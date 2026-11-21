@@ -1,0 +1,45 @@
+# Round 29 — smart text everywhere, hover copy, pick-a-time clock, stage fixes, Black palette, emails, phone format
+
+Standing rules: nothing existing is removed; only fixes and additions. Phone + PC. Pure black base. **Every feature is applied everywhere it applies** (Day End, Deals tracker, Deals board, Contacts, Tickets, Tasks, Lost, record pages, dialogs, Search, Call log, HR).
+
+| # | You asked | Root cause found | What I will do |
+|---|---|---|---|
+| 1 | Smart text not working in additional-number notes; make it work everywhere | The smart-text field filter skips any field whose *placeholder* contains "number". The "Note for this number" box matches, so it was skipped. | Filter decides by field *name/purpose*, not placeholder words; note-like fields (extra-number notes, additional notes, ticket/deal/contact/task notes, reasons, descriptions) are always on; those boxes also share the main Notes suggestions. A sweep test lists every text field in the app and fails if a note-like one is skipped. |
+| 2 | Hover buttons to copy number / deal name / notes from entries, for calls, WhatsApp, tickets, other | — | Day End entries get a hover group (phones: one ⧉ button that opens it): copy number, deal name, notes, everything — showing only what the entry has (calls: number + reason; WhatsApp: number + inquiry; tickets: type + description; other: note; tasks: number(s), deal, notes, email). Same hover chips on Deals, Contacts, Tickets, Tasks, Lost and Call-log rows. |
+| 3 | Clock: option to pick a time from a hover popup, and set times I forgot | Buttons only stamp "now" | A small 🕒 appears when you hover a clock button (always visible, faint, on touch). It opens a popup with date + time (+ reason) and clocks in / out / break start / break end at that moment, today or any past day, audit-logged. Works in the Day End clock strip, the clock sheet and HR. |
+| 4 | Deals sit in "No response" just because of the task folder | Stage was taken from *any* old entry/note that matched a phrase and stayed forever | Stage now follows the **latest** task/note only. A note that merely sounds like "no answer / call back" no longer moves the stage; an explicit stage you pick always wins. |
+| 5 | New palette: Black (two very dark shades), white moon, next to red, yellow next to pink | — | New "Black" palette: surfaces in two very dark blacks, **white moon and white sky glow**, applied to hub, Day End, Deals, dialogs, HR. Order: Red, Black, Grey, Blue, Purple, Green, Yellow, Pink. |
+| 6 | Emails on numbers, used to track deals; add to the contact; follow latest task | No email field existed in Day End | Optional email on a task (hidden ✉ button beside the number; also one per extra number). Emails typed in notes are detected too. They link deals/contacts, are added to the matching contact, and the contact's main email follows the latest task. |
+| 7 | Email button red for every task; WhatsApp too | Red meant "no email saved", so almost every deal was red | Neutral by default. **Red only when the latest note says it couldn't be done** (unable to email / not on WhatsApp / couldn't message). Green when sent. No email saved = neutral, tap to add one. |
+| 8 | Deals auto-land in "Waiting on Contact" | same as #4 | Fixed with #4. Notes saying they will call back / waiting now show a **note flag** (chip) on the deal instead of changing its stage. Optional switch in Automations to let notes move stages again. |
+| 9 | Automation: phrases must not be required; any combination; folder names + icons customizable | Editor buried the options; built-in No response folder could not be renamed/re-iconed; icon via a prompt box | Plain-language conditions: "not contacted for X days", "note has these phrases (or similar)", stage filters — use any one or any mix; live sentence preview; rules save with no phrases. Every folder incl. No response: rename + icon picker. |
+| 10 | Maldives number format: +9 → +960-, 7777777 → +960-777-7777, hidden toggle by the copy button | — | Auto-format in every phone field. Typing +9… fills +960-, then groups the 7 digits; plain 7 digits become +960-777-7777. A hover toggle next to the copy button turns it on/off (remembered). Other country codes are left alone. |
+
+## Tests
+`tests/test_v29.py` — every item above on PC and phone, all palettes incl. Black (no fixed colours, headings readable, moon white), light theme, plus full regression, cloud test and palette scan.
+
+
+## Added mid-round (your later messages)
+
+| # | You asked | What was done |
+|---|---|---|
+| 11 | HR tabs can't all be reached (no horizontal scroll) | A **☰ All** button on the HR tab row (appears on hover on PC, always visible on touch) opens a menu with every HR section. |
+| 12 | One clear HR section in all navigation menus | Left menu now has a **People → HR & Time** entry (Tools menu and G then R already had one). HR items no longer need hunting through other lists. |
+| 13 | Delete accidental clock entries — hover button, double-click to confirm | Hover ✕ on every punch in the clock sheet and on the In / Break / Back / Out chips in Day End. A single click only says “double-click to delete”; a double-click deletes it. Audit-logged; locked weeks refuse. The existing HR day-detail delete (with a reason) is unchanged. |
+| 14 | Moon does not follow clocked in / out / break and is missing in other sections | The moon (hub sections and Day End) now shows the **live HR clock**: green “worked” time while clocked in, amber “on break” time on break, normal shift countdown when clocked out. The stale “· clocked in” tag after clock-out was a bug and is fixed. |
+
+| 15 | Adjustments to clock in / break / clock out not updating | Found: the **Day End moon kept showing the shift countdown** after clocking in or adjusting (my first wiring never took effect there). It now follows the live clock — worked time, break time, back to the shift countdown after clock-out — and refreshes on every adjustment, pick-a-time, delete and punch. Verified: clock in → adjust to 3 h earlier → Day End moon, strip chips, report lines, hub moon and HR chip all agree. If a *different* spot is still stale, tell me which one. |
+| 16 | Hold the copy button in any text box to clear it (turns into ✕) | The hover copy button now has two modes in **every** text box (hub, Day End, Deals Tracker, dialogs): tap = copy; **hold ~0.5 s** = it turns into a ✕ with a ring filling up, release = the box is cleared (and Undo / Ctrl+Z brings the text back). Release early to just copy. Works with touch and mouse. |
+| 17 | If I forget the deal stage, fill it from the most recent previous note | When a new Day End task is saved with **no stage**, it takes the current stage of the same deal (matched by number, extra numbers, email or deal name) — which is the stage of the latest earlier task/note. It is marked with a small “auto stage” tag so you can tell it from one you picked; a stage you pick always wins; nothing is filled if the deal has no earlier stage. |
+
+## Status (delivered)
+Done and tested (`tests/test_v29.py`): 1 smart text in note boxes; 2 hover copy chips on Day End entries (tasks / calls / WhatsApp / tickets / other), Deals Tracker entries and hub Deals rows; 3 hover 🕒 pick-a-time (any date, reason, audit) in Day End strip and clock sheet; 4+8 stage follows the latest task/note only, soft “No response / Waiting” from text is a ⚑ flag (Automations switch to restore old behaviour); 5 Black palette, second in the list, white moon + white sky; 6 optional emails per number in Day End, shown on the entry, in copy chips, Excel export, and added to contacts (also per extra number); 7 email/WhatsApp buttons neutral unless the latest note says unable, green when sent; 9 Quick rule builder (any mix of conditions, phrases optional), rename + icon picker for every folder incl. No response; 10 Maldives phone auto-format with hover on/off toggle; 11–14 above.
+
+Honest limits:
+- **Black palette** keeps light silver text/heading colours so everything stays readable; only surfaces, buttons, glows are the two blacks. The moon is white but still follows the shift phase (a crescent early in the shift).
+- Typing “+9” always fills “+960-” unless the next digit is clearly another country code.
+- Copy chips on Contacts / Tickets / Tasks / Lost / Call-log rows are **not** added yet (Day End, Deals Tracker and hub Deals rows are). Phones show the ⧉ toggle on Day End and Deals Tracker entries; hub row chips are hover-only (PC).
+- The Deals record page buttons still dim (not red) when there is no email/number; the red/neutral logic is applied to the Deals list, board and Day End marks.
+- Email is not in the quick-add draft-restore yet. The copied Day End report text is deliberately unchanged (no email added), so existing reports look the same; emails appear in the entry, copy chips, Excel export and contacts.
+- Hold-to-clear, auto stage (item 17) and the Day End moon fix are covered by tests/test_v29.py.
+- Nothing has been deployed to Netlify; unzip and deploy yourself.
