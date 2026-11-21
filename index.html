@@ -895,6 +895,20 @@ html:not([data-theme="light"]) body #navDrawer .nv-f :is(button,a){border:0!impo
 html:not([data-theme="light"]) body #navDrawer .nv-f :is(button,a):hover{background:radial-gradient(ellipse 80% 90% at 50% 50%,rgba(var(--t1-rgb),.2),rgba(var(--t1-rgb),0) 100%)!important;text-shadow:0 0 9px rgba(var(--t2-rgb),.55)}
 html:not([data-theme="light"]) body #navDrawer :is(.nv-h,.nv-f){border-color:transparent!important}
 
+/* Round 32: Black palette = truly black (no filigree), stars/moon light in white-grey */
+html[data-pal=mono]:not([data-theme="light"]){--fil:linear-gradient(#000,#000);--texbg:#000;--texbg2:#000;--texin:#030303;--star:#e9e9ef;--star-rgb:233,233,239;--star2:#b4b4bc;--star2-rgb:180,180,188}
+html[data-pal=mono]:not([data-theme="light"]) body{background:#000!important}
+html[data-pal=mono] #hbNight i{background:#fff!important;box-shadow:0 0 6px rgba(255,255,255,.75)!important}
+html[data-pal=mono] #hbMoonLight{opacity:calc(var(--ml,0)*.35)}
+html[data-pal=mono] #hbMoon .mn-l{color:#d6d6dd}
+
+/* Round 32: small clocked-in / break line under the moon's time left */
+#hbMoon .mn-s{display:block;margin-top:2px;font:700 .46rem var(--dv-mono);letter-spacing:.06em;text-transform:uppercase;text-shadow:0 0 6px #000;white-space:nowrap}
+#hbMoon .mn-s:empty{display:none}
+#hbMoon[data-clk=work] .mn-s{color:#3ddc84}#hbMoon[data-clk=break] .mn-s{color:#ffb020}
+#hbMoon[data-clk] .mn-l{color:#ffc2c8!important}
+html[data-pal=mono] #hbMoon[data-clk] .mn-l{color:#d6d6dd!important}
+
 /* Round 12: one simple icon set for every section */
 html body #dashView :is(.tc-head,.ld-head,.an-head){--dv-ico:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='white'%20stroke-width='1.7'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M4%204h7v7H4zM13%204h7v4h-7zM13%2011h7v9h-7zM4%2014h7v6H4z'/%3E%3C/svg%3E")}
 html body #analyticsView :is(.tc-head,.ld-head,.an-head){--dv-ico:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='24'%20height='24'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='white'%20stroke-width='1.7'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M4%2020V10M9.5%2020V4M15%2020v-8M20.5%2020V7'/%3E%3C/svg%3E")}
@@ -3837,7 +3851,7 @@ function phNoteTools(getRoot) {
   const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Copy notes';
   b.title = 'Copy the notes of all numbers as one note (Number 1 - Note, Number 2 - Note)';
   b.addEventListener('click', () =&gt; {
-    const t = phCombined(getRoot(), '\n');
+    const mt0 = getRoot() &amp;&amp; getRoot().querySelector('[data-f=&quot;notes&quot;]'), t = phCombined(getRoot(), '\n') || (mt0 ? mt0.value.trim() : '');   // Round 32: with no extra numbers it copies the notes box itself (an email never matters)
     if (!t) { toast('Nothing to copy yet'); return; }
     copyText(t);
   });
@@ -5590,7 +5604,7 @@ window.__hubRemoveTask = function (ref) {
   var OK_TYPES = { text: 1, search: 1, tel: 1, email: 1, url: 1, number: 1 };
   var st = document.createElement('style'); st.id = 'hubCopyBtnStyle';
   st.textContent = '#hubCopyFloat{position:fixed;z-index:2147483000;display:none;width:24px;height:24px;padding:0;margin:0;border-radius:7px;border:1px solid var(--border,rgba(128,128,128,.45));background:var(--card-solid,#222);color:var(--text2,#aaa);cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.35);opacity:.95;font:inherit}#hubCopyFloat:hover{color:var(--text,#fff);border-color:var(--accent,#888)}#hubCopyFloat.ok{color:#4ade80;border-color:#4ade80}#hubCopyFloat svg{width:13px;height:13px;pointer-events:none}@media print{#hubCopyFloat{display:none!important}}';
-  st.textContent += '#hubCopyFloat.hold{animation:hubHold .55s linear forwards}@keyframes hubHold{to{box-shadow:0 0 0 3px rgba(var(--accent-rgb,225,42,57),.55);color:var(--accent,#e12a39)}}#hubCopyFloat.clr{color:#fff;background:linear-gradient(135deg,var(--btn1,#e12a39),var(--btn2,#8a1520));border-color:transparent}';
+  st.textContent += '#hubCopyFloat.hold{animation:hubHold .22s linear forwards}@keyframes hubHold{to{box-shadow:0 0 0 3px rgba(var(--accent-rgb,225,42,57),.55);color:var(--accent,#e12a39)}}#hubCopyFloat.clr{color:#fff;background:linear-gradient(135deg,var(--btn1,#e12a39),var(--btn2,#8a1520));border-color:transparent}';
   (document.head || document.documentElement).appendChild(st);
   var ICON = '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;9&quot; width=&quot;11&quot; height=&quot;11&quot; rx=&quot;2&quot;&gt;&lt;/rect&gt;&lt;path d=&quot;M5 15V6a2 2 0 0 1 2-2h9&quot;&gt;&lt;/path&gt;&lt;/svg&gt;';
   var TICK = '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.4&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M5 12l5 5L20 7&quot;&gt;&lt;/path&gt;&lt;/svg&gt;';
@@ -5661,7 +5675,7 @@ window.__hubRemoveTask = function (ref) {
     say('Cleared'); place();
   }
   function endHold() { clearTimeout(holdT); btn.classList.remove('hold'); }
-  btn.addEventListener('pointerdown', function (e) { if (e.button) return; held = false; heldEl = cur; clearTimeout(holdT); btn.classList.add('hold'); holdT = setTimeout(function () { held = true; btn.classList.remove('hold'); btn.classList.add('clr'); btn.innerHTML = XICO; btn.title = 'Release to clear'; try { navigator.vibrate &amp;&amp; navigator.vibrate(12); } catch (x) {} }, 550); });
+  btn.addEventListener('pointerdown', function (e) { if (e.button) return; held = false; heldEl = cur; clearTimeout(holdT); btn.classList.add('hold'); holdT = setTimeout(function () { held = true; btn.classList.remove('hold'); btn.classList.add('clr'); btn.innerHTML = XICO; btn.title = 'Release to clear'; try { navigator.vibrate &amp;&amp; navigator.vibrate(12); } catch (x) {} }, 220); });
   btn.addEventListener('pointerup', function () { endHold(); });
   btn.addEventListener('pointercancel', function () { endHold(); held = false; btn.classList.remove('clr'); btn.innerHTML = ICON; btn.title = 'Copy (hold to clear)'; });
   btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
@@ -5729,6 +5743,17 @@ html:not([data-theme=&quot;light&quot;]) .shift-card::after{content:&quot;&quot;
 .ns-sky i.on{opacity:.9;animation:nsTw 3.6s ease-in-out infinite alternate}
 html[data-theme=&quot;light&quot;] .ns-sky{display:none}
 @media (prefers-reduced-motion:reduce){.ns-sky i.on{animation:none}}
+
+/* Round 32: Black palette stars + glow are white-grey (the palette greys were nearly black, so stars vanished) */
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) .shift-card{background-color:#000;background-image:
+  radial-gradient(2.6px 2.6px at 12% 22%,rgba(255,255,255,.95),transparent 60%),radial-gradient(2px 2px at 27% 68%,rgba(220,220,230,.8),transparent 60%),
+  radial-gradient(2.8px 2.8px at 41% 30%,rgba(255,255,255,.9),transparent 60%),radial-gradient(2px 2px at 58% 78%,rgba(220,220,230,.8),transparent 60%),
+  radial-gradient(2.4px 2.4px at 71% 18%,rgba(255,255,255,.9),transparent 60%),radial-gradient(2px 2px at 84% 55%,rgba(220,220,230,.8),transparent 60%),
+  radial-gradient(2.6px 2.6px at 93% 82%,rgba(255,255,255,.9),transparent 60%),radial-gradient(2px 2px at 6% 80%,rgba(220,220,230,.7),transparent 60%),
+  radial-gradient(2px 2px at 49% 8%,rgba(220,220,230,.8),transparent 60%),radial-gradient(2px 2px at 66% 46%,rgba(220,220,230,.6),transparent 60%),
+  radial-gradient(circle at var(--moon-x,120px) var(--moon-y,50%),rgba(255,255,255,calc(.03 + .10*var(--moon-lit,.1))) 0,rgba(255,255,255,calc(.015 + .05*var(--moon-lit,.1))) 20%,transparent 60%)}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) .shift-card::after{background-image:radial-gradient(2px 2px at 20% 40%,#fff,transparent 60%),radial-gradient(2px 2px at 52% 62%,#cfcfd8,transparent 60%),radial-gradient(2.4px 2.4px at 78% 30%,#fff,transparent 60%),radial-gradient(2px 2px at 35% 88%,#cfcfd8,transparent 60%)}
+html[data-pal=mono] .ns-sky i{background:#fff;box-shadow:0 0 6px rgba(255,255,255,.7)}
 &lt;/style&gt;
 &lt;script id=&quot;hubMoonScriptD&quot;&gt;// ===== Round 11: the countdown ring becomes the blood moon (phase follows shift progress; time stays in the middle) =====
 (function () {
@@ -5835,6 +5860,15 @@ html[data-theme=&quot;light&quot;] .ns-sky{display:none}
 /* Round 28: same heading sizes as the hub (H1 1.5rem/800, section titles .95rem/700) */
 body .brand h1{font-size:1.5rem!important;font-weight:800!important;letter-spacing:-.01em!important}
 body :is(.section-title,.report-title){font-size:.95rem!important;font-weight:700!important}
+
+/* Round 32: Black palette = truly black (no filigree), stars in white-grey */
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]){--fil:linear-gradient(#000,#000);--texbg:#000;--texbg2:#000;--texin:#030303;--star:#e9e9ef;--star-rgb:233,233,239;--star2:#b4b4bc;--star2-rgb:180,180,188}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body{background:#000!important}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body .brand h1,html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body .brand h1 *{background:none!important;-webkit-text-fill-color:#ececf1!important;color:#ececf1!important;filter:none!important}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body :is(.section-title,.report-title,.hour-label,.act-title){color:#d8d8de!important}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body .plus-btn{background:#0a0a0a!important;color:#e4e4e8!important;border-color:rgba(255,255,255,.18)!important}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body :is(#countdownLabel,.countdown-label){color:#cfcfd8!important}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body :is(.section-title,.report-title,.section-title *){background:none!important;-webkit-text-fill-color:#e2e2e8!important;color:#e2e2e8!important;filter:none!important}
 &lt;/style&gt;
 &lt;style id=&quot;hubClockStyle&quot;&gt;.clk-chip{display:inline-flex;align-items:center;gap:6px;background:transparent;color:inherit;border:1px solid rgba(var(--accent-rgb,225,42,57),.5);border-radius:999px;padding:6px 12px;font:600 .8rem inherit;cursor:pointer;font-variant-numeric:tabular-nums;margin-right:8px;white-space:nowrap}
 .clk-chip[data-clk=work]{color:#3ddc84;border-color:#3ddc84}.clk-chip[data-clk=break]{color:#ffb020;border-color:#ffb020}
@@ -5875,6 +5909,21 @@ html[data-theme=light] .clk-dl{background:#fff;color:#17171a}html[data-theme=lig
 .clk-del{top:-9px;right:-9px;width:16px;height:16px;border:0;background:transparent;color:var(--accent,#e12a39);font-size:.95rem;font-weight:700}
 .clk-pk{display:none!important}
 @media (max-width:520px){.clk-strip{flex-direction:column;align-items:stretch}.clk-b{justify-content:center}.clk-ts{margin-left:0;width:100%;justify-content:space-around;gap:4px}.clk-t{flex:1 1 0;min-width:0}}
+
+/* Round 32: moon shows time left + a small clocked-in / break line; bigger moon, vertically centred row; smaller, calmer buttons */
+.clk-small{margin-top:3px;font:600 .54rem/1.1 'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;text-shadow:0 0 6px #000,0 0 3px #000;color:#3ddc84}
+.clk-small[data-clk=break]{color:#ffb020}
+#countdownWrap[data-clk] .countdown-label{color:#ffc2c8!important}
+html[data-pal=mono] #countdownWrap[data-clk] .countdown-label{color:#cfcfd8!important}
+.shift-card .countdown-wrap{width:196px;height:196px;align-self:center}
+.shift-card .shift-fields,.shift-card .shift-side{align-self:center}
+.shift-card .shift-fields{padding-top:0}
+.shift-card .shift-arrow{margin-top:20px}
+.clk-b button{padding:5px 12px!important;min-height:30px!important;font-size:.72rem!important;border-radius:9px}
+.clk-b button:not(.p){background:transparent!important;border-color:transparent!important;color:var(--text2,#bbb)}
+.clk-b button:not(.p):hover{background:rgba(255,255,255,.06)!important;color:var(--text,#fff)}
+@media (max-width:720px){.shift-card .countdown-wrap{width:150px;height:150px}}
+.shift-card .shift-field input{min-width:136px;width:136px}
 &lt;/style&gt;
 &lt;script id=&quot;hubClockScript&quot;&gt;/* Round 25 — Day End: time-clock chip in the header + live refresh of the report (runs inside this frame) */
 (function () {
@@ -5958,7 +6007,7 @@ html[data-theme=light] .clk-dl{background:#fff;color:#17171a}html[data-theme=lig
     s.innerHTML = '&lt;div class=&quot;clk-b&quot;&gt;' + btn + '&lt;/div&gt;&lt;div class=&quot;clk-ts&quot;&gt;' + chip('In', lb.in) + chip('Break', lb.bs) + chip('Back', lb.be) + chip('Out', lb.out) + '&lt;/div&gt;';
   }
   var base = window.__hubHRTick;
-  window.__hubHRTick = function (t, st) { if (base) base(t, st); var cw = doc.getElementById('countdownLabel'); if (cw) { if (st !== 'out') cw.setAttribute('data-clk', st); else cw.removeAttribute('data-clk'); } if (doc.getElementById('clkStrip') &amp;&amp; !window.__stripT) { window.__stripT = setTimeout(function () { window.__stripT = 0; renderStrip(); }, 400); } };
+  window.__hubHRTick = function (t, st) { if (base) base(t, st); var cw = doc.getElementById('countdownLabel'); if (cw) cw.removeAttribute('data-clk'); if (doc.getElementById('clkStrip') &amp;&amp; !window.__stripT) { window.__stripT = setTimeout(function () { window.__stripT = 0; renderStrip(); }, 400); } };
   var bc = window.__hubHRChanged; window.__hubHRChanged = function () { if (bc) bc(); renderStrip(); };
   var wrap = doc.getElementById('countdownWrap'); if (wrap) wrap.addEventListener('click', function () { var h = hr(); if (h) h.openClock(); }); if (wrap) wrap.style.cursor = 'pointer';
   setTimeout(renderStrip, 600);
@@ -5967,19 +6016,23 @@ html[data-theme=light] .clk-dl{background:#fff;color:#17171a}html[data-theme=lig
 // moon shows the live clock state (worked time / break time) while clocked in or on break
 (function () {
   var w = window, doc = document, busy = false;
+  function hm(ms) { var d = new Date(ms), h = d.getHours(), m = d.getMinutes(), ap = h &gt;= 12 ? 'pm' : 'am'; h = h % 12 || 12; return h + ':' + (m &lt; 10 ? '0' : '') + m + ap; }
   function apply() {
     if (busy) return; busy = true;
     try {
-      var h = w.parent &amp;&amp; w.parent.hubHR, c = h &amp;&amp; h.chip &amp;&amp; h.chip(), t = doc.getElementById('countdownTime'), l = doc.getElementById('countdownLabel'), wr = doc.getElementById('countdownWrap');
-      var st = c &amp;&amp; (c.state === 'work' || c.state === 'break') ? c.state : '';
+      var h = w.parent &amp;&amp; w.parent.hubHR, c = h &amp;&amp; h.chip &amp;&amp; h.chip(), wr = doc.getElementById('countdownWrap'), ctr = wr &amp;&amp; wr.querySelector('.countdown-center');
+      var st = c &amp;&amp; (c.state === 'work' || c.state === 'break') ? c.state : '', sm = doc.getElementById('clkSmall');
       if (wr) { if (st) wr.setAttribute('data-clk', st); else wr.removeAttribute('data-clk'); }
-      if (st &amp;&amp; t &amp;&amp; l) { var tx = String(c.text || '').replace(/^[^\d+]+/, ''), lb = st === 'break' ? 'on break' : 'clocked in'; if (t.textContent !== tx) t.textContent = tx; if (l.textContent !== lb) l.textContent = lb; l.removeAttribute('data-clk'); }
+      // the big number stays the time LEFT in the shift; a small line under it says clocked in (with the time) / on break
+      var tx = '';
+      if (st &amp;&amp; h) { var lb = h.lastBy(h.today()); tx = st === 'break' ? 'break' + (lb.bs ? ' · ' + hm(lb.bs.at) : '') : 'in' + (lb.in ? ' · ' + hm(lb.in.at) : ' · clocked'); }
+      if (tx &amp;&amp; ctr) { if (!sm) { sm = doc.createElement('div'); sm.id = 'clkSmall'; sm.className = 'clk-small'; ctr.appendChild(sm); } if (sm.textContent !== tx) sm.textContent = tx; sm.setAttribute('data-clk', st); }
+      else if (sm) sm.remove();
     } catch (e) {}
     busy = false;
   }
   var base = w.__hubHRTick; w.__hubHRTick = function (t, st) { if (base) base(t, st); apply(); };
-  try { var mo = new MutationObserver(apply); ['countdownTime', 'countdownLabel'].forEach(function (id) { var n = doc.getElementById(id); if (n) mo.observe(n, { childList: true, characterData: true, subtree: true }); }); } catch (e) {}
-  setInterval(apply, 1000); setTimeout(apply, 300);
+    setInterval(apply, 1000); setTimeout(apply, 300);
 })();
 &lt;/script&gt;
 &lt;script id=&quot;hubAidsScript&quot;&gt;/* Round 26 — Day End entry aids: duplicate warning while typing, call outcome chips (runs inside this frame) */
@@ -6109,6 +6162,7 @@ html[data-theme=light] .clk-dl{background:#fff;color:#17171a}html[data-theme=lig
     if (!em) { var m = EM_RX.exec(e.notes || ''); if (m) em = m[0]; }
     if (em) e.email = em.toLowerCase();
     // Round 29: no stage chosen → take the stage from the most recent earlier task/note of the same number / deal (marked auto)
+    try { if (e.stage) { var as = document.querySelector('[data-f=&quot;stage&quot;][data-auto=&quot;1&quot;]'); if (as &amp;&amp; as.value === e.stage) e.stageAuto = 1; } } catch (x0) {}
     try {
       if (!e.stage) {
         var H = window.parent &amp;&amp; window.parent.hubDeals, L = H &amp;&amp; H.deals &amp;&amp; H.deals().list, dg = function (x) { return String(x || '').replace(/\D/g, '').slice(-9); };
@@ -6248,6 +6302,145 @@ function cpIco(l) {
   setTimeout(function () { try { decorateAll(); decorateEntries(); } catch (e) {} }, 200);
   // the quick-add form is built by its own script: decorate it when it appears / changes
   var qa = document.getElementById('qaForm'); if (qa) { try { new MutationObserver(function () { qa.querySelectorAll('[data-section=&quot;tasks&quot;]').length || (qa.getAttribute('data-section') === 'tasks' &amp;&amp; decorateRoot(qa)); qa.querySelectorAll('.ph-row').forEach(decorateRow); }).observe(qa, { childList: true, subtree: true }); } catch (e) {} }
+})();
+
+// ===== Round 32: the deal stage is picked automatically when the number / deal name is recognised (change it by hand any time) =====
+(function () {
+  'use strict';
+  if (window.__hubAutoStage) return; window.__hubAutoStage = true;
+  var dg = function (x) { return String(x || '').replace(/\D/g, '').slice(-7); };
+  function lookup(num, deal, email) {
+    try {
+      var H = window.parent &amp;&amp; window.parent.hubDeals, L = (H &amp;&amp; H.deals &amp;&amp; H.deals().list) || [];
+      var n = dg(num), nm = String(deal || '').trim().toLowerCase(), em = String(email || '').trim().toLowerCase();
+      if (n.length &lt; 7 &amp;&amp; nm.length &lt; 3 &amp;&amp; !em) return null;
+      var best = null;
+      L.forEach(function (d) {
+        if (!d.stage) return; var score = 0;
+        if (n.length &gt;= 7 &amp;&amp; (d.numbers || []).some(function (x) { return dg(x) === n; })) score += 3;
+        if (em &amp;&amp; String(d.email || '').toLowerCase() === em) score += 2;
+        if (nm.length &gt;= 3 &amp;&amp; String(d.name || '').trim().toLowerCase() === nm) score += 2;
+        if (score &amp;&amp; (!best || score &gt; best.s || (score === best.s &amp;&amp; (d.last || 0) &gt; (best.d.last || 0)))) best = { s: score, d: d };
+      });
+      return best ? { stage: best.d.stage, by: best.s &gt;= 3 ? 'number' : 'deal name' } : null;
+    } catch (e) { return null; }
+  }
+  var T = null;
+  function run(form) {
+    if (!form) return;
+    var st = form.querySelector('[data-f=&quot;stage&quot;]'); if (!st) return;
+    var num = (form.querySelector('[data-f=&quot;number&quot;]') || {}).value, deal = (form.querySelector('[data-f=&quot;deal&quot;]') || {}).value, em = (form.querySelector('[data-f=&quot;email&quot;]') || {}).value;
+    var hint = form.querySelector('.as-hint');
+    // a stage the user picked by hand is never touched
+    if (st.value &amp;&amp; st.getAttribute('data-auto') !== '1') { if (hint) hint.remove(); return; }
+    var r = lookup(num, deal, em);
+    if (r &amp;&amp; Array.prototype.some.call(st.options, function (o) { return o.value === r.stage; })) {
+      if (st.value !== r.stage) { st.value = r.stage; st.dispatchEvent(new Event('change', { bubbles: true })); }
+      st.setAttribute('data-auto', '1');
+      if (!hint) { hint = document.createElement('div'); hint.className = 'as-hint'; st.insertAdjacentElement('afterend', hint); }
+      hint.textContent = 'Stage picked automatically from the ' + r.by + ' (' + r.stage + ') – change it if it is wrong';
+    } else if (st.getAttribute('data-auto') === '1') { st.value = ''; st.removeAttribute('data-auto'); st.dispatchEvent(new Event('change', { bubbles: true })); if (hint) hint.remove(); }
+  }
+  document.addEventListener('input', function (e) {
+    var el = e.target; if (!el || !el.matches || !el.matches('[data-f=&quot;number&quot;],[data-f=&quot;deal&quot;],[data-f=&quot;email&quot;]')) return;
+    var form = el.closest('[data-section=&quot;tasks&quot;]') || el.closest('#qaForm'); clearTimeout(T); T = setTimeout(function () { run(form); }, 250);
+  }, true);
+  document.addEventListener('change', function (e) {
+    var el = e.target; if (!el || !el.matches || !el.matches('[data-f=&quot;stage&quot;]') || !e.isTrusted) return;
+    el.removeAttribute('data-auto'); var h = el.parentNode &amp;&amp; el.parentNode.querySelector('.as-hint'); if (h) h.remove();
+  }, true);
+  var st = document.createElement('style'); st.textContent = '.as-hint{font-size:.7rem;color:var(--text3,#888);margin:3px 2px 0}'; document.head.appendChild(st);
+})();
+
+// ===== Round 32: duplicate warning while typing + smart paste (number / email / name out of pasted text) =====
+(function () {
+  'use strict';
+  if (window.__hubDupPaste) return; window.__hubDupPaste = true;
+  var dg = function (x) { return String(x || '').replace(/\D/g, '').slice(-7); };
+  function list() { try { return window.parent.hubDeals.deals().list || []; } catch (e) { return []; } }
+  var T = null;
+  function dup(el) {
+    var form = el.closest('[data-section=&quot;tasks&quot;]') || el.closest('#qaForm'); if (!form) return;
+    var n = dg((form.querySelector('[data-f=&quot;number&quot;]') || {}).value), em = String((form.querySelector('[data-f=&quot;email&quot;]') || {}).value || '').trim().toLowerCase();
+    var hit = null; if (n.length &gt;= 7 || em) list().forEach(function (d) { if (hit) return; if ((n.length &gt;= 7 &amp;&amp; (d.numbers || []).some(function (x) { return dg(x) === n; })) || (em &amp;&amp; String(d.email || '').toLowerCase() === em)) hit = d; });
+    var h = form.querySelector('.dp-hint'), host = (form.querySelector('[data-f=&quot;number&quot;]') || el);
+    if (!hit) { if (h) h.remove(); return; }
+    if (!h) { h = document.createElement('div'); h.className = 'dp-hint'; host.insertAdjacentElement('afterend', h); }
+    h.textContent = 'Already in Deals: ' + hit.name + (hit.stage ? ' (' + hit.stage + ')' : '') + ' '; h.setAttribute('data-k', hit.key); var ub = document.createElement('button'); ub.type = 'button'; ub.className = 'dp-use'; ub.textContent = 'Use last details'; h.appendChild(ub);
+  }
+  document.addEventListener('input', function (e) { var el = e.target; if (!el || !el.matches || !el.matches('[data-f=&quot;number&quot;],[data-f=&quot;email&quot;]')) return; clearTimeout(T); T = setTimeout(function () { dup(el); }, 300); }, true);
+  document.addEventListener('paste', function (e) {
+    var el = e.target; if (!el || !el.matches || !el.matches('[data-f=&quot;number&quot;]')) return;
+    var tx = (e.clipboardData &amp;&amp; e.clipboardData.getData('text')) || ''; if (!/[A-Za-z@]/.test(tx)) return;   // plain numbers paste as before
+    var form = el.closest('[data-section=&quot;tasks&quot;]') || el.closest('#qaForm'); if (!form) return;
+    var em = (tx.match(/[\w.+-]+@[\w-]+(\.[\w-]+)+/) || [])[0], ph = (tx.match(/(\+?960[\s-]?)?\d{3}[\s-]?\d{4}/) || [])[0];
+    var rest = tx.replace(em || '', '').replace(ph || '', '').replace(/[\r\n,;|]+/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!em &amp;&amp; !ph) return; e.preventDefault();
+    function set(f, v) { var x = form.querySelector('[data-f=&quot;' + f + '&quot;]'); if (x &amp;&amp; v) { x.value = v; x.dispatchEvent(new Event('input', { bubbles: true })); } }
+    if (ph) set('number', ph.trim());
+    if (em) { var eb = form.querySelector('.mail-btn'), ei = form.querySelector('[data-f=&quot;email&quot;]'); if (!ei &amp;&amp; eb) { eb.click(); } set('email', em); }
+    var dl = form.querySelector('[data-f=&quot;deal&quot;]'); if (dl &amp;&amp; !dl.value &amp;&amp; rest &amp;&amp; rest.length &lt; 60) set('deal', rest);
+  }, true);
+  var st = document.createElement('style'); st.textContent = '.dp-hint{font-size:.7rem;color:var(--accent,#e11d2e);margin:3px 2px 0}'; document.head.appendChild(st);
+})();
+
+// ===== Round 33: use-last-details, quick-note chips, time-aware notes =====
+(function () {
+  'use strict';
+  if (window.__hubR33) return; window.__hubR33 = true;
+  function formOf(el) { return el.closest('[data-section=&quot;tasks&quot;]') || el.closest('#qaForm'); }
+  function setv(form, f, v) { var x = form.querySelector('[data-f=&quot;' + f + '&quot;]'); if (x &amp;&amp; v != null) { x.value = v; x.dispatchEvent(new Event('input', { bubbles: true })); x.dispatchEvent(new Event('change', { bubbles: true })); } }
+  document.addEventListener('click', function (e) {
+    var u = e.target.closest &amp;&amp; e.target.closest('.dp-use'); if (u) {
+      var h = u.parentNode, form = formOf(h), k = h.getAttribute('data-k'), L = []; try { L = window.parent.hubDeals.deals().list || []; } catch (x) {}
+      var d = L.filter(function (z) { return z.key === k; })[0]; if (!d || !form) return;
+      var g = function (f) { return (form.querySelector('[data-f=&quot;' + f + '&quot;]') || {}).value; };
+      if (!g('deal') &amp;&amp; d.name) setv(form, 'deal', d.name); if (!g('stage') &amp;&amp; d.stage) setv(form, 'stage', d.stage);
+      if (d.email &amp;&amp; !g('email')) { var ei = form.querySelector('[data-f=&quot;email&quot;]'); if (!ei) { var eb = form.querySelector('.mail-btn'); if (eb) eb.click(); } setv(form, 'email', d.email); }
+      var nt = form.querySelector('[data-f=&quot;notes&quot;]'); if (nt) nt.focus(); return;
+    }
+    var c = e.target.closest &amp;&amp; e.target.closest('.qn-chip'); if (c) {
+      var form2 = formOf(c), nt2 = form2 &amp;&amp; form2.querySelector('[data-f=&quot;notes&quot;]'); if (!nt2) return;
+      if (c.getAttribute('data-qnadd')) { var t = prompt('New quick note'); if (t &amp;&amp; t.trim()) { var A = chips(); A.push(t.trim().slice(0, 40)); try { localStorage.setItem('hub_chips_v1', JSON.stringify(A)); } catch (x) {} draw(true); } return; }
+      var tx = c.textContent; nt2.value = nt2.value ? nt2.value.replace(/\s+$/, '') + '. ' + tx : tx; nt2.dispatchEvent(new Event('input', { bubbles: true })); nt2.focus();
+    }
+  }, true);
+  function chips() { try { var a = JSON.parse(localStorage.getItem('hub_chips_v1') || 'null'); if (Array.isArray(a) &amp;&amp; a.length) return a; } catch (e) {} return ['No answer', 'Left message', 'Call back later', 'Interested', 'Not interested', 'Sent details']; }
+  var busy = false;
+  function draw(force) {
+    if (busy) return; busy = true;
+    try {
+      document.querySelectorAll('[data-section=&quot;tasks&quot;] [data-f=&quot;notes&quot;], #qaForm [data-f=&quot;notes&quot;]').forEach(function (n) {
+        var host = n.parentNode, old = host.querySelector(':scope &gt; .qn-row'); if (old &amp;&amp; !force) return; if (old) old.remove();
+        var r = document.createElement('div'); r.className = 'qn-row'; r.innerHTML = chips().map(function (t) { return '&lt;button type=&quot;button&quot; class=&quot;qn-chip&quot;&gt;' + t.replace(/[&lt;&gt;&amp;]/g, '') + '&lt;/button&gt;'; }).join('') + '&lt;button type=&quot;button&quot; class=&quot;qn-chip&quot; data-qnadd=&quot;1&quot; title=&quot;Add your own quick note&quot;&gt;+&lt;/button&gt;';
+        n.insertAdjacentElement('afterend', r);
+      });
+    } catch (e) {}
+    busy = false;
+  }
+  var T = null; new MutationObserver(function () { clearTimeout(T); T = setTimeout(draw, 250); }).observe(document.body, { childList: true, subtree: true }); setTimeout(draw, 500);
+  // time-aware notes -&gt; task
+  var DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  function pad(n) { return (n &lt; 10 ? '0' : '') + n; }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function when(t) {
+    var s = String(t || '').toLowerCase(), d = null, tm = '', m;
+    if (!/(call|ring|remind|follow|check|send|visit|meet)/.test(s)) return null;
+    if (/\btomorrow\b/.test(s)) { d = new Date(); d.setDate(d.getDate() + 1); }
+    else if ((m = /\bin (\d{1,2}) (day|week)s?\b/.exec(s))) { d = new Date(); d.setDate(d.getDate() + (+m[1]) * (m[2] === 'week' ? 7 : 1)); }
+    else if ((m = /\bnext (sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/.exec(s))) { d = new Date(); var diff = (DAYS.indexOf(m[1]) - d.getDay() + 7) % 7 || 7; d.setDate(d.getDate() + diff); }
+    else if (/\btoday\b/.test(s)) d = new Date();
+    if ((m = /\b(?:at |@ ?)?(\d{1,2})(?::(\d{2}))?\s?(am|pm)\b/.exec(s))) { var hh = +m[1] % 12 + (m[3] === 'pm' ? 12 : 0); tm = pad(hh) + ':' + (m[2] || '00'); if (!d) d = new Date(); }
+    return d ? { due: ymd(d), time: tm } : null;
+  }
+  function hash(s) { var h = 0; for (var i = 0; i &lt; s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0; return Math.abs(h).toString(36); }
+  var D0 = SECTION_DEFS[0], prev = D0.make;
+  D0.make = function (v) {
+    var e = prev(v);
+    try { var w = when(e.notes), P = window.parent; if (w &amp;&amp; P &amp;&amp; P.hubTasksAdd) { P.hubTasksAdd({ id: 'tp-' + hash(String(e.number || e.deal) + '|' + e.notes), title: 'Follow up — ' + (e.deal || e.number || 'note'), notes: String(e.notes).slice(0, 200), due: w.due, time: w.time, remind: null, priority: 'normal', folder: '', created: Date.now(), auto: false, phrase: 'time in note', nums: e.number ? [e.number] : [] }); if (P.hubTasksRefresh) P.hubTasksRefresh(); } } catch (x) {}
+    return e;
+  };
+  var st = document.createElement('style'); st.textContent = '.qn-row{display:flex;flex-wrap:wrap;gap:5px;margin:5px 0 2px}.qn-chip,.dp-use{font:inherit;font-size:.68rem;padding:3px 8px;border-radius:999px;border:1px solid var(--line,#444);background:transparent;color:inherit;cursor:pointer;opacity:.8}.qn-chip:hover,.dp-use:hover{opacity:1;border-color:var(--accent,#e11d2e)}.dp-use{margin-left:6px;color:inherit}'; document.head.appendChild(st);
 })();
 &lt;/script&gt;
 &lt;script id=&quot;hubHScrollScript&quot;&gt;// ===== Round 30: invisible hover scroll buttons for every horizontal bar (press = next section, hold = jump to the end) =====
@@ -7470,7 +7663,7 @@ function phNoteTools(getList, getNum, getNote) {
   var b = document.createElement(&#x27;button&#x27;); b.type = &#x27;button&#x27;; b.textContent = &#x27;Copy notes&#x27;;
   b.title = &#x27;Copy the notes of all numbers as one note (Number 1 - Note, Number 2 - Note)&#x27;;
   b.addEventListener(&#x27;click&#x27;, function () {
-    var t = phCombined(getList(), getNum(), getNote());
+    var n0 = getNote &amp;&amp; getNote(), t = phCombined(getList(), getNum(), getNote()) || (n0 &amp;&amp; n0.value ? n0.value.trim() : &#x27;&#x27;);   // Round 32: no extra numbers -&gt; copy the notes box itself
     if (!t) { toast(&#x27;Nothing to copy yet&#x27;); return; }
     phCopy(t);
   });
@@ -8372,7 +8565,7 @@ render();
   var OK_TYPES = { text: 1, search: 1, tel: 1, email: 1, url: 1, number: 1 };
   var st = document.createElement('style'); st.id = 'hubCopyBtnStyle';
   st.textContent = '#hubCopyFloat{position:fixed;z-index:2147483000;display:none;width:24px;height:24px;padding:0;margin:0;border-radius:7px;border:1px solid var(--border,rgba(128,128,128,.45));background:var(--card-solid,#222);color:var(--text2,#aaa);cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.35);opacity:.95;font:inherit}#hubCopyFloat:hover{color:var(--text,#fff);border-color:var(--accent,#888)}#hubCopyFloat.ok{color:#4ade80;border-color:#4ade80}#hubCopyFloat svg{width:13px;height:13px;pointer-events:none}@media print{#hubCopyFloat{display:none!important}}';
-  st.textContent += '#hubCopyFloat.hold{animation:hubHold .55s linear forwards}@keyframes hubHold{to{box-shadow:0 0 0 3px rgba(var(--accent-rgb,225,42,57),.55);color:var(--accent,#e12a39)}}#hubCopyFloat.clr{color:#fff;background:linear-gradient(135deg,var(--btn1,#e12a39),var(--btn2,#8a1520));border-color:transparent}';
+  st.textContent += '#hubCopyFloat.hold{animation:hubHold .22s linear forwards}@keyframes hubHold{to{box-shadow:0 0 0 3px rgba(var(--accent-rgb,225,42,57),.55);color:var(--accent,#e12a39)}}#hubCopyFloat.clr{color:#fff;background:linear-gradient(135deg,var(--btn1,#e12a39),var(--btn2,#8a1520));border-color:transparent}';
   (document.head || document.documentElement).appendChild(st);
   var ICON = '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;rect x=&quot;9&quot; y=&quot;9&quot; width=&quot;11&quot; height=&quot;11&quot; rx=&quot;2&quot;&gt;&lt;/rect&gt;&lt;path d=&quot;M5 15V6a2 2 0 0 1 2-2h9&quot;&gt;&lt;/path&gt;&lt;/svg&gt;';
   var TICK = '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.4&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M5 12l5 5L20 7&quot;&gt;&lt;/path&gt;&lt;/svg&gt;';
@@ -8443,7 +8636,7 @@ render();
     say('Cleared'); place();
   }
   function endHold() { clearTimeout(holdT); btn.classList.remove('hold'); }
-  btn.addEventListener('pointerdown', function (e) { if (e.button) return; held = false; heldEl = cur; clearTimeout(holdT); btn.classList.add('hold'); holdT = setTimeout(function () { held = true; btn.classList.remove('hold'); btn.classList.add('clr'); btn.innerHTML = XICO; btn.title = 'Release to clear'; try { navigator.vibrate &amp;&amp; navigator.vibrate(12); } catch (x) {} }, 550); });
+  btn.addEventListener('pointerdown', function (e) { if (e.button) return; held = false; heldEl = cur; clearTimeout(holdT); btn.classList.add('hold'); holdT = setTimeout(function () { held = true; btn.classList.remove('hold'); btn.classList.add('clr'); btn.innerHTML = XICO; btn.title = 'Release to clear'; try { navigator.vibrate &amp;&amp; navigator.vibrate(12); } catch (x) {} }, 220); });
   btn.addEventListener('pointerup', function () { endHold(); });
   btn.addEventListener('pointercancel', function () { endHold(); held = false; btn.classList.remove('clr'); btn.innerHTML = ICON; btn.title = 'Copy (hold to clear)'; });
   btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
@@ -8575,6 +8768,15 @@ render();
 /* Round 28: same heading sizes as the hub (H1 1.5rem/800, section titles .95rem/700) */
 body .brand h1{font-size:1.5rem!important;font-weight:800!important;letter-spacing:-.01em!important}
 body :is(.section-title,.report-title){font-size:.95rem!important;font-weight:700!important}
+
+/* Round 32: Black palette = truly black (no filigree), stars in white-grey */
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]){--fil:linear-gradient(#000,#000);--texbg:#000;--texbg2:#000;--texin:#030303;--star:#e9e9ef;--star-rgb:233,233,239;--star2:#b4b4bc;--star2-rgb:180,180,188}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body{background:#000!important}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body .brand h1,html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body .brand h1 *{background:none!important;-webkit-text-fill-color:#ececf1!important;color:#ececf1!important;filter:none!important}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body :is(.section-title,.report-title,.hour-label,.act-title){color:#d8d8de!important}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body .plus-btn{background:#0a0a0a!important;color:#e4e4e8!important;border-color:rgba(255,255,255,.18)!important}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body :is(#countdownLabel,.countdown-label){color:#cfcfd8!important}
+html[data-pal=mono]:not([data-theme=&quot;light&quot;]) body :is(.section-title,.report-title,.section-title *){background:none!important;-webkit-text-fill-color:#e2e2e8!important;color:#e2e2e8!important;filter:none!important}
 &lt;/style&gt;
 &lt;script id=&quot;hubPhoneFmtScript&quot;&gt;// ===== Round 29/31: Maldives phone format (+960-777-7777), tiny hover-only MDV toggle beside the copy button. Generated - edit tools/phonefmt.tpl.js =====
 (function () {
@@ -9061,6 +9263,7 @@ function cpIco(l) {
         var ph = [];
         phonesOfDeal(src).forEach(function (p) { if (ph.map(pk).indexOf(pk(p)) < 0) ph.push(p); });
         c = { id: uid('c'), created: src.ts || now, modified: now, phones: ph, emails: em ? [em] : [], company: src.deal || '', first: '', last: '', type: 'Customer', status: 'Active', source: d ? 'Deals Tracker' : 'Day End Report', tags: [], dealIds: [], syncCo: src.deal || '', syncPh: ph.slice(), syncEm: em ? [em] : [] };
+        r.keys.forEach(function (k) { (byKey[k] || []).forEach(function (o) { var oc = res(o); if (oc && !oc.archived) (oc.emails || []).forEach(function (x) { if (c.emails.map(function (y) { return String(y).toLowerCase(); }).indexOf(String(x).toLowerCase()) < 0) c.emails.push(x); }); }); });   // Round 32: same number = same emails
         D.contacts[c.id] = c; index(c); made++;
       }
       ((d ? links : tl)[c.id] = (d ? links : tl)[c.id] || []).push(src);
@@ -9072,6 +9275,8 @@ function cpIco(l) {
         if (c.phones.map(pk).indexOf(pk(p)) < 0) { c.phones.push(p); (c.syncPh = c.syncPh || []).push(p); putL(byKey, pk(p), c); upd[c.id] = 1; }
       });
       if (em && c.emails.map(function (x) { return String(x).toLowerCase(); }).indexOf(em.toLowerCase()) < 0) { c.emails.push(em); (c.syncEm = c.syncEm || []).push(em); put(byMail, em.toLowerCase(), c); upd[c.id] = 1; }
+      // Round 32: an email typed with a number belongs to EVERY contact that has that number (even under another deal name)
+      if (em) r.keys.forEach(function (k) { (byKey[k] || []).forEach(function (o) { var oc = res(o); if (!oc || oc === c || oc.archived) return; oc.emails = oc.emails || []; if (oc.emails.map(function (x) { return String(x).toLowerCase(); }).indexOf(em.toLowerCase()) < 0) { oc.emails.push(em); put(byMail, em.toLowerCase(), oc); upd[oc.id] = 1; } }); });
     }
     deals.forEach(function (d) { take(d, d); });
     try {
@@ -12694,6 +12899,12 @@ function installScrollNav(win, doc, getScroller) {
       ['Deal gone quiet', mk({ name: 'Deal gone quiet', sources: ['deals'], phrases: [{ text: '', mode: 'similar', not: false, sim: 80 }], stageMode: 'in', stages: ['Interested', 'Demo Completed', 'Going Live', 'Waiting on Contact'], ageMode: 'stale', ageValue: 7, ageUnit: 'days', title: 'No update for a week — {name}', dueMode: 'today' })],
       ['New lost deal win-back', mk({ name: 'Win-back lost deals', sources: ['lost'], phrases: [{ text: '', mode: 'similar', not: false, sim: 80 }], ageMode: 'newer', ageValue: 2, ageUnit: 'days', title: 'Win-back call — {name}', dueMode: 'plusDays', dueN: 7 })],
       ['Won deal onboarding', mk({ name: 'Won deal onboarding', sources: ['won'], phrases: [{ text: '', mode: 'similar', not: false, sim: 80 }], ageMode: 'newer', ageValue: 1, ageUnit: 'days', title: 'Onboarding call — {name}', dueMode: 'plusDays', dueN: 2, actTag: 'onboarding' })],
+      ['Interested but silent 3 days', mk({ name: 'Interested but silent', sources: ['deals'], phrases: [{ text: '', mode: 'similar', not: false, sim: 80 }], stageMode: 'in', stages: ['Interested'], ageMode: 'stale', ageValue: 3, ageUnit: 'days', title: 'Chase interested lead — {name}', dueMode: 'today' })],
+      ['Payment / invoice mention', mk({ name: 'Payment mentions', phrases: [{ text: 'invoice', mode: 'similar' }, { text: 'payment', mode: 'similar' }], combine: 'any', title: 'Check payment — {name}', dueMode: 'today', priority: 'high' })],
+      ['Wants a demo', mk({ name: 'Wants a demo', phrases: [{ text: 'book demo', mode: 'similar' }, { text: 'show me', mode: 'similar' }], combine: 'any', title: 'Book demo — {name}', dueMode: 'plusDays', dueN: 1 })],
+      ['Going live check-in', mk({ name: 'Going live check-in', sources: ['deals'], phrases: [{ text: '', mode: 'similar', not: false, sim: 80 }], stageMode: 'in', stages: ['Going Live'], ageMode: 'stale', ageValue: 5, ageUnit: 'days', title: 'Check go-live progress — {name}', dueMode: 'today' })],
+      ['Waiting on contact 4 days', mk({ name: 'Waiting on contact', sources: ['deals'], phrases: [{ text: '', mode: 'similar', not: false, sim: 80 }], stageMode: 'in', stages: ['Waiting on Contact'], ageMode: 'stale', ageValue: 4, ageUnit: 'days', title: 'Nudge — {name}', dueMode: 'today' })],
+      ['Won deal: ask for email', mk({ name: 'Won deal: ask for email', sources: ['won'], phrases: [{ text: '', mode: 'similar', not: false, sim: 80 }], ageMode: 'newer', ageValue: 1, ageUnit: 'days', title: 'Get email address — {name}', dueMode: 'plusDays', dueN: 1 })],
       ['Renewal', mk({ name: 'Renewals', phrases: [{ text: 'renew', mode: 'similar' }], title: 'Renewal — {name}', dueMode: 'plusDays', dueN: 3 })]
     ];
   }
@@ -12878,7 +13089,7 @@ function installScrollNav(win, doc, getScroller) {
     else if (a === 'test' && W) { testOut = R().test(W); draw(); }
     else if (a === 'cancel') { W = null; testOut = null; draw(); }
     else if (a === 'save' && W) { if (!String(W.name).trim()) W.name = 'Rule'; if (!W.sources.length) { L.toast('Pick at least one place to look'); return; } R().saveRule(W); W = null; testOut = null; L.toast('Rule saved'); draw(); }
-    else if (a === 'addf') { var inp = api.pop.querySelector('#auFn'); if (inp && inp.value.trim()) { R().addFolder(inp.value.trim()); draw(); } }
+    else if (a === 'addf') { var inp = api.pop.querySelector('#auFn'); if (inp && inp.value.trim()) { var nf = R().addFolder(inp.value.trim()); draw(); L.toast('Folder “' + nf.name + '” added'); try { var i2 = api.pop.querySelector('#auFn'); if (i2) i2.focus(); } catch (e) {} } else { L.toast('Type a folder name first'); if (inp) inp.focus(); } }
     else if (a === 'fcol') { R().updateFolder(b.closest('.au-card').getAttribute('data-id'), { color: b.getAttribute('data-c') }); draw(); }
     else if (a === 'fren') { var id = b.closest('.au-card').getAttribute('data-id'); L.ask ? L.ask('Rename folder', '', function (v) { v = String(v || '').trim(); if (!v) return; if (id === '__nr') R().setSettings({ nrName: v }); else R().updateFolder(id, { name: v }); draw(); }) : null; }
     else if (a === 'ficon') { var id2 = b.closest('.au-card').getAttribute('data-id'); iconPick(id2, b); }
@@ -12892,6 +13103,7 @@ function installScrollNav(win, doc, getScroller) {
     else if (a === 'imp') { (function (cb) { var fi = document.createElement('input'); fi.type = 'file'; fi.accept = '.json,application/json'; fi.onchange = function () { if (fi.files[0]) cb(fi.files[0]); }; fi.click(); })(function (f) { var rd = new FileReader(); rd.onload = function () { try { var d = JSON.parse(rd.result), S3 = R().get(); (d.folders || []).forEach(function (x) { if (!S3.folders.some(function (y) { return y.id === x.id; })) S3.folders.push(x); }); (d.rules || []).forEach(function (x) { if (!S3.rules.some(function (y) { return y.id === x.id; })) S3.rules.push(x); }); if (d.settings) Object.assign(S3.settings, d.settings); R().save(); L.toast('Imported'); draw(); } catch (er) { L.toast('Not a valid file'); } }; rd.readAsText(f); }); }
   }
   api = null;
+  document.addEventListener('keydown', function (e) { var t = e.target; if (e.key === 'Enter' && t && t.id === 'auFn') { e.preventDefault(); var b = t.closest('.kt-pop') && t.closest('.kt-pop').querySelector('[data-a="addf"]'); if (b) b.click(); } });
   document.addEventListener('change', function (e) { var t = e.target; if (t && t.getAttribute && t.getAttribute('data-a') === 'tpl' && t.closest('.kt-pop') && t.value !== '') { var tp = R().templates()[+t.value][1]; R().saveRule(tp); L.toast('Added “' + tp.name + '”'); draw(); } });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', css); else css();
   window.hubAuto = { open: open, folders: function () { open('folders'); } };
@@ -13297,7 +13509,7 @@ function installScrollNav(win, doc, getScroller) {
   var OK_TYPES = { text: 1, search: 1, tel: 1, email: 1, url: 1, number: 1 };
   var st = document.createElement('style'); st.id = 'hubCopyBtnStyle';
   st.textContent = '#hubCopyFloat{position:fixed;z-index:2147483000;display:none;width:24px;height:24px;padding:0;margin:0;border-radius:7px;border:1px solid var(--border,rgba(128,128,128,.45));background:var(--card-solid,#222);color:var(--text2,#aaa);cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.35);opacity:.95;font:inherit}#hubCopyFloat:hover{color:var(--text,#fff);border-color:var(--accent,#888)}#hubCopyFloat.ok{color:#4ade80;border-color:#4ade80}#hubCopyFloat svg{width:13px;height:13px;pointer-events:none}@media print{#hubCopyFloat{display:none!important}}';
-  st.textContent += '#hubCopyFloat.hold{animation:hubHold .55s linear forwards}@keyframes hubHold{to{box-shadow:0 0 0 3px rgba(var(--accent-rgb,225,42,57),.55);color:var(--accent,#e12a39)}}#hubCopyFloat.clr{color:#fff;background:linear-gradient(135deg,var(--btn1,#e12a39),var(--btn2,#8a1520));border-color:transparent}';
+  st.textContent += '#hubCopyFloat.hold{animation:hubHold .22s linear forwards}@keyframes hubHold{to{box-shadow:0 0 0 3px rgba(var(--accent-rgb,225,42,57),.55);color:var(--accent,#e12a39)}}#hubCopyFloat.clr{color:#fff;background:linear-gradient(135deg,var(--btn1,#e12a39),var(--btn2,#8a1520));border-color:transparent}';
   (document.head || document.documentElement).appendChild(st);
   var ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg>';
   var TICK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"></path></svg>';
@@ -13368,7 +13580,7 @@ function installScrollNav(win, doc, getScroller) {
     say('Cleared'); place();
   }
   function endHold() { clearTimeout(holdT); btn.classList.remove('hold'); }
-  btn.addEventListener('pointerdown', function (e) { if (e.button) return; held = false; heldEl = cur; clearTimeout(holdT); btn.classList.add('hold'); holdT = setTimeout(function () { held = true; btn.classList.remove('hold'); btn.classList.add('clr'); btn.innerHTML = XICO; btn.title = 'Release to clear'; try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} }, 550); });
+  btn.addEventListener('pointerdown', function (e) { if (e.button) return; held = false; heldEl = cur; clearTimeout(holdT); btn.classList.add('hold'); holdT = setTimeout(function () { held = true; btn.classList.remove('hold'); btn.classList.add('clr'); btn.innerHTML = XICO; btn.title = 'Release to clear'; try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} }, 220); });
   btn.addEventListener('pointerup', function () { endHold(); });
   btn.addEventListener('pointercancel', function () { endHold(); held = false; btn.classList.remove('clr'); btn.innerHTML = ICON; btn.title = 'Copy (hold to clear)'; });
   btn.addEventListener('contextmenu', function (e) { e.preventDefault(); });
@@ -13798,10 +14010,11 @@ function installScrollNav(win, doc, getScroller) {
   var KP = 'hub_moon_pos', KH = 'hub_moon_hide';
   function lsg(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
   function lss(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-  var el = document.createElement('div'); el.id = 'hbMoon'; el.setAttribute('aria-label', 'Shift timer'); el.innerHTML = '<canvas></canvas><div class="mn-c"><b class="mn-t">--:--:--</b><i class="mn-l">shift</i></div><button type="button" class="mn-x" aria-label="Hide moon timer" title="Hide">×</button>';
+  var el = document.createElement('div'); el.id = 'hbMoon'; el.setAttribute('aria-label', 'Shift timer'); el.innerHTML = '<canvas></canvas><div class="mn-c"><b class="mn-t">--:--:--</b><i class="mn-l">shift</i><span class="mn-s"></span></div><button type="button" class="mn-x" aria-label="Hide moon timer" title="Hide">×</button>';
   var tab = document.createElement('button'); tab.id = 'hbMoonTab'; tab.type = 'button'; tab.setAttribute('aria-label', 'Show moon timer'); tab.title = 'Show shift moon'; tab.textContent = '☾';
   document.body.appendChild(el); document.body.appendChild(tab);
-  var cv = el.querySelector('canvas'), tt = el.querySelector('.mn-t'), ll = el.querySelector('.mn-l');
+  var cv = el.querySelector('canvas'), tt = el.querySelector('.mn-t'), ll = el.querySelector('.mn-l'), ss = el.querySelector('.mn-s');
+  function hm(ms) { var d = new Date(ms), h = d.getHours(), m = d.getMinutes(), ap = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return h + ':' + (m < 10 ? '0' : '') + m + ap; }
   function pad(n) { return (n < 10 ? '0' : '') + n; }
   function dur(s) { s = Math.abs(Math.floor(s)); return pad(Math.floor(s / 3600)) + ':' + pad(Math.floor((s % 3600) / 60)) + ':' + pad(s % 60); }
   function tm(t) { var m = /^(\d\d):(\d\d)$/.exec(t || ''); return m ? (+m[1]) * 60 + (+m[2]) : null; }
@@ -13830,7 +14043,8 @@ function installScrollNav(win, doc, getScroller) {
     else if (sec < s1) { f = (sec - s0) / (s1 - s0); tt.textContent = dur(s1 - sec); ll.textContent = 'left'; }
     else { f = 1; over = true; tt.textContent = '+' + dur(sec - s1); ll.textContent = 'overtime'; }
     var ck = window.__hrChip || {}, cs = ck.state === 'work' || ck.state === 'break' ? ck.state : '';   // clocked in / on break: the moon shows the live HR clock
-    if (cs) { tt.textContent = String(ck.text || '').replace(/^[^\d+]+/, ''); ll.textContent = cs === 'break' ? 'on break' : 'clocked in'; over = false; }
+    var sm = ''; if (cs) { try { var lb = window.hubHR.lastBy(window.hubHR.today()); sm = cs === 'break' ? 'on break' + (lb.bs ? ' · ' + hm(lb.bs.at) : '') : 'in · ' + (lb.in ? hm(lb.in.at) : ''); } catch (e) { sm = cs === 'break' ? 'on break' : 'clocked in'; } }
+    ss.textContent = sm;   // big number = time left in the shift; the small line says clocked in (with the time) / on break
     if (cs) el.setAttribute('data-clk', cs); else el.removeAttribute('data-clk');
     el.classList.toggle('over', over); el.title = moonPhaseName(f) + ' · ' + Math.round(f * 100) + '% of shift';
     moonDraw(cv, f, over, true); curF = f; light(true); night(Date.now() - still >= 5000 && !el.classList.contains('drag') && window.matchMedia && !matchMedia('(prefers-reduced-motion:reduce)').matches);
@@ -16117,6 +16331,248 @@ function cpIco(l) {
   function run() { sched = false; var l = q; q = []; l.forEach(function (n) { try { if (document.documentElement.contains(n)) fix(n); } catch (e) {} }); }
   new MutationObserver(function (ms) { ms.forEach(function (m) { if (m.type === 'characterData') q.push(m.target); else m.addedNodes.forEach(function (n) { if (n.nodeType === 1 || n.nodeType === 3) q.push(n); }); }); if (!sched) { sched = true; (window.requestAnimationFrame || setTimeout)(run); } }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
   setTimeout(function () { fix(document.body); }, 100);
+})();
+</script>
+<script id="hubEffScript">// ===== Round 32: efficiency tools - Follow-up dashboard, weekly/daily summary, goals, one-tap log call + template send, auto-backup, update notice, offline pill, voice notes =====
+// Only adds things. Reads deals through window.hubDeals; writes only its own keys (hub_goals_v1, hub_autobk_v1, hub_ver_v1).
+(function () {
+  'use strict';
+  if (window.__hubEff) return; window.__hubEff = true;
+  var ls = { g: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, s: function (k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } } };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function toast(m) { try { if (window.hubKit && window.hubKit.toast) return window.hubKit.toast(m); } catch (e) {} var t = document.createElement('div'); t.className = 'ef-toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3200); }
+  function deals() { try { return window.hubDeals.deals().list || []; } catch (e) { return []; } }
+  var CLOSED = /won|churn|lost|cancel|closed/i;
+  function dayOf(d) { return ymd(d); }
+  function weekStart() { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return ymd(d); }
+  function entries(from, to) { var o = []; deals().forEach(function (d) { (d.entries || []).forEach(function (e) { if (e.day && e.day >= from && e.day <= to) o.push({ d: d, e: e }); }); }); return o; }
+
+  // ---- goals ----
+  function goals() { try { return Object.assign({ day: 30, week: 150 }, JSON.parse(ls.g('hub_goals_v1') || '{}')); } catch (e) { return { day: 30, week: 150 }; } }
+  function progress() { var t = ymd(new Date()), g = goals(), a = entries(t, t).length, b = entries(weekStart(), t).length; return { day: a, week: b, g: g }; }
+  function bar(n, goal) { var p = Math.min(100, goal ? Math.round(n * 100 / goal) : 0); return '<div class="ef-bar"><i style="width:' + p + '%"></i></div><small>' + n + ' / ' + goal + ' (' + p + '%)</small>'; }
+
+  // ---- summary text ----
+  function summaryText(range) {
+    var t = ymd(new Date()), from = range === 'day' ? t : (function () { var d = new Date(); d.setDate(d.getDate() - 6); return ymd(d); })();
+    var es = entries(from, t), by = {}, uniq = {}; es.forEach(function (x) { var s = x.e.stage || x.d.stage || 'No stage'; by[s] = (by[s] || 0) + 1; uniq[x.d.key] = 1; });
+    var lines = [(range === 'day' ? 'Day summary ' + t : 'Weekly summary ' + from + ' to ' + t), 'Entries: ' + es.length + ' · Contacts/deals touched: ' + Object.keys(uniq).length];
+    Object.keys(by).sort(function (a, b) { return by[b] - by[a]; }).forEach(function (s) { lines.push('- ' + s + ': ' + by[s]); });
+    return lines.join('\n');
+  }
+
+  // ---- modal ----
+  var M = null;
+  function close() { if (M) { M.remove(); M = null; } }
+  function modal(title, body) { close(); M = document.createElement('div'); M.className = 'ef-ov'; M.innerHTML = '<div class="ef-box"><div class="ef-h"><b>' + esc(title) + '</b><button type="button" class="ef-x" data-ef="close" aria-label="Close">×</button></div><div class="ef-b">' + body + '</div></div>'; document.body.appendChild(M); M.addEventListener('click', onClick); M.addEventListener('mousedown', function (e) { if (e.target === M) close(); }); }
+  function tplOptions() { var t = []; try { t = window.hubTools.templates() || []; } catch (e) {} return t.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.name || 'Template') + '</option>'; }).join(''); }
+  function dashboard() {
+    var t = ymd(new Date()), L = deals(), p = progress(), over = [], today = [], stale = [];
+    var cut = Date.now() - 7 * 864e5;
+    L.forEach(function (d) { var f = d.meta && d.meta.follow; if (f) { if (f < t) over.push(d); else if (f === t) today.push(d); } else if (!CLOSED.test(d.stage || '') && (d.ts || d.last || 0) < cut && d.ts) stale.push(d); });
+    stale.sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
+    function row(d, kind) {
+      var n = (d.numbers || [])[0] || '', f = d.meta && d.meta.follow;
+      return '<div class="ef-row" data-key="' + esc(d.key) + '"><div class="ef-m"><b>' + esc(d.name) + '</b><i>' + esc(d.stage || 'No stage') + (n ? ' · ' + esc(n) : '') + (f ? ' · due ' + esc(f) : '') + '</i></div><div class="ef-a">' +
+        '<button type="button" data-ef="call">Log call</button><select data-ef="tpl"><option value="">Send template…</option>' + tplOptions() + '</select>' +
+        '<button type="button" data-ef="snz1">+1d</button><button type="button" data-ef="snz3">+3d</button><button type="button" data-ef="snzm">Next Mon</button><button type="button" data-ef="tl">Timeline</button></div></div>';
+    }
+    function sec(h, a, k) { return '<div class="ef-s"><h4>' + h + ' <em>' + a.length + '</em></h4>' + (a.length ? a.slice(0, 40).map(function (d) { return row(d, k); }).join('') : '<p class="ef-e">Nothing here.</p>') + '</div>'; }
+    var g = '<div class="ef-s"><h4>Goals</h4><div class="ef-g"><div>Today' + bar(p.day, p.g.day) + '</div><div>This week' + bar(p.week, p.g.week) + '</div></div><div class="ef-gs"><label>Daily<input type="number" min="1" id="efGd" value="' + p.g.day + '"></label><label>Weekly<input type="number" min="1" id="efGw" value="' + p.g.week + '"></label><button type="button" data-ef="gsave">Save goals</button></div></div>';
+    modal('Follow-ups & goals', g + sec('Overdue follow-ups', over) + sec('Due today', today) + sec('Quiet for 7+ days', stale) + '<div class="ef-s"><h4>Summary</h4><div class="ef-a"><button type="button" data-ef="sumd">Copy today’s draft</button><button type="button" data-ef="sumw">Copy weekly summary</button></div></div>');
+  }
+  function keyOf(el) { var r = el.closest('.ef-row'); return r && r.getAttribute('data-key'); }
+  function plus(n) { var d = new Date(); d.setDate(d.getDate() + n); return ymd(d); }
+  function onClick(e) {
+    var b = e.target.closest('[data-ef]'); if (!b || b.tagName === 'SELECT') return; var a = b.getAttribute('data-ef'), k;
+    if (a === 'close') close();
+    else if (a === 'call' && (k = keyOf(b))) { window.hubDeals.addNote(k, 'Call logged ' + pad(new Date().getHours()) + ':' + pad(new Date().getMinutes())); toast('Call logged'); }
+    else if (a === 'snz1' || a === 'snz3') { k = keyOf(b); window.hubDeals.setFollow(k, plus(a === 'snz1' ? 1 : 3), ''); toast('Snoozed'); dashboard(); }
+    else if (a === 'snzm' && (k = keyOf(b))) { var d = new Date(); d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7)); window.hubDeals.setFollow(k, ymd(d), ''); toast('Snoozed to Monday'); dashboard(); }
+    else if (a === 'tl' && (k = keyOf(b))) { if (window.hubEff2) window.hubEff2.timeline(k); }
+    else if (a === 'gsave') { ls.s('hub_goals_v1', JSON.stringify({ day: Math.max(1, +M.querySelector('#efGd').value || 30), week: Math.max(1, +M.querySelector('#efGw').value || 150) })); toast('Goals saved'); dashboard(); }
+    else if (a === 'sumd' || a === 'sumw') { var tx = summaryText(a === 'sumd' ? 'day' : 'week'); try { navigator.clipboard.writeText(tx); toast('Summary copied'); } catch (er) { prompt('Copy:', tx); } }
+  }
+  document.addEventListener('change', function (e) {
+    var s = e.target; if (!s || s.getAttribute('data-ef') !== 'tpl' || !s.value) return; var k = keyOf(s), d = deals().filter(function (x) { return x.key === k; })[0], t; try { t = window.hubTools.templates().filter(function (x) { return x.id === s.value; })[0]; } catch (er) {}
+    if (!d || !t) return; var txt = window.hubTools.fill(t.text || t.body || '', { name: d.name, deal: d.name }), n = String((d.numbers || [])[0] || '').replace(/\D/g, '');
+    try { window.hubDeals.markSent(k, 'tpl:' + t.id); window.hubDeals.addNote(k, 'Sent template: ' + (t.name || '')); } catch (er) {}
+    window.open('https://wa.me/' + n + '?text=' + encodeURIComponent(txt), '_blank'); toast('Opened chat – logged as sent'); s.value = '';
+  });
+
+  // ---- tools menu entries ----
+  var items = window.hubToolsItems = window.hubToolsItems || [];
+  items.push({ label: 'Follow-ups & goals', icon: '⚑', fn: dashboard });
+  items.push({ label: 'Weekly summary', icon: '✎', fn: function () { var tx = summaryText('week'); modal('Weekly summary', '<pre class="ef-pre">' + esc(tx) + '</pre><div class="ef-a"><button type="button" data-ef="sumw">Copy</button><button type="button" data-ef="sumd">Copy today’s draft</button></div>'); } });
+
+  // ---- auto-backup (daily, keeps 3, own key, small only) ----
+  function autoBackup() {
+    try {
+      var today = ymd(new Date()), A = JSON.parse(ls.g('hub_autobk_v1') || '[]'); if (A.length && A[0].day === today) return;
+      var data = {}, size = 0; for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k === 'hub_autobk_v1' || !/^(dayEndReport_|dealsTracker_|followTasks_|crm_|tickets_|rules_|tools_|smartText_|hub_)/.test(k)) continue; var v = localStorage.getItem(k); size += v.length; data[k] = v; }
+      if (size > 900000) return; A.unshift({ day: today, ts: Date.now(), data: data }); A = A.slice(0, 3);
+      while (A.length && !ls.s('hub_autobk_v1', JSON.stringify(A))) A.pop();
+    } catch (e) {}
+  }
+  setTimeout(autoBackup, 6000);
+  window.hubAutoBackups = { list: function () { try { return JSON.parse(ls.g('hub_autobk_v1') || '[]').map(function (x) { return { day: x.day, ts: x.ts, keys: Object.keys(x.data).length }; }); } catch (e) { return []; } }, restore: function (i) { var A = JSON.parse(ls.g('hub_autobk_v1') || '[]'), x = A[i]; if (!x) return false; try { var cur = {}; for (var j = 0; j < localStorage.length; j++) { var kk = localStorage.key(j); if (kk !== 'hub_autobk_v1') cur[kk] = localStorage.getItem(kk); } sessionStorage.setItem('hub_prerestore', JSON.stringify(cur).slice(0, 4000000)); } catch (e) {} Object.keys(x.data).forEach(function (k) { ls.s(k, x.data[k]); }); return true; } };
+  items.push({ label: 'Restore automatic backup', icon: '🔁', fn: function () {
+    var L = window.hubAutoBackups.list(); modal('Automatic backups', L.length ? L.map(function (x, i) { return '<div class="ef-row"><div class="ef-m"><b>' + esc(x.day) + '</b><i>' + x.keys + ' items · saved ' + esc(new Date(x.ts).toLocaleTimeString()) + '</i></div><div class="ef-a"><button type="button" data-ef="rst" data-i="' + i + '">Restore</button></div></div>'; }).join('') + '<p class="ef-e">One is saved automatically each day (last 3 kept). Restoring replaces current data with that day’s copy and reloads.</p>' : '<p class="ef-e">No automatic backup yet – the first one is made a few seconds after opening the app each day.</p>');
+    M.addEventListener('click', function (e) { var r = e.target.closest('[data-ef=rst]'); if (r && confirm('Restore this backup? Current data will be replaced.')) { window.hubAutoBackups.restore(+r.getAttribute('data-i')); location.reload(); } });
+  } });
+
+  // ---- new version notice ----
+  function sig(t) { var h = 0; for (var i = 0; i < t.length; i += 7) h = (h * 31 + t.charCodeAt(i)) | 0; return t.length + ':' + h; }
+  var base = null;
+  function checkVer() {
+    if (!navigator.onLine || location.protocol === 'file:') return;
+    fetch(location.pathname + '?_=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.text(); }).then(function (t) { var s = sig(t); if (base === null) { base = s; return; } if (s !== base && !document.getElementById('efNew')) { var d = document.createElement('div'); d.id = 'efNew'; d.className = 'ef-pill ef-new'; d.innerHTML = 'New version available <button type="button">Refresh</button>'; d.querySelector('button').onclick = function () { location.reload(); }; document.body.appendChild(d); } }).catch(function () {});
+  }
+  setTimeout(checkVer, 4000); setInterval(checkVer, 600000);
+
+  // ---- offline pill ----
+  function net() { var p = document.getElementById('efOff'); if (navigator.onLine) { if (p) p.remove(); return; } if (!p) { p = document.createElement('div'); p.id = 'efOff'; p.className = 'ef-pill ef-off'; document.body.appendChild(p); } p.textContent = 'Offline – changes are saved on this device and will sync when you are back online'; }
+  window.addEventListener('online', function () { net(); toast('Back online'); try { if (window.hubCloud && window.hubCloud.sync) window.hubCloud.sync(); } catch (e) {} }); window.addEventListener('offline', net); net();
+
+  // ---- voice notes ----
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null, target = null;
+  function trackFocus(doc) { doc.addEventListener('focusin', function (e) { var t = e.target; if (t && t.tagName === 'TEXTAREA') target = t; }, true); }
+  trackFocus(document);
+  function hook() { Array.prototype.forEach.call(document.querySelectorAll('iframe'), function (f) { try { if (f.contentDocument && !f.contentDocument.__efF) { f.contentDocument.__efF = 1; trackFocus(f.contentDocument); } } catch (e) {} }); }
+  setInterval(hook, 3000); hook();
+  items.push({ label: function () { return 'Voice note' + (SR ? (rec ? ' (listening – tap to stop)' : '') : ' (not supported here)'); }, icon: '☎', fn: function () {
+    if (!SR) { toast('Voice typing is not supported in this browser'); return; }
+    if (rec) { rec.stop(); return; } if (!target) { toast('Tap into a notes box first, then choose Voice note'); return; }
+    rec = new SR(); rec.interimResults = false; rec.continuous = true; rec.lang = 'en-US';
+    rec.onresult = function (ev) { var s = ''; for (var i = ev.resultIndex; i < ev.results.length; i++) if (ev.results[i].isFinal) s += ev.results[i][0].transcript; if (s && target) { target.value += (target.value && !/\s$/.test(target.value) ? ' ' : '') + s.trim(); target.dispatchEvent(new Event('input', { bubbles: true })); } };
+    rec.onend = function () { rec = null; toast('Voice note stopped'); }; rec.onerror = function () { rec = null; toast('Could not use the microphone'); };
+    try { rec.start(); toast('Listening… speak now'); } catch (e) { rec = null; }
+  } });
+
+  var st = document.createElement('style'); st.textContent = '.ef-ov{position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:12px}.ef-box{width:min(720px,100%);max-height:88vh;overflow:auto;background:var(--panel,#111);color:var(--t0,#eee);border:1px solid var(--line,#333);border-radius:14px;padding:14px;box-sizing:border-box}.ef-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.ef-x{background:none;border:0;color:inherit;font-size:1.5rem;cursor:pointer}.ef-s{margin:10px 0}.ef-s h4{margin:0 0 6px;font-size:.85rem}.ef-s h4 em{opacity:.6;font-style:normal}.ef-row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--line,#2a2a2a)}.ef-m{min-width:0;flex:1 1 180px}.ef-m b,.ef-m i{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-style:normal}.ef-m i{font-size:.72rem;opacity:.65}.ef-a{display:flex;gap:6px;flex-wrap:wrap}.ef-a button,.ef-a select,.ef-gs button{font:inherit;font-size:.75rem;padding:5px 9px;border-radius:8px;border:1px solid var(--line,#444);background:transparent;color:inherit;cursor:pointer;max-width:150px}.ef-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:.8rem}.ef-bar{height:7px;border-radius:5px;background:rgba(128,128,128,.25);margin:4px 0}.ef-bar i{display:block;height:100%;border-radius:5px;background:var(--accent,#e11d2e)}.ef-gs{display:flex;gap:8px;align-items:end;margin-top:8px;flex-wrap:wrap}.ef-gs label{font-size:.72rem;display:flex;flex-direction:column;gap:2px}.ef-gs input{width:80px;padding:5px;border-radius:8px;border:1px solid var(--line,#444);background:transparent;color:inherit}.ef-e{opacity:.6;font-size:.78rem;margin:4px 0}.ef-pre{white-space:pre-wrap;font:inherit;font-size:.85rem}.ef-pill{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;z-index:2147482000;padding:7px 14px;border-radius:999px;font-size:.75rem;max-width:calc(100vw - 24px);background:#000;color:#fff;border:1px solid var(--accent,#e11d2e);box-sizing:border-box;text-align:center}.ef-new{bottom:56px}.ef-new button{margin-left:8px;font:inherit;border:1px solid #fff;background:transparent;color:#fff;border-radius:8px;padding:2px 8px;cursor:pointer}.ef-toast{position:fixed;left:50%;transform:translateX(-50%);bottom:70px;z-index:2147483100;background:#000;color:#fff;padding:7px 14px;border-radius:999px;font-size:.78rem}'; document.head.appendChild(st);
+  window.hubEff = { dashboard: dashboard, summary: summaryText, progress: progress };
+})();
+</script>
+<script id="hubEff2Script">// ===== Round 33: Today screen, call-back queue, timeline, health, snooze presets, insights/charts/forecast, streaks, month report, CSV, shortcuts, clock-out check =====
+(function () {
+  'use strict';
+  if (window.__hubEff2) return; window.__hubEff2 = true;
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+  var ymd = function (d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+  function plus(n, from) { var d = from ? new Date(from) : new Date(); d.setDate(d.getDate() + n); return ymd(d); }
+  function nextMon() { var d = new Date(); d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7)); return ymd(d); }
+  function toast(m) { try { window.hubKit.toast(m); } catch (e) { var t = document.createElement('div'); t.className = 'ef-toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3000); } }
+  function H() { return window.hubDeals; }
+  function deals() { try { return H().deals().list || []; } catch (e) { return []; } }
+  var CLOSED = /won|churn|lost|cancel|closed/i;
+  var WEIGHT = { lead: .1, interested: .25, 'demo completed': .5, 'going live': .8, 'waiting on contact': .3, won: 1 };
+  function w(st) { return WEIGHT[String(st || '').toLowerCase()] != null ? WEIGHT[String(st).toLowerCase()] : .15; }
+  function dealNotes(key) { try { return (JSON.parse(localStorage.getItem('dealsTracker_v1') || '{}').notes || {})[key] || []; } catch (e) { return []; } }
+  function days(d) { return Math.floor((Date.now() - (d.ts || 0)) / 864e5); }
+  function health(d) { var f = d.meta && d.meta.follow, t = ymd(new Date()); if (CLOSED.test(d.stage || '')) return 'g'; if (f && f < t) return 'r'; var n = days(d); return n >= 7 ? 'r' : n >= 3 ? 'y' : 'g'; }
+  function action(d) { var f = d.meta && d.meta.follow, t = ymd(new Date()), n = days(d); if (CLOSED.test(d.stage || '')) return /won/i.test(d.stage) ? 'Check in / ask for referral' : 'Win-back call later'; if (f && f < t) return 'Follow-up overdue – call now'; if (f === t) return 'Follow up today'; if (n >= 7) return 'Quiet ' + n + ' days – send a template'; if (n >= 3) return 'Quiet ' + n + ' days – check in'; return 'On track'; }
+  var HC = { r: '#e5394a', y: '#e8b339', g: '#3fb26b' };
+  function dot(d) { var h = health(d); return '<span class="e2-dot" style="background:' + HC[h] + '" title="' + esc(action(d)) + '"></span>'; }
+  function due() { var t = ymd(new Date()), o = []; deals().forEach(function (d) { var f = d.meta && d.meta.follow; if (f && f <= t) o.push(d); }); o.sort(function (a, b) { return String(a.meta.follow).localeCompare(String(b.meta.follow)); }); return o; }
+  function sig() { return window.hubEff ? window.hubEff : null; }
+  function bar(n, goal) { var p = Math.min(100, goal ? Math.round(n * 100 / goal) : 0); return '<div class="ef-bar"><i style="width:' + p + '%"></i></div><small>' + n + ' / ' + goal + ' (' + p + '%)</small>'; }
+  function entriesBy() { var m = {}; deals().forEach(function (d) { (d.entries || []).forEach(function (e) { if (e.day) m[e.day] = (m[e.day] || 0) + 1; }); }); return m; }
+  function goalDay() { try { return +(JSON.parse(localStorage.getItem('hub_goals_v1') || '{}').day) || 30; } catch (e) { return 30; } }
+  function streak() { var m = entriesBy(), g = goalDay(), n = 0, d = new Date(); if ((m[ymd(d)] || 0) < g) d.setDate(d.getDate() - 1); while ((m[ymd(d)] || 0) >= g && n < 400) { n++; d.setDate(d.getDate() - 1); } return n; }
+
+  // ---- modal (own, same look as round 32) ----
+  var M = null;
+  function close() { if (M) { M.remove(); M = null; } }
+  function modal(title, body, wide) { close(); M = document.createElement('div'); M.className = 'ef-ov'; M.innerHTML = '<div class="ef-box"><div class="ef-h"><b>' + esc(title) + '</b><button type="button" class="ef-x" data-e2="close" aria-label="Close">×</button></div><div class="ef-b">' + body + '</div></div>'; document.body.appendChild(M); M.addEventListener('click', onClick); M.addEventListener('mousedown', function (e) { if (e.target === M) close(); }); return M; }
+  function numOf(d) { return String((d.numbers || [])[0] || ''); }
+  function digits(d) { return numOf(d).replace(/\D/g, ''); }
+  function contactBtns(d) { var n = digits(d); return n ? '<a class="e2-b" href="tel:+' + (n.length === 7 ? '960' + n : n) + '">Call</a><a class="e2-b" target="_blank" rel="noopener" href="https://wa.me/' + (n.length === 7 ? '960' + n : n) + '">WhatsApp</a>' : ''; }
+  function snooze(k) { return '<button type="button" data-e2="sn" data-d="1">Tomorrow</button><button type="button" data-e2="sn" data-d="mon">Next Mon</button><button type="button" data-e2="sn" data-d="7">+1 week</button>'; }
+  function row(d) {
+    return '<div class="ef-row" data-key="' + esc(d.key) + '"><div class="ef-m"><b>' + dot(d) + esc(d.name || numOf(d)) + '</b><i>' + esc(d.stage || 'No stage') + ' · ' + esc(action(d)) + '</i></div><div class="ef-a">' + contactBtns(d) + '<button type="button" data-e2="tl">Timeline</button><button type="button" data-e2="log">Log call</button></div></div>';
+  }
+  function today() {
+    var L = deals(), t = ymd(new Date()), dueL = due(), m = entriesBy(), g = goalDay(), s = streak();
+    var chip = ''; try { chip = window.hubHR.chip().text; } catch (e) {}
+    var open = L.filter(function (d) { return !CLOSED.test(d.stage || ''); });
+    var fc = open.reduce(function (a, d) { var v = parseFloat(String(d.mvr || d.price || '').replace(/[^\d.]/g, '')) || 0; return a + v * w(d.stage); }, 0);
+    var next = L.filter(function (d) { return !CLOSED.test(d.stage || '') && health(d) !== 'g'; }).sort(function (a, b) { return (health(a) === 'r' ? 0 : 1) - (health(b) === 'r' ? 0 : 1) || (a.ts || 0) - (b.ts || 0); }).slice(0, 5);
+    modal('Today · ' + t, '<div class="ef-s"><div class="ef-g"><div>Entries today' + bar(m[t] || 0, g) + '</div><div>Streak<br><b style="font-size:1.4rem">' + s + '</b> day' + (s === 1 ? '' : 's') + '</div></div>' + (chip ? '<p class="ef-e">Clock: ' + esc(chip) + '</p>' : '') + (fc ? '<p class="ef-e">Weighted pipeline (open deals): ' + Math.round(fc).toLocaleString() + '</p>' : '') + '</div>' +
+      '<div class="ef-s"><h4>Follow-ups due or overdue <em>' + dueL.length + '</em></h4>' + (dueL.slice(0, 8).map(row).join('') || '<p class="ef-e">All clear.</p>') + '</div><div class="ef-s"><h4>Next 5 actions</h4>' + (next.map(row).join('') || '<p class="ef-e">Nothing needs attention.</p>') + '</div>' +
+      '<div class="ef-a"><button type="button" data-e2="queue">Start call-back queue</button><button type="button" data-e2="ins">Insights</button></div>');
+  }
+  // ---- call-back queue ----
+  var Q = { list: [], i: 0 };
+  function queue() {
+    Q.list = due(); Q.i = 0; if (!Q.list.length) { Q.list = deals().filter(function (d) { return !CLOSED.test(d.stage || '') && health(d) === 'r'; }).sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); }); }
+    drawQ();
+  }
+  function drawQ() {
+    var d = Q.list[Q.i]; if (!d) { modal('Call-back queue', '<p class="ef-e">Queue finished – nice work.</p>'); return; }
+    var notes = dealNotes(d.key).slice(-2), last = (d.entries || []).slice(-1)[0];
+    modal('Call-back queue ' + (Q.i + 1) + ' / ' + Q.list.length, '<div class="ef-row" data-key="' + esc(d.key) + '" style="border:0"><div class="ef-m"><b style="font-size:1.1rem">' + dot(d) + esc(d.name || numOf(d)) + '</b><i style="white-space:normal">' + esc(d.stage || 'No stage') + ' · ' + esc(numOf(d)) + (d.meta && d.meta.follow ? ' · due ' + esc(d.meta.follow) : '') + '</i></div></div>' +
+      (last && last.notes ? '<p class="ef-e" style="white-space:pre-wrap">Last note: ' + esc(last.notes.slice(0, 220)) + '</p>' : '') + (notes.length ? '<p class="ef-e">Saved note: ' + esc(String(notes[notes.length - 1].text).slice(0, 160)) + '</p>' : '') +
+      '<div class="ef-a" style="margin:8px 0">' + contactBtns(d) + '</div><div class="ef-s ef-row2" data-key="' + esc(d.key) + '"><h4>Outcome</h4><div class="ef-a"><button type="button" data-e2="out" data-o="spoke">Spoke – clear follow-up</button><button type="button" data-e2="out" data-o="noans">No answer – try tomorrow</button><button type="button" data-e2="out" data-o="later">Call back next Mon</button><button type="button" data-e2="skip">Skip</button></div></div>');
+  }
+  // ---- timeline ----
+  function timeline(key) {
+    var d = deals().filter(function (x) { return x.key === key; })[0]; if (!d) return; var ev = [];
+    (d.entries || []).forEach(function (e) { ev.push({ ts: e.ts || 0, k: 'Day End', s: e.stage, t: e.notes }); });
+    dealNotes(key).forEach(function (n) { ev.push({ ts: n.ts || 0, k: 'Note', t: n.text }); });
+    var sent = (d.meta && d.meta.sent) || {}; Object.keys(sent).forEach(function (k) { ev.push({ ts: sent[k], k: 'Sent', t: String(k).replace(/^tpl:/, 'template ') }); });
+    ev.sort(function (a, b) { return b.ts - a.ts; });
+    modal('Timeline · ' + (d.name || numOf(d)), '<p class="ef-e">' + esc(d.stage || 'No stage') + ' · ' + esc(numOf(d)) + '</p>' + (ev.map(function (e) { return '<div class="ef-row"><div class="ef-m" style="flex-basis:100%"><b style="white-space:normal">' + esc(e.k) + (e.s ? ' · ' + esc(e.s) : '') + '</b><i style="white-space:pre-wrap">' + esc(new Date(e.ts).toLocaleString()) + '</i><div style="font-size:.8rem;white-space:pre-wrap">' + esc(String(e.t || '').slice(0, 400)) + '</div></div></div>'; }).join('') || '<p class="ef-e">No history yet.</p>') + '<div class="ef-a" style="margin-top:8px">' + snooze() + '</div>');
+    M.querySelector('.ef-b').setAttribute('data-key', key);
+  }
+  // ---- insights ----
+  function insights() {
+    var m = entriesBy(), L = deals(), t = new Date(), a = [], mx = 1;
+    for (var i = 13; i >= 0; i--) { var d = new Date(); d.setDate(t.getDate() - i); var k = ymd(d), n = m[k] || 0; a.push([k.slice(5), n]); mx = Math.max(mx, n); }
+    var W = 320, bw = W / a.length, svg = '<svg viewBox="0 0 ' + W + ' 90" width="100%" role="img" aria-label="Entries per day">' + a.map(function (x, i) { var h = Math.round(x[1] / mx * 64); return '<rect x="' + (i * bw + 2) + '" y="' + (70 - h) + '" width="' + (bw - 4) + '" height="' + h + '" rx="2" fill="var(--accent,#e11d2e)"/><text x="' + (i * bw + bw / 2) + '" y="84" font-size="6" text-anchor="middle" fill="currentColor" opacity=".6">' + x[0].slice(3) + '</text>' + (x[1] ? '<text x="' + (i * bw + bw / 2) + '" y="' + (67 - h) + '" font-size="6" text-anchor="middle" fill="currentColor">' + x[1] + '</text>' : ''); }).join('') + '</svg>';
+    var wk = a.slice(7).reduce(function (s, x) { return s + x[1]; }, 0), pw = a.slice(0, 7).reduce(function (s, x) { return s + x[1]; }, 0);
+    var by = {}; L.forEach(function (d) { var s = d.stage || 'No stage'; by[s] = (by[s] || 0) + 1; }); var bm = Math.max.apply(null, Object.keys(by).map(function (k) { return by[k]; }).concat([1]));
+    var stages = Object.keys(by).sort(function (x, y) { return by[y] - by[x]; }).map(function (s) { return '<div class="e2-hb"><span>' + esc(s) + '</span><div class="ef-bar"><i style="width:' + Math.round(by[s] / bm * 100) + '%"></i></div><em>' + by[s] + '</em></div>'; }).join('');
+    var fc = L.filter(function (d) { return !CLOSED.test(d.stage || ''); }).reduce(function (s, d) { return s + (parseFloat(String(d.mvr || d.price || '').replace(/[^\d.]/g, '')) || 0) * w(d.stage); }, 0);
+    modal('Insights', '<div class="ef-s"><h4>Entries, last 14 days</h4>' + svg + '<p class="ef-e">Last 7 days: ' + wk + ' · previous 7: ' + pw + (pw ? ' (' + (wk >= pw ? '+' : '') + Math.round((wk - pw) * 100 / pw) + '%)' : '') + ' · streak ' + streak() + '</p></div><div class="ef-s"><h4>Deals by stage</h4>' + stages + '</div><p class="ef-e">Weighted forecast of open deals: ' + Math.round(fc).toLocaleString() + ' (stage weights are estimates, not promises)</p><div class="ef-a"><button type="button" data-e2="month">Copy month-end report</button><button type="button" data-e2="csv">Export deals CSV</button></div>');
+  }
+  function monthReport() {
+    var now = new Date(), pre = now.getFullYear() + '-' + pad(now.getMonth() + 1), n = 0, by = {}, touched = {}; deals().forEach(function (d) { (d.entries || []).forEach(function (e) { if (String(e.day).indexOf(pre) === 0) { n++; touched[d.key] = 1; var s = e.stage || d.stage || 'No stage'; by[s] = (by[s] || 0) + 1; } }); });
+    var L = ['Month-end report ' + pre, 'Entries: ' + n + ' · Deals/contacts touched: ' + Object.keys(touched).length]; Object.keys(by).sort(function (a, b) { return by[b] - by[a]; }).forEach(function (s) { L.push('- ' + s + ': ' + by[s]); });
+    var won = deals().filter(function (d) { return /won/i.test(d.stage || ''); }).length; L.push('Won deals (all time): ' + won); return L.join('\n');
+  }
+  function csv() {
+    var q = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }, rows = [['Name', 'Numbers', 'Email', 'Stage', 'Plan', 'Price', 'Follow-up', 'Last activity', 'Entries'].map(q).join(',')];
+    deals().forEach(function (d) { rows.push([d.name, (d.numbers || []).join(' / '), d.email, d.stage, d.plan, d.price, d.meta && d.meta.follow, d.ts ? new Date(d.ts).toISOString().slice(0, 10) : '', (d.entries || []).length].map(q).join(',')); });
+    var b = new Blob(['﻿' + rows.join('\n')], { type: 'text/csv' }), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'deals-' + ymd(new Date()) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); toast('CSV downloaded');
+  }
+  function keyOf(el) { var r = el.closest('[data-key]'); return r && r.getAttribute('data-key'); }
+  function onClick(e) {
+    var b = e.target.closest('[data-e2]'); if (!b) return; var a = b.getAttribute('data-e2'), k = keyOf(b);
+    if (a === 'close') close();
+    else if (a === 'queue') queue(); else if (a === 'ins') insights();
+    else if (a === 'tl' && k) timeline(k);
+    else if (a === 'log' && k) { H().addNote(k, 'Call logged ' + pad(new Date().getHours()) + ':' + pad(new Date().getMinutes())); toast('Call logged'); }
+    else if (a === 'sn' && k) { var dd = b.getAttribute('data-d'); H().setFollow(k, dd === 'mon' ? nextMon() : plus(+dd), ''); toast('Snoozed to ' + (dd === 'mon' ? nextMon() : plus(+dd))); close(); }
+    else if (a === 'out' && k) { var o = b.getAttribute('data-o'), now = pad(new Date().getHours()) + ':' + pad(new Date().getMinutes()); if (o === 'spoke') { H().addNote(k, 'Spoke ' + now); H().setFollow(k, '', ''); } else if (o === 'noans') { H().addNote(k, 'No answer ' + now); H().setFollow(k, plus(1), ''); } else { H().addNote(k, 'Call back requested ' + now); H().setFollow(k, nextMon(), ''); } try { if (navigator.vibrate) navigator.vibrate(15); } catch (er) {} Q.i++; drawQ(); }
+    else if (a === 'skip') { Q.i++; drawQ(); }
+    else if (a === 'month') { var tx = monthReport(); try { navigator.clipboard.writeText(tx); toast('Report copied'); } catch (er) { prompt('Copy:', tx); } }
+    else if (a === 'csv') csv();
+  }
+  // tools menu + shortcuts
+  var items = window.hubToolsItems = window.hubToolsItems || [];
+  items.push({ label: 'Today', icon: '📅', fn: today }); items.push({ label: 'Call-back queue', icon: '☎', fn: queue }); items.push({ label: 'Insights', icon: '✦', fn: insights });
+  document.addEventListener('keydown', function (e) { if (!e.altKey || e.ctrlKey || e.metaKey) return; var k = e.key.toLowerCase(), f = k === 't' ? today : k === 'q' ? queue : k === 'i' ? insights : k === 'f' ? (window.hubEff && window.hubEff.dashboard) : null; if (f) { e.preventDefault(); f(); } });
+  // end-of-shift check
+  function wrapHR() {
+    if (!window.hubHR || window.hubHR.__e2) return false; var o = window.hubHR.act; if (typeof o !== 'function') return false; window.hubHR.__e2 = 1;
+    window.hubHR.act = function (a) { var r = o.apply(this, arguments); try { if (a === 'out') setTimeout(function () { var n = due().length; if (n) toast(n + ' follow-up' + (n === 1 ? '' : 's') + ' still due – Alt+Q or Tools → Call-back queue'); }, 700); } catch (e) {} return r; }; return true;
+  }
+  var tries = 0, iv = setInterval(function () { if (wrapHR() || ++tries > 40) clearInterval(iv); }, 500);
+  var st = document.createElement('style'); st.textContent = '.e2-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}.e2-b{font:inherit;font-size:.75rem;padding:5px 10px;border-radius:8px;border:1px solid var(--line,#444);color:inherit;text-decoration:none}.e2-hb{display:grid;grid-template-columns:110px 1fr 28px;gap:8px;align-items:center;font-size:.76rem}.e2-hb .ef-bar{margin:0}.e2-hb span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ef-b svg{color:inherit}'; document.head.appendChild(st);
+  window.hubEff2 = { today: today, queue: queue, insights: insights, timeline: timeline, health: health, streak: streak, monthReport: monthReport };
 })();
 </script>
 <script id="hubBackupScript">// ===== Backup / Restore: one-click copy of all app data to a file, and back again =====

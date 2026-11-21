@@ -376,3 +376,11 @@ Hover ‹ › scroll buttons on every horizontal bar (press = next, hold = end);
 HR page scroll button fixed (was under the overlay); MDV toggle (tiny, hover-only, 7 digits → +960-777-7777, notes never formatted); 🕒 icons removed (long-press / right-click picks a time), clock strip has no box; ☰ side menu inside HR; copy chips → 4 small line icons inside each entry, invisible until hover; all colour-emoji icons drawn as line icons; smart text learns from all saved data continuously; message templates with separate name/message boxes and categories (add / rename / remove / move).
 
 ## Round 31b — MDV button moved next to Copy notes / + Note; turning it on reformats every number box; Tools menu switch
+
+
+## Round 32
+Moon time-left + clocked-in/break line (hub + Day End); bigger moon and layout; transparent Break; email linked to contact by number; Copy notes fix; automation folders hardened + 6 templates; deal stage auto-pick; faster hold-to-clear; darker Black palette with stars; Follow-ups & goals dashboard; weekly/daily summary; duplicate warning; smart paste; auto-backup + restore; new-version notice; offline pill; voice notes. See FEATURES_V32_MOON_EMAIL_AUTOMATION_STAGE_BLACK.md for honest status.
+
+
+## Round 33
+Today screen, call-back queue, deal timeline, health dots + next action, snooze presets, insights/charts/forecast, streaks, month report, CSV export, quick-note chips, use-last-details, time-aware notes, clock-out check, Alt shortcuts. See FEATURES_V33_EFFICIENCY_BATCH2.md.
