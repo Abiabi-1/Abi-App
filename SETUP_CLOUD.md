@@ -57,3 +57,12 @@ The Settings → Sync & devices screen lists every device that is signed in and 
 
 ## Why the app no longer refreshes by itself (Round 46)
 Updates from your other device are now applied in place and only when you have paused for about 12 seconds (and nothing half-typed is in a box). If you want to decide yourself, Settings → Sync & devices → switch off "Apply updates automatically when I pause"; a small bar then offers "Apply now".
+
+## Round 47: no phone numbers / e-mails – making sure the cloud copy is clean too
+The app now cleans everything it saves, and the first time this version opens on a device it cleans what is already stored there; because that clean-up is a normal save, it also replaces the cloud copy. The cloud keeps **only the latest version of each item** (the `kv` table has one row per item), so once one cleaned device has synced, the live cloud copy has no numbers or e-mails.
+Do this **in order**:
+1. Open the new version on your **PC first** and wait for the "Privacy clean-up" notice (Settings → Privacy → *Scan now* should say "Nothing found"). Let it sync (cloud pill shows synced).
+2. Then open it on the **phone** (it cleans itself the same way). Do not open the *old* version on any device any more – an old copy would send its numbers back up.
+3. Optional check (Supabase → SQL Editor): `select key from public.kv where value ~ '\+?[0-9][0-9 .()-]{6,}[0-9]' or value ~ '[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[a-z]{2,}';` – the only rows that may still match are plain prices / ids; contacts and Won Deals should not be listed.
+4. Optional: the Contacts data is not used any more – `delete from public.kv where key = 'crm_v1';` removes it from the cloud for good.
+5. Things the app cannot reach: Supabase's own database backups (paid plans keep point-in-time copies for a few days), your phone's iCloud/Google backup, files you exported earlier (CSV/PDF) and messages you already sent.

@@ -440,3 +440,14 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 - Quick Add: customise rows (Recent, Quick notes, Templates, Call outcome, Contact), edit/hide/reorder/rename call-outcome and contact shortcuts everywhere at once, compact one-line rows option, Recent as one scrolling line with live matches, no huge drop-down (3 modes), "Use last details" inline (3 positions), typing preview beside the box like Smart Text (2 modes), hold a type chip to jump to its section.
 - Split double numbers (Day End + Won Deals): second number becomes an extra number of the same entry; preview, restore point, notice.
 - Settings hub (Tools → Settings, Ctrl/Cmd+,): Quick Add, Features on/off (9 + message tasks), Tools menu (pin, hide, most used first, search box), Menus, Sync & devices, Automations, Appearance & phone, Data & safety.
+
+## Round 47 – No contact data, HubSpot deal link, faster, search shortcut, theme
+- **No phone numbers, e-mails or contacts are stored.** Contacts page removed (tab, menus, Go-to, Tools, associations, contact picker); phone/number/e-mail boxes removed from Day End, Quick Add, Won Deals, tickets, lost deals, manual deals, invoices; exports/imports/reports have no phone/e-mail columns; Copy numbers/emails, number formatting, Split double numbers and the "+960-" snippet are gone. Kept: deal and ticket names, notes, stages, plans, prices, call outcomes, WhatsApp/Email tracking marks, best time to contact, follow-ups, tasks, automations, HR.
+- **HubSpot deal link** replaces the phone-number box (Day End Tasks, Won Deals form, Quick Add, manual deals, lost deals): paste the link, ↗ opens it; link chip on entries, deals, lost deals; "Include link in report" option (Settings → Privacy, default off).
+- **Find and clear**: first start of this version scans every saved area (Day End, Won Deals, tickets, lost deals, tasks, notes, call log, templates reported, safety copies, restore points, sync base copy) and removes phone numbers/e-mails, keeps everything else; counts only are shown. Settings → Privacy: Scan now / Clear now, Block switch, link-in-report switch, "Remove from templates too".
+- **Guard**: everything saved (also by imports and from the other device) goes through the same cleaner; typing a number in a note is cut out with a short message.
+- **Templates row** inside the boxes is off by default; switch it on in Settings → Quick Add → Templates.
+- **Ctrl/Cmd+K** opens only the normal search. The jump/command pop-up is Tools → "Jump to… commands" (Alt+J) and is fully themed.
+- **Lag**: shared "calm watcher" (idle wake-ups 43/s → 0/s in the hub, 24/s → 0/s in Day End) and the big glass cards no longer re-blur on every key (typing delay with 120 entries 75 ms → 41 ms).
+- **Theme**: pop-ups (.ef) use palette colours in every palette + light theme, ON switches were white-on-white in light theme (fixed), link chips, Black-palette Quick Add badges (number was invisible).
+
