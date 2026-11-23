@@ -45,3 +45,6 @@ Open the link in Chrome (Android) or Safari (iPhone), sign in, then **Add to Hom
 - The free plan has **no automatic backups**. Use the app's **Backup** button now and then.
 - Keep your link private; the sign-in protects the data, not the page itself.
 - Forgot password: "Forgot password?" on the sign-in screen sends a reset link.
+
+## Faster sync (optional, Round 43)
+In Supabase → SQL editor run: `alter publication supabase_realtime add table public.kv;` — other devices then update within about a second. Without it, sync still works (checks every 6 seconds).

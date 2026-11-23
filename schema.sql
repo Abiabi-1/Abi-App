@@ -82,3 +82,6 @@ revoke all on function public.ensure_workspace() from public, anon;
 grant execute on function public.ensure_workspace() to authenticated;
 revoke all on function public.is_member(uuid) from public, anon;
 grant execute on function public.is_member(uuid) to authenticated;
+
+-- Round 43 (optional): live push so other devices update within ~1 second
+alter publication supabase_realtime add table public.kv;

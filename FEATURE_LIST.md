@@ -384,3 +384,48 @@ Moon time-left + clocked-in/break line (hub + Day End); bigger moon and layout; 
 
 ## Round 33
 Today screen, call-back queue, deal timeline, health dots + next action, snooze presets, insights/charts/forecast, streaks, month report, CSV export, quick-note chips, use-last-details, time-aware notes, clock-out check, Alt shortcuts. See FEATURES_V33_EFFICIENCY_BATCH2.md.
+
+## Round 34
+Mobile starfield + moon double-tap, two-tap delete, weekly schedule/off days/shift edit, salary slips, HR mobile layout, funnel + conversion (Analytics > Insights), pipeline jump bar, quick-add button, round checkboxes, Black palette layers, command palette (Ctrl+K), bulk owner/follow-up/log, paste list, CSV import, recurring tasks, daily start screen, autocomplete, recents, entry templates, promise tracker, email composer, suggested messages. See FEATURES_V34_MOBILE_HR_PIPELINE_BLACK_EFFICIENCY3.md for honest status.
+
+## Round 35
+Call outcomes + best hours to call (per contact and average), time-based auto order of Tasks and Order-by menus everywhere, Smart rules (triggers/actions/templates/run history), moon echo behind dialogs, Deeper insights (weekly review, months with arrows and pacing, win/loss, plans and prices, productivity, objections, phrases, scripts, data quality), duplicate merge + undo, number cleaner, tap-a-number menu, calendar, app lock, haptics, share/save report. See FEATURES_V35 md for what is not done.
+
+## Round 36
+Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + renewal messages, snooze with time of day, stuck-deal chips, open-ticket chips, objection tags, .xlsx import, smart paste in forms, Day End draft, invoices, shortcuts, styled chart tooltips, dashboard Your day + KPI arrows + arrange tiles, Tasks/Won Deals/Lost filters, tappable numbers on every list, touch copy chips, HR bar on phones, fixes (sections vanishing in Analytics, email draft restore).
+
+## Round 37 – typing on phones, runaway rows, notes, quick-note editor
+- Fixed the runaway duplicate "Templates" rows that made the Day End form jump and broke extra number / notes / copy / save.
+- Typing preview bar above the keyboard (hub, Day End, Won Deals, Quick Add); typed box kept clear of the keyboard.
+- No jump to top while typing (scroll guard, redraw keeps scroll, cloud sync never reloads while a box is focused).
+- "Use last details" is now a popup in an empty part of the screen.
+- ✎ editor for quick notes and templates (rename, remove, add, reset).
+
+## Round 38 – contact filter, WhatsApp Today / Email Today tasks, long-text preview
+- Day End filter chips: WhatsApped, Unable to WhatsApp, To WhatsApp, Emailed, Unable to email, To email (with counts).
+- Tap-to-mark Contact row in every entry form; automatic tasks in "WhatsApp Today" and "Email Today" folders, closed when the contact is logged.
+- Long-text preview popup beside the box when Smart Text has nothing to offer.
+
+## Round 39 – moon hold, saved-entry copy format, feature parity
+- Press and hold the moon for 1 second (Day End moon, hub moon in every section, moon tab) opens Day End Quick Add; a short tap still behaves as before.
+- Saved Day End entries copy in the line-by-line / extra-number format.
+- Quick notes, templates, ✎ editors and Contact row (auto WhatsApp Today / Email Today tasks) now in Won Deals form, Won Deals Quick Add and the hub record note box; contact filter bar over Won Deals.
+
+## Round 40 – activity tiles scroller, glass scrollbars, design base
+- Support Calls / Whatsapp / Tickets / Other tiles: equal size, scroll sideways like the Pipeline.
+- Glass scrollbars (transparent, no lines) in every document; design base (`DESIGN_BASE.md`) and audit (`tests/test_v40_design.py`); fonts/borders aligned on new features.
+
+## Round 41 – mobile/desktop speed pack + Message Templates page
+- Templates page: scroll categories, copy, use, move, select mode, drag to category, category manager, favourites/recent.
+- Bottom bar, comfort panel, installable app + shortcuts, pull to refresh, sent-check, voice quick add, saver/calm modes.
+- Entry helpers: repeat-caller hint, suggestions, duplicate guard, one-tap follow-up, keyboard hints, pinned/sticky filters, Won Deals drafts.
+
+## Round 42 – Go to entry + no auto light/dark
+- Stage-breakdown pop-up (Day End and Won Deals): "Go to entry" button opens the day/hour and highlights where it was entered.
+- Auto light/dark by time of day removed.
+
+## Round 43 – Fast sync
+- Saves in ~1 s, checks every 6 s, live push (Supabase Realtime, optional one SQL line), sync on change / leave / return, reload-loop guard.
+
+## Round 44 – App logo
+- Your clock artwork is now the home-screen icon (iPhone/Android), installed-app icon (incl. maskable), and browser tab icon.
