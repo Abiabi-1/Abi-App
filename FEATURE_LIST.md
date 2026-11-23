@@ -429,3 +429,14 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 
 ## Round 44 – App logo
 - Your clock artwork is now the home-screen icon (iPhone/Android), installed-app icon (incl. maskable), and browser tab icon.
+
+## Round 45 – WhatsApp / Email message tasks + Automation Studio
+- Message tasks: automatic tasks (from 23 Nov 2026) in WhatsApp, Email, WhatsApp – unable, Email – unable folders; "Messages by day" in Tasks (22 Nov onward); hover ✗/✓ buttons in Day End complete the task.
+- Automation Studio (Automations → Studio): 11 sections, 36 templates, triggers (records, messages, quiet shift, tasks, schedules, Smart-rule triggers), conditions, actions (tasks, message tasks, complete/move/prioritise, deal changes, tickets, snapshot, clean-up, webhook), waits with skip-if-followed-up, test run, history, undo, limits, import/export.
+
+## Round 46 – Sync fix, Devices, Quick Add customising, Settings hub
+- Refreshing fixed at the root: updates from your other device are applied in place (no page reload), only after you pause, never over half-typed text; no-change updates are ignored; background records merge silently; the old "Sync paused" pop-up is gone.
+- Devices & sessions: list of signed-in devices (online now / last seen), sign one out, sign out all others (one new SQL block in cloud/schema.sql).
+- Quick Add: customise rows (Recent, Quick notes, Templates, Call outcome, Contact), edit/hide/reorder/rename call-outcome and contact shortcuts everywhere at once, compact one-line rows option, Recent as one scrolling line with live matches, no huge drop-down (3 modes), "Use last details" inline (3 positions), typing preview beside the box like Smart Text (2 modes), hold a type chip to jump to its section.
+- Split double numbers (Day End + Won Deals): second number becomes an extra number of the same entry; preview, restore point, notice.
+- Settings hub (Tools → Settings, Ctrl/Cmd+,): Quick Add, Features on/off (9 + message tasks), Tools menu (pin, hide, most used first, search box), Menus, Sync & devices, Automations, Appearance & phone, Data & safety.

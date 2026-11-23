@@ -85,3 +85,26 @@ grant execute on function public.is_member(uuid) to authenticated;
 
 -- Round 43 (optional): live push so other devices update within ~1 second
 alter publication supabase_realtime add table public.kv;
+
+-- Round 46: devices that are signed in (so the app can list them and let you remove one)
+create table if not exists public.devices (
+  workspace_id uuid not null references public.workspaces(id) on delete cascade,
+  device_id text not null,
+  name text not null default 'Device',
+  platform text,
+  browser text,
+  first_seen timestamptz not null default now(),
+  last_seen timestamptz not null default now(),
+  removed boolean not null default false,
+  removed_at timestamptz,
+  primary key (workspace_id, device_id)
+);
+alter table public.devices enable row level security;
+drop policy if exists dv_select on public.devices;
+create policy dv_select on public.devices for select to authenticated using (public.is_member(workspace_id));
+drop policy if exists dv_insert on public.devices;
+create policy dv_insert on public.devices for insert to authenticated with check (public.is_member(workspace_id));
+drop policy if exists dv_update on public.devices;
+create policy dv_update on public.devices for update to authenticated using (public.is_member(workspace_id)) with check (public.is_member(workspace_id));
+revoke all on public.devices from anon;
+grant select, insert, update on public.devices to authenticated;

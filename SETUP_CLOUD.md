@@ -48,3 +48,12 @@ Open the link in Chrome (Android) or Safari (iPhone), sign in, then **Add to Hom
 
 ## Faster sync (optional, Round 43)
 In Supabase → SQL editor run: `alter publication supabase_realtime add table public.kv;` — other devices then update within about a second. Without it, sync still works (checks every 6 seconds).
+
+## Round 46: devices list (optional, one more SQL block)
+The Settings → Sync & devices screen lists every device that is signed in and lets you sign one out. It needs one more table.
+1. Supabase → SQL Editor → New query.
+2. Paste the block at the very end of `schema.sql` (it starts with "Round 46: devices") — or paste the whole file again, it is safe to run twice.
+3. Run. Nothing else changes. Until you do, the app works as before and the list only knows "this device".
+
+## Why the app no longer refreshes by itself (Round 46)
+Updates from your other device are now applied in place and only when you have paused for about 12 seconds (and nothing half-typed is in a box). If you want to decide yourself, Settings → Sync & devices → switch off "Apply updates automatically when I pause"; a small bar then offers "Apply now".
