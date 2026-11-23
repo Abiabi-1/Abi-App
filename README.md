@@ -40,7 +40,7 @@ See `FEATURE_LIST.md` for the plan.
 
 
 ## Cloud
-`python3 tools/build.py --deploy deploy` builds the upload folder (app + config.js + PWA files + schema.sql). Setup: SETUP_CLOUD.md. Test: `python3 tests/test_cloud.py`.
+`python3 tools/build.py --deploy deploy` builds the upload folder (app + PWA files + schema.sql; no config.js unless `--with-config` is given and none exists, so your keys are never overwritten). Setup: SETUP_CLOUD.md. Test: `python3 tests/test_cloud.py`.
 
 ## Round 5
 Automations (rules + folders + No response time), Dashboard builder, Tickets "Move to…", stage colour tones. See FEATURES_V5.md and FEATURE_LIST.md. New storage keys: `rules_v1`, `dash_v1`, `billing_v1` (all synced and backed up).

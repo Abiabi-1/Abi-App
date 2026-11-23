@@ -1,6 +1,6 @@
 # Put your app in the cloud (phone + PC) — about 20 minutes, one time
 
-You do three things: **(1)** make a free Supabase project, **(2)** paste two values into `config.js`, **(3)** upload the `deploy` folder to a host. Then open the link on your PC and phone and sign in.
+You do three things: **(1)** make a free Supabase project, **(2)** paste the two values into the app (the **Sync** button) – or into `config.js`, **(3)** upload the `deploy` folder to a host. Then open the link on your PC and phone and sign in.
 
 Nothing here changes how the app looks or works. It adds a small **Cloud** pill in the top bar (green = saved to the cloud) and a sign-in screen.
 
@@ -10,8 +10,10 @@ Nothing here changes how the app looks or works. It adds a small **Cloud** pill 
 3. Left menu → **SQL Editor** → **New query** → open `schema.sql` (in the deploy folder), copy everything, paste, press **Run**. It should say "Success".
 4. Left menu → **Project Settings → API**. Copy the **Project URL** and the **anon public** key.
 
-## 2. Put the two values in config.js
-Open `deploy/config.js` in Notepad, paste the URL and the key between the quotes, save.
+## 2. Put the two values in the app (easiest) – or in config.js
+**Easiest (Round 48):** open the app, tap **Sync** in the top bar, paste the Project URL and the anon key, tap Save. The app remembers them on that browser and shows the sign-in. Do this once per browser.
+
+**Or:** create a file named `config.js` next to `index.html` containing `window.CLOUD_CONFIG = { url: "https://…supabase.co", anonKey: "…" };` The zip from Round 48 on **does not contain `config.js`**, so uploading the zip can never overwrite your keys again. (Before Round 48 it contained a blank one – that is why the Sync button and login disappeared on the web after an upload. If that happened, put your keys back in GitHub's `config.js` or use the Sync button once.)
 
 ## 3. Upload the deploy folder
 Easiest: **app.netlify.com/drop** → drag the whole `deploy` folder onto the page. You get a link like `https://something.netlify.app`. (Netlify will ask you to create a free account to keep the site permanently — do it, otherwise it expires.)

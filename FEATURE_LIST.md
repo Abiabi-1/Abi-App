@@ -282,7 +282,7 @@ None right now.
 
 
 ## Phase C-1b — Cloud login + sync (done)
-- Supabase email/password sign-in, local-first sync of Day End Report, Won Deals, Contacts, Tasks; installable (PWA); multi-user-ready schema (workspaces + RLS). Inert until `config.js` is filled. See SETUP_CLOUD.md. Tests: tests/test_cloud.py (mock server, two devices). Smart text now syncs too (same phrase = same entry on every device); only the theme stays per-device.
+- Supabase email/password sign-in, local-first sync of Day End Report, Won Deals, Contacts, Tasks; installable (PWA); multi-user-ready schema (workspaces + RLS). Needs the Supabase URL + key: paste them with the top-bar **Sync** button (remembered per browser) or put them in `config.js`. See SETUP_CLOUD.md. Tests: tests/test_cloud.py (mock server, two devices). Smart text now syncs too (same phrase = same entry on every device); only the theme stays per-device.
 
 
 ## Phase C-2 / C-3 (part) / C-5 (first version) — done
@@ -451,3 +451,11 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 - **Lag**: shared "calm watcher" (idle wake-ups 43/s → 0/s in the hub, 24/s → 0/s in Day End) and the big glass cards no longer re-blur on every key (typing delay with 120 entries 75 ms → 41 ms).
 - **Theme**: pop-ups (.ef) use palette colours in every palette + light theme, ON switches were white-on-white in light theme (fixed), link chips, Black-palette Quick Add badges (number was invisible).
 
+
+## Round 48
+- **Web login / Sync button**: keys are remembered per browser; if none are known a **Sync** button (PC and phone) lets you paste them; the zip no longer ships `config.js` (the blank copy was overwriting your keys).
+- **Calls & WhatsApp linked to deals**: entries that started with a known number (or a known contact's name) become "Deal name: what was said" before the number is cut; nothing removed. They show on the deal page timeline (Call / WhatsApp) and in deal search.
+- **Contact names → deal names** (tickets, calls, WhatsApp). Numbers stay removed.
+- **WhatsApp + Email icons** back on deal cards, rows and the deal page, and in Day End entries, each with one **✓ / ✗ / not toggled** button beneath (default not toggled).
+- **Contact row** in Quick Add and the forms = the two icons with ✓ / ✗ beneath (written shortcuts via Settings → Quick Add → Contact buttons: Icons / Written / Both).
+- **Quick Add settings**: one switch for call-outcome shortcuts everywhere (row + tile), per-row limit of shortcuts, row labels on/off, contact button style.
