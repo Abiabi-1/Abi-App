@@ -469,3 +469,6 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 - **Ticket types**: Demo, Support, Product List, Setup, Hardware Delivery, Printer Setup, Training × Online / Physical / AnyDesk; multi-type tags; filters; add/remove types and sub-types; phrase automations; board = Deals board on phones.
 - **Themed checkboxes** everywhere; **Settings** after Colours and in the side menu; Customize sections inside Settings.
 - **Mobile**: customizable bottom dock (sections + tools, Quick Add and Search at the end; also for the desktop bar), compact sections, phone Quick Add sheet with Add button, Call outcome / Contact rows switchable per device, stars only inside the Day End box.
+
+## Round 50
+- **Phone bottom bar = the original top bar, moved**: every section tab in the same order (swipe to scroll, active one centred), Quick Add / Menu / Search pinned at the right end, still customizable.
