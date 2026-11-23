@@ -459,3 +459,13 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 - **WhatsApp + Email icons** back on deal cards, rows and the deal page, and in Day End entries, each with one **✓ / ✗ / not toggled** button beneath (default not toggled).
 - **Contact row** in Quick Add and the forms = the two icons with ✓ / ✗ beneath (written shortcuts via Settings → Quick Add → Contact buttons: Icons / Written / Both).
 - **Quick Add settings**: one switch for call-outcome shortcuts everywhere (row + tile), per-row limit of shortcuts, row labels on/off, contact button style.
+
+## Round 49
+- **Day End filter** = three icon toggles (WhatsApp / Email / Tick: off → green → red) that combine; no written chips.
+- **Tick from an entry completes the task** and makes none.
+- **Tasks by day** (All days, ‹ ›, date picker, day chips) like Day End.
+- **Moon hold 0.4 s**; Day End **Quick Add opens over any page**.
+- **Use last details** under the deal stage (Quick Add) / above (entry); fills HubSpot link + stage; tasks for entries without a link; tickets linked to deals by name.
+- **Ticket types**: Demo, Support, Product List, Setup, Hardware Delivery, Printer Setup, Training × Online / Physical / AnyDesk; multi-type tags; filters; add/remove types and sub-types; phrase automations; board = Deals board on phones.
+- **Themed checkboxes** everywhere; **Settings** after Colours and in the side menu; Customize sections inside Settings.
+- **Mobile**: customizable bottom dock (sections + tools, Quick Add and Search at the end; also for the desktop bar), compact sections, phone Quick Add sheet with Add button, Call outcome / Contact rows switchable per device, stars only inside the Day End box.
