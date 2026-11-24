@@ -4024,7 +4024,7 @@ const SECTION_DEFS = [
   },
   {
     key: 'whatsapp', label: 'Whatsapp Inquiries', sub: 'Deal / ticket + Inquiry',
-    icon: '&lt;svg width=&quot;14&quot; height=&quot;14&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M7.9 20A9 9 0 1 0 4 16.1L2 22Z&quot;/&gt;&lt;/svg&gt;',
+    icon: '&lt;svg width=&quot;14&quot; height=&quot;14&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M7.9 20A9 9 0 1 0 4 16.1L2 22Z&quot;/&gt;&lt;/svg&gt;',
     color: 'amber',
     fields: [
       { name: 'sender',  placeholder: 'Deal / ticket name' },
@@ -4073,8 +4073,8 @@ const MK_RED = {
 function mkAuto(tx, k) { return MK_RED[k].test(tx) ? 'r' : MK_RX[k].test(tx) ? 'g' : ''; }
 const MK_LABEL = { wa: 'WhatsApp', em: 'Email' };
 const MK_ICON = {
-  wa: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M7.9 20A9 9 0 1 0 4 16.1L2 22Z&quot;/&gt;&lt;/svg&gt;',
-  em: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;rect width=&quot;20&quot; height=&quot;16&quot; x=&quot;2&quot; y=&quot;4&quot; rx=&quot;2&quot;/&gt;&lt;path d=&quot;m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7&quot;/&gt;&lt;/svg&gt;'
+  wa: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.4A8.4 8.4 0 1 1 21 11.5zM9.2 8.6c.1 2.4 2.3 4.6 4.6 4.7l1-1.1 1.9.8v1.2c0 .5-.4.9-.9.9-3.3-.2-6-2.9-6.2-6.2 0-.5.4-.9.9-.9h1.2l.8 1.9z&quot;/&gt;&lt;/svg&gt;',
+  em: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M3 6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z&quot;/&gt;&lt;path d=&quot;m3.5 7 8.5 6 8.5-6&quot;/&gt;&lt;/svg&gt;'
 };
 function mkOf(e, k) {
   if (e &amp;&amp; typeof e === 'object' &amp;&amp; e[k]) return e[k] === 'x' ? '' : e[k];
@@ -7834,9 +7834,10 @@ function cpIco(l) {
   var ROW = [['wa', 'WhatsApped'], ['nwa', 'No WhatsApp'], ['twa', 'WhatsApp today'], ['em', 'Emailed'], ['nem', 'No email'], ['tem', 'Email today']];
   // Round 49: three icon toggles (WhatsApp / Email / Tick), each off -&gt; green -&gt; red -&gt; off; all toggled filters must match
   var LEG = { wa: { wa: 'g' }, nwa: { wa: 'r' }, em: { em: 'g' }, nem: { em: 'r' } };
-  function loadFil() { var f = { wa: '', em: '', tk: '' }; try { var o = JSON.parse(localStorage.getItem('hub_fl_day2') || 'null'); if (o) { ['wa', 'em', 'tk'].forEach(function (k) { if (o[k] === 'g' || o[k] === 'r') f[k] = o[k]; }); } else { var l = localStorage.getItem('hub_fl_day') || ''; if (LEG[l]) Object.keys(LEG[l]).forEach(function (k) { f[k] = LEG[l][k]; }); } } catch (e) {} return f; }
+  var FK = ['wa', 'em', 'twa', 'tem'], EMPTY = function () { return { wa: '', em: '', twa: '', tem: '' }; };   // Round 51: one tick under WhatsApp and one under Email (kept separate)
+  function loadFil() { var f = EMPTY(); try { var o = JSON.parse(localStorage.getItem('hub_fl_day2') || 'null'); if (o) { FK.forEach(function (k) { if (o[k] === 'g' || o[k] === 'r') f[k] = o[k]; }); if ((o.tk === 'g' || o.tk === 'r') &amp;&amp; !f.twa &amp;&amp; !f.tem) { f.twa = o.tk; f.tem = o.tk; } } else { var l = localStorage.getItem('hub_fl_day') || ''; if (LEG[l]) Object.keys(LEG[l]).forEach(function (k) { f[k] = LEG[l][k]; }); } } catch (e) {} return f; }
   var FIL = loadFil();
-  function filOn() { return !!(FIL.wa || FIL.em || FIL.tk); }
+  function filOn() { return !!(FIL.wa || FIL.em || FIL.twa || FIL.tem); }
   function saveFil() { try { localStorage.setItem('hub_fl_day2', JSON.stringify(FIL)); } catch (e) {} }
   function P() { try { return window.parent &amp;&amp; window.parent !== window ? window.parent : null; } catch (e) { return null; } }
   function strip(t) { return String(t || '').replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, ' '); }
@@ -7912,7 +7913,7 @@ function cpIco(l) {
   // ---------- tap-to-mark row ----------
   function rowList() { try { var q = window.parent.hubQaCfg; if (q) return q.contacts().map(function (c) { return [c.k, c.l]; }); } catch (e) {} return ROW; }
   function escL(x) { return String(x).replace(/[&amp;&lt;&gt;&quot;]/g, ''); }
-  var CXI = { wa: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M7.9 20A9 9 0 1 0 4 16.1L2 22Z&quot;/&gt;&lt;/svg&gt;', em: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;rect width=&quot;20&quot; height=&quot;16&quot; x=&quot;2&quot; y=&quot;4&quot; rx=&quot;2&quot;/&gt;&lt;path d=&quot;m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7&quot;/&gt;&lt;/svg&gt;' }, CXL = { wa: 'WhatsApp', em: 'Email' }, CXT = { y: '\u2713', n: '\u2717', '': '' };
+  var CXI = { wa: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.4A8.4 8.4 0 1 1 21 11.5zM9.2 8.6c.1 2.4 2.3 4.6 4.6 4.7l1-1.1 1.9.8v1.2c0 .5-.4.9-.9.9-3.3-.2-6-2.9-6.2-6.2 0-.5.4-.9.9-.9h1.2l.8 1.9z&quot;/&gt;&lt;/svg&gt;', em: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M3 6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z&quot;/&gt;&lt;path d=&quot;m3.5 7 8.5 6 8.5-6&quot;/&gt;&lt;/svg&gt;' }, CXL = { wa: 'WhatsApp', em: 'Email' }, CXT = { y: '\u2713', n: '\u2717', '': '' };
   // Round 48: the Contact row = WhatsApp + Email icons with ONE confirmation button beneath each (not toggled / tick / cross); the written shortcuts stay available (Settings -&gt; Quick Add)
   function pairsHtml() { return '&lt;span class=&quot;cx-pairs&quot;&gt;' + ['wa', 'em'].map(function (k) { return '&lt;span class=&quot;cx-pr&quot; data-ch=&quot;' + k + '&quot;&gt;&lt;span class=&quot;cx-pi&quot; title=&quot;' + CXL[k] + '&quot;&gt;' + CXI[k] + '&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;cx-tk&quot; data-ch=&quot;' + k + '&quot; data-s=&quot;&quot; title=&quot;' + CXL[k] + ': not marked (tap to confirm)&quot; aria-label=&quot;' + CXL[k] + ' confirmation&quot;&gt;&lt;/button&gt;&lt;/span&gt;'; }).join('') + '&lt;/span&gt;'; }
   function rowHtml() { return '&lt;span class=&quot;qn-lb&quot;&gt;Contact&lt;/span&gt;' + pairsHtml() + '&lt;span class=&quot;cx-chips&quot;&gt;' + rowList().map(function (r) { return '&lt;button type=&quot;button&quot; class=&quot;cx-c&quot; data-rc=&quot;' + r[0] + '&quot;&gt;' + escL(r[1]) + '&lt;/button&gt;'; }).join('') + '&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;qn-chip qn-ed2&quot; data-qed=&quot;contact&quot; title=&quot;Edit or remove contact shortcuts&quot; aria-label=&quot;Edit contact shortcuts&quot;&gt;\u270E&lt;/button&gt;&lt;input type=&quot;hidden&quot; data-f=&quot;rcp&quot; value=&quot;&quot;&gt;'; }
@@ -7953,7 +7954,7 @@ function cpIco(l) {
     bar = document.createElement('div'); bar.id = 'rcBar'; bar.className = 'cx-bar'; blocks.parentNode.insertBefore(bar, blocks);
     bar.addEventListener('click', function (e) {
       var b = e.target.closest &amp;&amp; e.target.closest('button'); if (!b) return;
-      if (b.hasAttribute('data-ft')) { var k = b.getAttribute('data-ft'); if (k === 'clear') FIL = { wa: '', em: '', tk: '' }; else FIL[k] = FIL[k] === '' ? 'g' : FIL[k] === 'g' ? 'r' : ''; saveFil(); scan(); return; }
+      if (b.hasAttribute('data-ft')) { var k = b.getAttribute('data-ft'); if (k === 'clear') FIL = EMPTY(); else FIL[k] = FIL[k] === '' ? 'g' : FIL[k] === 'g' ? 'r' : ''; saveFil(); scan(); return; }
       var go = b.getAttribute('data-rcgo'), p = P(); if (go &amp;&amp; p) { try { var fid = folderId(go); if (p.hubTasksFilter) { p.hubTasksFilter('folder', fid); p.hubTasksFilter('f', 'open'); } p.hubShow('tasks'); } catch (x) {} }
     });
     return bar;
@@ -7974,7 +7975,8 @@ function cpIco(l) {
       function tkS(k) { var t = en.querySelector('.entry-tk[data-tk=&quot;' + k + '&quot;]'); return t ? t.getAttribute('data-s') || '' : ''; }
       var st = { wa: chan('wa', 'nwa'), em: chan('em', 'nem') }, m = true;
       if (FIL.wa &amp;&amp; st.wa !== FIL.wa) m = false; if (FIL.em &amp;&amp; st.em !== FIL.em) m = false;
-      if (m &amp;&amp; FIL.tk) { var want = FIL.tk === 'g' ? 'y' : 'n', ch = []; if (FIL.wa) ch.push('wa'); if (FIL.em) ch.push('em'); if (!ch.length) ch = ['wa', 'em']; m = ch.some(function (c) { return tkS(c) === want; }); }
+      if (m &amp;&amp; FIL.twa &amp;&amp; tkS('wa') !== (FIL.twa === 'g' ? 'y' : 'n')) m = false;
+      if (m &amp;&amp; FIL.tem &amp;&amp; tkS('em') !== (FIL.tem === 'g' ? 'y' : 'n')) m = false;
       total++; if (m) shown++;
       if (en.classList.contains('cx-m') !== m) en.classList.toggle('cx-m', m);
     });
@@ -7986,9 +7988,10 @@ function cpIco(l) {
     try { if (p &amp;&amp; p.hubTasksOpenList &amp;&amp; p.hubRules) { var fw = (p.hubRules.folders() || []), idw = (fw.filter(function (z) { return z.name === FOLD.wa[0]; })[0] || {}).id, ide = (fw.filter(function (z) { return z.name === FOLD.em[0]; })[0] || {}).id; p.hubTasksOpenList(false).forEach(function (t) { if (idw &amp;&amp; t.folder === idw) open.wa++; if (ide &amp;&amp; t.folder === ide) open.em++; }); } } catch (e) {}
     var TKI = '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.6&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M20 6 9 17l-5-5&quot;/&gt;&lt;/svg&gt;';
     function tg(k, ico, lab) { var v = FIL[k] || ''; return '&lt;button type=&quot;button&quot; class=&quot;cx-ft&quot; data-ft=&quot;' + k + '&quot; data-s=&quot;' + v + '&quot; aria-pressed=&quot;' + (v ? 'true' : 'false') + '&quot; title=&quot;' + lab + ': ' + (v === 'g' ? 'green (tap for red)' : v === 'r' ? 'red (tap to switch off)' : 'off (tap for green)') + '&quot; aria-label=&quot;' + lab + ' filter&quot;&gt;' + ico + '&lt;/button&gt;'; }
-    var html = '&lt;span class=&quot;cx-t&quot;&gt;Filter · ' + esc(day) + '&lt;/span&gt;' + tg('wa', CXI.wa, 'WhatsApp') + tg('em', CXI.em, 'Email') + tg('tk', TKI, 'Tick') +
-      (filOn() ? '&lt;span class=&quot;cx-sum&quot;&gt;' + shown + ' of ' + total + '&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;cx-ft cx-clr&quot; data-ft=&quot;clear&quot; title=&quot;Clear the filter&quot; aria-label=&quot;Clear the filter&quot;&gt;✕&lt;/button&gt;' : '') +
-      '&lt;button type=&quot;button&quot; class=&quot;cx-l&quot; data-rcgo=&quot;wa&quot; title=&quot;Open the WhatsApp Today tasks&quot;&gt;WhatsApp Today &lt;b&gt;' + open.wa + '&lt;/b&gt;&lt;/button&gt;&lt;button type=&quot;button&quot; class=&quot;cx-l&quot; data-rcgo=&quot;em&quot; title=&quot;Open the Email Today tasks&quot;&gt;Email Today &lt;b&gt;' + open.em + '&lt;/b&gt;&lt;/button&gt;';
+    function tgt(k, lab) { var v = FIL[k] || ''; return '&lt;button type=&quot;button&quot; class=&quot;cx-ft cx-tkf&quot; data-ft=&quot;' + k + '&quot; data-s=&quot;' + v + '&quot; aria-pressed=&quot;' + (v ? 'true' : 'false') + '&quot; title=&quot;Tick under ' + lab + ': ' + (v === 'g' ? 'ticked (tap for \u2717)' : v === 'r' ? 'not possible (tap to switch off)' : 'off (tap for ticked)') + '&quot; aria-label=&quot;Tick under ' + lab + ' filter&quot;&gt;&lt;/button&gt;'; }
+    // Round 51: 2 x 2 block -- WhatsApp and Email on top, the tick belonging to each right under it (no &quot;WhatsApp Today / Email Today&quot; links any more)
+    var html = '&lt;span class=&quot;cx-t&quot;&gt;Filter · ' + esc(day) + '&lt;/span&gt;&lt;span class=&quot;cx-grid&quot;&gt;' + tg('wa', CXI.wa, 'WhatsApp') + tg('em', CXI.em, 'Email') + tgt('twa', 'WhatsApp') + tgt('tem', 'Email') + '&lt;/span&gt;' +
+      (filOn() ? '&lt;span class=&quot;cx-sum&quot;&gt;' + shown + ' of ' + total + '&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;cx-ft cx-clr&quot; data-ft=&quot;clear&quot; title=&quot;Clear the filter&quot; aria-label=&quot;Clear the filter&quot;&gt;✕&lt;/button&gt;' : '');
     var sig = html; if (b._sig !== sig) { b._sig = sig; b.innerHTML = html; }
   }
   function soon() { if (!T) T = setTimeout(function () { scan(); injectRow(); document.querySelectorAll('[data-section=&quot;tasks&quot;], #qaForm').forEach(syncRow); }, 140); }
@@ -8005,7 +8008,7 @@ function cpIco(l) {
     '.cx-ft{box-sizing:border-box;width:34px;height:30px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px;border:1px solid var(--border,rgba(128,128,128,.45));background:transparent;color:var(--text3,#9a8f92);cursor:pointer;padding:0;font:inherit;font-size:.8rem}.cx-ft svg{width:16px;height:16px}.cx-ft:hover{border-color:var(--accent,#e11d2e)}.cx-ft[data-s=&quot;g&quot;]{color:var(--green,#4ade80);border-color:rgba(74,222,128,.65);background:rgba(74,222,128,.15)}.cx-ft[data-s=&quot;r&quot;]{color:var(--rose,#f87171);border-color:rgba(248,113,113,.65);background:rgba(248,113,113,.15)}.cx-ft.cx-clr{width:28px;height:28px;border-radius:50%}.cx-sum{font-size:.7rem;opacity:.7}' +
     '.cx-on .entry:not(.cx-m){display:none}.cx-on .section:not(.cx-hasm){display:none}.cx-on .hour-block:not(.cx-hasm){display:none}.cx-on .hour-block.cx-hasm .hour-body{grid-template-rows:1fr}.cx-on .hour-block.cx-hasm .hour-body-inner{padding:18px}';
   document.head.appendChild(st);
-  window.hubReach38 = { flags: flags, scan: scan, filter: function (k) { FIL = { wa: '', em: '', tk: '' }; if (k &amp;&amp; LEG[k]) Object.keys(LEG[k]).forEach(function (c) { FIL[c] = LEG[k][c]; }); else if (k &amp;&amp; typeof k === 'object') ['wa', 'em', 'tk'].forEach(function (c) { if (k[c] === 'g' || k[c] === 'r') FIL[c] = k[c]; }); saveFil(); scan(); }, addTask: addTask, complete: complete };
+  window.hubReach38 = { flags: flags, scan: scan, filter: function (k) { FIL = EMPTY(); if (k &amp;&amp; LEG[k]) Object.keys(LEG[k]).forEach(function (c) { FIL[c] = LEG[k][c]; }); else if (k &amp;&amp; typeof k === 'object') FK.forEach(function (c) { if (k[c] === 'g' || k[c] === 'r') FIL[c] = k[c]; }); if ((k.tk === 'g' || k.tk === 'r') &amp;&amp; !FIL.twa &amp;&amp; !FIL.tem) { FIL.twa = k.tk; FIL.tem = k.tk; } saveFil(); scan(); }, addTask: addTask, complete: complete };
 })();
 &lt;/script&gt;
 &lt;script id=&quot;hubMoonHoldScript&quot;&gt;// Round 39: hold the moon for 0.4 seconds -&gt; open Day End Quick Add (hub moon, its tab, Day End moon)
@@ -8365,6 +8368,32 @@ html body input[type=&quot;checkbox&quot;]:not(.cz-sw input):not(.keep-native):d
   .qn-row,.oc-row{gap:5px!important}
   .btn-add{min-height:40px!important;font-size:.86rem!important}
   .report-card{margin-bottom:10px!important}
+}
+
+/* ===== Round 51: WhatsApp / Email icon buttons and the tick button under each: ONE size, ONE design, kept separate ===== */
+:root{--mi:32px;--mk-chk:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E&quot;);--mk-x:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E&quot;)}
+.entry-mkw{--mi:28px}.cx-grid,.cx-pairs,.q39-pairs{--mi:30px}
+html :is(.entry-mk,.cx-pi,.q39-pi,.cx-ft:not(.cx-clr),.entry-tk,.cx-tk,.q39-tk,.rx-t){box-sizing:border-box;flex:0 0 var(--mi);width:var(--mi);height:var(--mi);min-height:0;padding:0;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border,rgba(128,128,128,.4));background:var(--tile-bg,rgba(0,0,0,.3));box-shadow:var(--bevel,none);color:var(--text3,#b9aeb1);opacity:1;line-height:0;cursor:pointer;position:relative}
+html :is(.entry-mk,.cx-pi,.q39-pi,.cx-ft:not(.cx-clr)) svg{width:16px;height:16px}
+html :is(.entry-tk,.cx-tk,.q39-tk,.rx-t,.cx-tkf){font-size:0;color:var(--text3,#b9aeb1)}
+html :is(.entry-tk,.cx-tk,.q39-tk,.rx-t,.cx-tkf)::before{content:&quot;&quot;;width:16px;height:16px;background:currentColor;-webkit-mask:var(--mk-chk) center/contain no-repeat;mask:var(--mk-chk) center/contain no-repeat;opacity:.4}
+html :is(.entry-mk.g,.cx-ft[data-s=&quot;g&quot;],.entry-tk[data-s=&quot;y&quot;],.cx-tk[data-s=&quot;y&quot;],.q39-tk[data-s=&quot;y&quot;],.rx-t[data-s=&quot;y&quot;]){color:#4ade80;border-color:rgba(74,222,128,.65);background:rgba(74,222,128,.15)}
+html :is(.entry-mk.r,.cx-ft[data-s=&quot;r&quot;],.entry-tk[data-s=&quot;n&quot;],.cx-tk[data-s=&quot;n&quot;],.q39-tk[data-s=&quot;n&quot;],.rx-t[data-s=&quot;n&quot;]){color:#f87171;border-color:rgba(248,113,113,.65);background:rgba(248,113,113,.15)}
+html :is(.entry-tk[data-s=&quot;y&quot;],.cx-tk[data-s=&quot;y&quot;],.q39-tk[data-s=&quot;y&quot;],.rx-t[data-s=&quot;y&quot;],.cx-tkf[data-s=&quot;g&quot;])::before{opacity:1}
+html :is(.entry-tk[data-s=&quot;n&quot;],.cx-tk[data-s=&quot;n&quot;],.q39-tk[data-s=&quot;n&quot;],.rx-t[data-s=&quot;n&quot;],.cx-tkf[data-s=&quot;r&quot;])::before{opacity:1;-webkit-mask-image:var(--mk-x);mask-image:var(--mk-x)}
+html .cx-tkf{display:inline-flex}
+.cx-grid{display:inline-grid;grid-template-columns:repeat(2,var(--mi));gap:4px;vertical-align:middle;margin:0 6px}
+.entry-mkw{gap:3px}
+.rx-p{gap:4px}
+
+/* ===== Round 51: no shortcuts (call outcome, contact, quick-note chips, templates) anywhere except Quick Add ===== */
+:is(.qn-row,.hc-oc,.cx-co,.oc-row,.hc-hint,.q39-ch,.q39-tpl,.q39-cx):not(:is(#qaPanel,#ldQa,#tcQa,#dlQa,#hubQaPanel) *){display:none!important}
+/* entry rows keep readable boxes (they used to collapse to letter-sized boxes when Quick Add squeezed the page) */
+#blocks .input-row:not(.stage-row){flex-wrap:wrap}
+#blocks .input-row:not(.stage-row)&gt;input:not(.hide):not([type=hidden]){flex:1 1 160px;min-width:130px}
+#blocks .input-row .btn-add{flex:0 0 auto}
+@media (max-width:820px){
+  #blocks .input-row:not(.stage-row)&gt;input:not(.hide):not([type=hidden]){flex:0 0 auto;min-width:0;width:100%}
 }
 &lt;/style&gt;
 &lt;/body&gt;&lt;/html&gt;"></iframe>
@@ -9717,7 +9746,7 @@ function phNoteTools(getList, getNum, getNote) {
     if (!t) { toast(&#x27;Nothing to copy yet&#x27;); return; }
     phCopy(t);
   });
-  d.append(b);
+  /* Round 51: no Copy notes button in Deals (the deal-name copy button stays) */
   return d;
 }
 function clearPhones() { $(&#x27;phoneList&#x27;).replaceChildren(); $(&#x27;phoneField&#x27;).classList.add(&#x27;hidden&#x27;); }
@@ -11354,7 +11383,7 @@ function cpIco(l) {
     nt.dispatchEvent(new Event('input', { bubbles: true }));
   }
   // Round 48: WhatsApp + Email icons with ONE confirmation button beneath each (not toggled / tick / cross)
-  var CXI = { wa: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M7.9 20A9 9 0 1 0 4 16.1L2 22Z&quot;/&gt;&lt;/svg&gt;', em: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;2.2&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;rect width=&quot;20&quot; height=&quot;16&quot; x=&quot;2&quot; y=&quot;4&quot; rx=&quot;2&quot;/&gt;&lt;path d=&quot;m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7&quot;/&gt;&lt;/svg&gt;' }, CXL = { wa: 'WhatsApp', em: 'Email' }, CXT = { y: '\u2713', n: '\u2717', '': '' };
+  var CXI = { wa: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.4A8.4 8.4 0 1 1 21 11.5zM9.2 8.6c.1 2.4 2.3 4.6 4.6 4.7l1-1.1 1.9.8v1.2c0 .5-.4.9-.9.9-3.3-.2-6-2.9-6.2-6.2 0-.5.4-.9.9-.9h1.2l.8 1.9z&quot;/&gt;&lt;/svg&gt;', em: '&lt;svg viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;&gt;&lt;path d=&quot;M3 6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z&quot;/&gt;&lt;path d=&quot;m3.5 7 8.5 6 8.5-6&quot;/&gt;&lt;/svg&gt;' }, CXL = { wa: 'WhatsApp', em: 'Email' }, CXT = { y: '\u2713', n: '\u2717', '': '' };
   function pairsHtml() { return '&lt;span class=&quot;q39-pairs&quot;&gt;' + ['wa', 'em'].map(function (k) { return '&lt;span class=&quot;q39-pr&quot; data-ch=&quot;' + k + '&quot;&gt;&lt;span class=&quot;q39-pi&quot; title=&quot;' + CXL[k] + '&quot;&gt;' + CXI[k] + '&lt;/span&gt;&lt;button type=&quot;button&quot; class=&quot;q39-tk&quot; data-ch=&quot;' + k + '&quot; data-s=&quot;&quot; title=&quot;' + CXL[k] + ': not marked (tap to confirm)&quot; aria-label=&quot;' + CXL[k] + ' confirmation&quot;&gt;&lt;/button&gt;&lt;/span&gt;'; }).join('') + '&lt;/span&gt;'; }
   function syncPairs(w, set) { w.querySelectorAll('.q39-tk').forEach(function (b) { var ch = b.getAttribute('data-ch'), st = set.indexOf(ch) &gt;= 0 ? 'y' : set.indexOf('n' + ch) &gt;= 0 ? 'n' : ''; b.setAttribute('data-s', st); b.textContent = CXT[st]; b.title = CXL[ch] + ': ' + (st === 'y' ? 'confirmed (tap for \u2717)' : st === 'n' ? 'not possible (tap to clear)' : 'not marked (tap to confirm)'); }); }
   var CFG = [];
@@ -11628,6 +11657,32 @@ html body input[type=&quot;checkbox&quot;]:not(.cz-sw input):not(.keep-native):d
   .qn-row,.oc-row{gap:5px!important}
   .btn-add{min-height:40px!important;font-size:.86rem!important}
   .report-card{margin-bottom:10px!important}
+}
+
+/* ===== Round 51: WhatsApp / Email icon buttons and the tick button under each: ONE size, ONE design, kept separate ===== */
+:root{--mi:32px;--mk-chk:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E&quot;);--mk-x:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E&quot;)}
+.entry-mkw{--mi:28px}.cx-grid,.cx-pairs,.q39-pairs{--mi:30px}
+html :is(.entry-mk,.cx-pi,.q39-pi,.cx-ft:not(.cx-clr),.entry-tk,.cx-tk,.q39-tk,.rx-t){box-sizing:border-box;flex:0 0 var(--mi);width:var(--mi);height:var(--mi);min-height:0;padding:0;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border,rgba(128,128,128,.4));background:var(--tile-bg,rgba(0,0,0,.3));box-shadow:var(--bevel,none);color:var(--text3,#b9aeb1);opacity:1;line-height:0;cursor:pointer;position:relative}
+html :is(.entry-mk,.cx-pi,.q39-pi,.cx-ft:not(.cx-clr)) svg{width:16px;height:16px}
+html :is(.entry-tk,.cx-tk,.q39-tk,.rx-t,.cx-tkf){font-size:0;color:var(--text3,#b9aeb1)}
+html :is(.entry-tk,.cx-tk,.q39-tk,.rx-t,.cx-tkf)::before{content:&quot;&quot;;width:16px;height:16px;background:currentColor;-webkit-mask:var(--mk-chk) center/contain no-repeat;mask:var(--mk-chk) center/contain no-repeat;opacity:.4}
+html :is(.entry-mk.g,.cx-ft[data-s=&quot;g&quot;],.entry-tk[data-s=&quot;y&quot;],.cx-tk[data-s=&quot;y&quot;],.q39-tk[data-s=&quot;y&quot;],.rx-t[data-s=&quot;y&quot;]){color:#4ade80;border-color:rgba(74,222,128,.65);background:rgba(74,222,128,.15)}
+html :is(.entry-mk.r,.cx-ft[data-s=&quot;r&quot;],.entry-tk[data-s=&quot;n&quot;],.cx-tk[data-s=&quot;n&quot;],.q39-tk[data-s=&quot;n&quot;],.rx-t[data-s=&quot;n&quot;]){color:#f87171;border-color:rgba(248,113,113,.65);background:rgba(248,113,113,.15)}
+html :is(.entry-tk[data-s=&quot;y&quot;],.cx-tk[data-s=&quot;y&quot;],.q39-tk[data-s=&quot;y&quot;],.rx-t[data-s=&quot;y&quot;],.cx-tkf[data-s=&quot;g&quot;])::before{opacity:1}
+html :is(.entry-tk[data-s=&quot;n&quot;],.cx-tk[data-s=&quot;n&quot;],.q39-tk[data-s=&quot;n&quot;],.rx-t[data-s=&quot;n&quot;],.cx-tkf[data-s=&quot;r&quot;])::before{opacity:1;-webkit-mask-image:var(--mk-x);mask-image:var(--mk-x)}
+html .cx-tkf{display:inline-flex}
+.cx-grid{display:inline-grid;grid-template-columns:repeat(2,var(--mi));gap:4px;vertical-align:middle;margin:0 6px}
+.entry-mkw{gap:3px}
+.rx-p{gap:4px}
+
+/* ===== Round 51: no shortcuts (call outcome, contact, quick-note chips, templates) anywhere except Quick Add ===== */
+:is(.qn-row,.hc-oc,.cx-co,.oc-row,.hc-hint,.q39-ch,.q39-tpl,.q39-cx):not(:is(#qaPanel,#ldQa,#tcQa,#dlQa,#hubQaPanel) *){display:none!important}
+/* entry rows keep readable boxes (they used to collapse to letter-sized boxes when Quick Add squeezed the page) */
+#blocks .input-row:not(.stage-row){flex-wrap:wrap}
+#blocks .input-row:not(.stage-row)&gt;input:not(.hide):not([type=hidden]){flex:1 1 160px;min-width:130px}
+#blocks .input-row .btn-add{flex:0 0 auto}
+@media (max-width:820px){
+  #blocks .input-row:not(.stage-row)&gt;input:not(.hide):not([type=hidden]){flex:0 0 auto;min-width:0;width:100%}
 }
 &lt;/style&gt;
 &lt;/body&gt;
@@ -12824,10 +12879,34 @@ function installScrollNav(win, doc, getScroller) {
   function nrIcon() { return String(nrSet().nrIcon || '').trim() || '📁'; }
   function folderName(id) { if (id === FOLDER) return nrName(); var f = customFolders().filter(function (x) { return x.id === id; })[0]; return f ? f.name : id; }
   function folderCounts() { var o = 0, d = 0; S.tasks.forEach(function (t) { if (t.folder !== FOLDER) return; if (t.done) d++; else o++; }); return { open: o, done: d }; }
+  // Round 51: WhatsApp / Email icons (+ the tick under each) next to the folder selector filter the tasks of the WhatsApp / Email folders
+  var TKDD = false;
+  var MF = { wa: '', em: '', twa: '', tem: '' };
+  try { var mo = JSON.parse(localStorage.getItem('hub_tk_mf') || 'null') || {}; Object.keys(MF).forEach(function (k) { if (mo[k] === 'g' || mo[k] === 'r') MF[k] = mo[k]; }); } catch (e) {}
+  var MI = { wa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.4A8.4 8.4 0 1 1 21 11.5zM9.2 8.6c.1 2.4 2.3 4.6 4.6 4.7l1-1.1 1.9.8v1.2c0 .5-.4.9-.9.9-3.3-.2-6-2.9-6.2-6.2 0-.5.4-.9.9-.9h1.2l.8 1.9z"/></svg>', em: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>' };
+  var MCH = [{ k: 'wa', t: 'twa', g: 'cf_msg_wa', r: 'cf_msg_nwa' }, { k: 'em', t: 'tem', g: 'cf_msg_em', r: 'cf_msg_nem' }];
+  function mfOn() { return !!(MF.wa || MF.em || MF.twa || MF.tem); }
+  function mfPass(t) {
+    var any = false;
+    for (var i = 0; i < MCH.length; i++) {
+      var c = MCH[i], ic = MF[c.k], tk = MF[c.t]; if (!ic && !tk) continue; any = true;
+      var fo = t.folder || '', fOK = ic === 'g' ? fo === c.g : ic === 'r' ? fo === c.r : (fo === c.g || fo === c.r); if (!fOK) continue;
+      var dOK = tk === 'g' ? !!t.done : tk === 'r' ? !t.done : (F.f === 'open' ? !t.done : F.f === 'done' ? !!t.done : true);
+      if (dOK) return true;
+    }
+    return !any;
+  }
+  function mfHtml() {
+    function b(k, lab, tick) { var v = MF[k]; return '<button type="button" class="cx-ft' + (tick ? ' cx-tkf' : '') + '" data-a="tkmf" data-k="' + k + '" data-s="' + v + '" aria-pressed="' + (v ? 'true' : 'false') + '" title="' + (tick ? 'Tick under ' : '') + lab + ': ' + (v === 'g' ? (tick ? 'done' : 'on') : v === 'r' ? (tick ? 'still open' : 'the unable folder') : 'off') + ' (tap to change)" aria-label="' + (tick ? 'Tick under ' : '') + lab + ' filter">' + (tick ? '' : MI[k]) + '</button>'; }
+    return '<span class="tk-mf cx-grid">' + b('wa', 'WhatsApp', 0) + b('em', 'Email', 0) + b('twa', 'WhatsApp', 1) + b('tem', 'Email', 1) + '</span>';
+  }
   function renderFolders() {
     var el = $('tkFolders'); if (!el) return; var c = counts(), fc = folderCounts();
     var opts = '<option value=""' + (F.folder ? '' : ' selected') + '>All tasks · ' + c.open + '</option><option value="' + esc(FOLDER) + '"' + (F.folder === FOLDER ? ' selected' : '') + '>' + esc(nrIcon()) + ' ' + esc(nrName()) + ' · ' + fc.open + '</option>' + customFolders().map(function (f) { return '<option value="' + esc(f.id) + '"' + (F.folder === f.id ? ' selected' : '') + '>' + esc(f.icon || '📁') + ' ' + esc(f.name) + ' · ' + folderCountsOf(f.id).open + '</option>'; }).join('');
-    el.innerHTML = '<select class="tk-fsel2" data-tkfolder="1" aria-label="Task folder">' + opts + '</select>' + '<button type="button" class="tk-fo' + (F.folder ? '' : ' on') + '" data-a="fopen" data-fo="">All tasks <span class="tk-n">' + c.open + '</span></button>' +
+    var curLbl = !F.folder ? 'All tasks · ' + c.open : F.folder === FOLDER ? nrIcon() + ' ' + nrName() + ' · ' + fc.open : (function () { var f = customFolders().filter(function (x) { return x.id === F.folder; })[0]; return f ? (f.icon || '📁') + ' ' + f.name + ' · ' + folderCountsOf(f.id).open : 'All tasks'; })();
+    var items = [['', 'All tasks · ' + c.open], [FOLDER, nrIcon() + ' ' + nrName() + ' · ' + fc.open]].concat(customFolders().map(function (f) { return [f.id, (f.icon || '📁') + ' ' + f.name + ' · ' + folderCountsOf(f.id).open]; }));
+    var dd = '<span class="tkdd' + (TKDD ? ' open' : '') + '"><button type="button" class="tkdd-b" data-a="tkdd" aria-haspopup="listbox" aria-expanded="' + (TKDD ? 'true' : 'false') + '"><span>' + esc(curLbl) + '</span><i></i></button><span class="tkdd-l" role="listbox">' + items.map(function (x) { return '<button type="button" role="option" class="tkdd-i' + ((F.folder || '') === x[0] ? ' on' : '') + '" data-a="fopen" data-fo="' + esc(x[0]) + '">' + esc(x[1]) + '</button>'; }).join('') + '</span></span>';
+    el.innerHTML = dd + mfHtml() + '<select class="tk-fsel2" data-tkfolder="1" aria-label="Task folder">' + opts + '</select>' + '<button type="button" class="tk-fo' + (F.folder ? '' : ' on') + '" data-a="fopen" data-fo="">All tasks <span class="tk-n">' + c.open + '</span></button>' +
       '<button type="button" class="tk-fo' + (F.folder === FOLDER ? ' on' : '') + '" data-a="fopen" data-fo="' + esc(FOLDER) + '">' + esc(nrIcon()) + ' ' + esc(nrName()) + ' <span class="tk-n">' + fc.open + '</span></button>' +
       customFolders().map(function (f) { var n = folderCountsOf(f.id); return '<button type="button" class="tk-fo' + (F.folder === f.id ? ' on' : '') + '" data-a="fopen" data-fo="' + esc(f.id) + '"><i class="tk-dot"></i>' + esc(f.icon || '📁') + ' ' + esc(f.name) + ' <span class="tk-n">' + n.open + '</span></button>'; }).join('') +
       '<button type="button" class="tk-fo tk-fm" data-a="fmanage" title="Add, rename, recolor or delete folders">＋ Folders</button><button type="button" class="tk-fo tk-fm" data-a="automations" title="Rules that add tasks by themselves">⚙ Automations</button>';
@@ -13134,9 +13213,9 @@ function installScrollNav(win, doc, getScroller) {
     var q = F.q.trim().toLowerCase(), smap = {}, hasAuto = S.tasks.some(function (t) { return t.auto && !t.done; });
     if (hasAuto) { try { smap = stageMap(); } catch (e) { smap = {}; } }
     var list = S.tasks.filter(function (t) {
-      if ((t.folder || '') !== F.folder) return false;
+      if (mfOn()) { if (!mfPass(t)) return false; } else if ((t.folder || '') !== F.folder) return false;
       if (F.day) { var td0 = today(); if (!(t.due === F.day || (F.day === td0 && !t.done && t.due && t.due < td0))) return false; }   // Round 49: one day (today also lists what is overdue)
-      if (F.f === 'open' && t.done) return false; if (F.f === 'done' && !t.done) return false;
+      if (!mfOn()) { if (F.f === 'open' && t.done) return false; if (F.f === 'done' && !t.done) return false; }
       if (F.fd) { var td = today(), wk = keyOfDate(new Date(Date.now() + 7 * 864e5)); if (F.fd === 'none' ? !!t.due : !t.due) return false; if (F.fd === 'over' && !(t.due < td)) return false; if (F.fd === 'today' && t.due !== td) return false; if (F.fd === 'soon' && !(t.due > td && t.due <= wk)) return false; if (F.fd === 'later' && !(t.due > wk)) return false; }
       if (F.fs) { var sr = t.src || {}, isRule = !!(t.rule || t.auto), isDay = !isRule && !!(sr.deal || sr.number || sr.label); if (F.fs === 'rule' ? !isRule : F.fs === 'day' ? !isDay : (isRule || isDay)) return false; }
       if (F.fr && ((F.fr === 'with') !== (typeof t.remind === 'number'))) return false;
@@ -13146,6 +13225,7 @@ function installScrollNav(win, doc, getScroller) {
     });
     function byDue(a, b) { var x = (a.due || '9999') + ' ' + (a.due && a.time ? a.time : '99:99'), y = (b.due || '9999') + ' ' + (b.due && b.time ? b.time : '99:99'); return x < y ? -1 : x > y ? 1 : (a.created - b.created); }
     var html = '';
+    if (mfOn()) { box.innerHTML = bulkBar() + (list.sort(byDue).map(function (t) { return taskHtml(t, smap); }).join('') || '<div class="tk-empty">No tasks match these WhatsApp / Email buttons.</div>'); return; }
     if (F.folder) { box.innerHTML = bulkBar() + (F.folder === FOLDER ? folderHtml(list) : customFolderHtml(list)); return; }
     if (F.f === 'open') {
       var t0 = today(), HC = window.hubCalls, om = HC ? HC.ORD.mode('tasks', 'auto') : { m: '' }, cmpT = byDue, ctxT = function (t) { try { return HC.dealForTask(t); } catch (e) { return null; } };
@@ -13197,7 +13277,9 @@ function installScrollNav(win, doc, getScroller) {
     if (a === 'fmanage') return void (window.hubAuto && window.hubAuto.folders());
     if (a === 'automations') return void (window.hubAuto && window.hubAuto.open());
     if (a === 'newin') { var nf = F.folder; return openModal(document, { ctx: { kind: 'manual', folder: nf } }); }
-    if (a === 'fopen') { F.folder = b.dataset.fo || ''; renderAll(); return; }
+    if (a === 'tkdd') { TKDD = !TKDD; renderFolders(); return; }
+    if (a === 'tkmf') { var mk = b.getAttribute('data-k'); MF[mk] = MF[mk] === '' ? 'g' : MF[mk] === 'g' ? 'r' : ''; try { localStorage.setItem('hub_tk_mf', JSON.stringify(MF)); } catch (e) {} renderAll(); return; }
+    if (a === 'fopen') { F.folder = b.dataset.fo || ''; TKDD = false; renderAll(); return; }
     if (a === 'nrscan') return void syncNoResp(false);
     if (a === 'stoggle') { F.collapsed[b.dataset.s] = b.classList.contains('on'); renderList(); return; }
     if (a === 'selmode') { selMode = !selMode; if (!selMode) SEL = {}; var sb = $('tkSelBtn'); if (sb) { sb.textContent = selMode ? 'Done selecting' : 'Select'; sb.classList.toggle('on', selMode); } return renderList(); }
@@ -13239,6 +13321,7 @@ function installScrollNav(win, doc, getScroller) {
     var lastMin = -1; setInterval(function () { var v = $('tasksView'); if (!v || !v.offsetParent) return; var a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName) && v.contains(a)) return; if (document.querySelector('.tk-modal, .tp-ov, .hc-menu')) return; var m = Math.floor(Date.now() / 60000); if (m === lastMin) return; lastMin = m; try { window.hubCalls.bust(); } catch (e) {} renderAll(); }, 20000);
     window.hubTasksFolderGone = function (id, mode) { S.tasks = mode === 'delete' ? S.tasks.filter(function (t) { return t.folder !== id; }) : S.tasks.map(function (t) { if (t.folder === id) t.folder = ''; return t; }); if (F.folder === id) F.folder = ''; save(); renderAll(); };
     v.addEventListener('change', function (e) { var k = e.target.getAttribute && e.target.getAttribute('data-tkf'); if (k) { F[k] = e.target.value; renderList(); } });
+    document.addEventListener('click', function (e) { if (TKDD && !(e.target.closest && e.target.closest('.tkdd'))) { TKDD = false; try { renderFolders(); } catch (x) {} } }, true);
     v.addEventListener('change', function (e) { var t = e.target; if (t.getAttribute && t.getAttribute('data-tkfolder')) { F.folder = t.value; F.md = ''; renderAll(); } else if (t.getAttribute && t.getAttribute('data-tkpick')) { F.day = t.value || ''; renderAll(); } });
     v.addEventListener('click', function (e) {
       var b = e.target.closest && e.target.closest('[data-a]'); if (!b) return; var a = b.getAttribute('data-a');
@@ -13467,13 +13550,18 @@ function installScrollNav(win, doc, getScroller) {
     if (cfg.keep) Array.prototype.slice.call(panel.querySelectorAll(cfg.keep)).forEach(function (k) { row.appendChild(k); });
     var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'fk-btn'; row.insertBefore(btn, row.firstChild);
     var chips = document.createElement('div'); chips.className = 'fk-chips'; row.appendChild(chips);
+    if (cfg.pop) panel.classList.add('fk-pop');
+    if (cfg.merge) {   // Round 51: the "More" actions live in the same pop-up as the filters (one button, no drop-down)
+      var mp = root.querySelector(cfg.merge);
+      if (mp && !mp.getAttribute('data-fkm')) { mp.setAttribute('data-fkm', '1'); var h1 = document.createElement('div'); h1.className = 'fk-h'; h1.textContent = 'Filters'; panel.insertBefore(h1, panel.firstChild); var h2 = document.createElement('div'); h2.className = 'fk-h'; h2.textContent = 'More'; panel.appendChild(h2); panel.appendChild(mp); }
+    }
     var done = document.createElement('button'); done.type = 'button'; done.className = 'kt-btn p fk-done'; done.textContent = 'Done'; panel.appendChild(done);
     var back = document.createElement('div'); back.className = 'fk-back'; back.style.display = 'none';
     panel.parentNode.insertBefore(row, panel); panel.parentNode.insertBefore(back, panel);
     function paint() {
       var a = cfg.noChips ? [] : activeOf(panel), open = !!FK.open[key];
       btn.className = 'fk-btn' + (open ? ' on' : ''); btn.innerHTML = '<span>' + (cfg.label || '⚙ Filters') + '</span>' + (a.length ? '<i>' + a.length + '</i>' : '');
-      panel.classList.toggle('open', open); back.style.display = open && window.matchMedia('(max-width:640px)').matches ? '' : 'none';
+      panel.classList.toggle('open', open); back.style.display = open && (cfg.pop || window.matchMedia('(max-width:640px)').matches) ? 'block' : 'none';
       chips.innerHTML = ''; a.forEach(function (x, i) { var c = document.createElement('button'); c.type = 'button'; c.className = 'fk-chip'; c.innerHTML = '<span>' + esc((x.field ? x.field + ': ' : '') + x.label) + '</span><b>✕</b>'; c.addEventListener('click', function () { if (x.el.type === 'checkbox') { x.el.checked = false; x.el.dispatchEvent(new Event('change', { bubbles: true })); } else { x.el.value = firstVal(x.el); x.el.dispatchEvent(new Event('change', { bubbles: true })); } }); chips.appendChild(c); });
       if (a.length > 1) { var cl = document.createElement('button'); cl.type = 'button'; cl.className = 'fk-clear'; cl.textContent = 'Clear all'; cl.addEventListener('click', function () { a.forEach(function (x) { if (x.el.type === 'checkbox') x.el.checked = false; else x.el.value = firstVal(x.el); }); a[0].el.dispatchEvent(new Event('change', { bubbles: true })); }); chips.appendChild(cl); }
     }
@@ -16211,9 +16299,9 @@ function installScrollNav(win, doc, getScroller) {
     if (attached || !window.hubKit) return; attached = true;
     var more = function (k) { return { panel: k === 'ld' ? '.ld-more' : '.tc-more', key: k + 'x', label: '⋯ More', noChips: true }; };
     hubKit.filters('crmView', [{ panel: '.cm-filt', key: 'crm', keep: '.cm-seg' }, { panel: '.cm-tools', key: 'crmx', label: '⋯ Import / Export', noChips: true }]);
-    hubKit.filters('lostView', [{ panel: '.ld-fsel', key: 'ld' }, more('ld')]);
-    hubKit.filters('ticketsView', [{ panel: '.tc-fsel', key: 'tc' }, more('tc')]);
-    hubKit.filters('dealsView', [{ panel: '.dl-fsel', key: 'dl' }, more('dl')]);
+    hubKit.filters('lostView', [{ panel: '.ld-fsel', key: 'ld', label: '⚙ Filters & more', merge: '.ld-more', pop: true }]);
+    hubKit.filters('ticketsView', [{ panel: '.tc-fsel', key: 'tc', label: '⚙ Filters & more', merge: '.tc-more', pop: true }]);
+    hubKit.filters('dealsView', [{ panel: '.dl-fsel', key: 'dl', label: '⚙ Filters & more', merge: '.tc-more', pop: true }]);
     hubKit.filters('tasksView', [{ panel: '.tk-fsel', key: 'tk' }]);
   }
   function go() { build(); attach(); try { applyOrder(); enableDrag(); } catch (e) {} setTimeout(reveal, 200); }
@@ -21355,7 +21443,7 @@ function cpIco(l) {
     nt.dispatchEvent(new Event('input', { bubbles: true }));
   }
   // Round 48: WhatsApp + Email icons with ONE confirmation button beneath each (not toggled / tick / cross)
-  var CXI = { wa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>', em: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>' }, CXL = { wa: 'WhatsApp', em: 'Email' }, CXT = { y: '\u2713', n: '\u2717', '': '' };
+  var CXI = { wa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-12.4 7.4L3 20.5l1.7-5.4A8.4 8.4 0 1 1 21 11.5zM9.2 8.6c.1 2.4 2.3 4.6 4.6 4.7l1-1.1 1.9.8v1.2c0 .5-.4.9-.9.9-3.3-.2-6-2.9-6.2-6.2 0-.5.4-.9.9-.9h1.2l.8 1.9z"/></svg>', em: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>' }, CXL = { wa: 'WhatsApp', em: 'Email' }, CXT = { y: '\u2713', n: '\u2717', '': '' };
   function pairsHtml() { return '<span class="q39-pairs">' + ['wa', 'em'].map(function (k) { return '<span class="q39-pr" data-ch="' + k + '"><span class="q39-pi" title="' + CXL[k] + '">' + CXI[k] + '</span><button type="button" class="q39-tk" data-ch="' + k + '" data-s="" title="' + CXL[k] + ': not marked (tap to confirm)" aria-label="' + CXL[k] + ' confirmation"></button></span>'; }).join('') + '</span>'; }
   function syncPairs(w, set) { w.querySelectorAll('.q39-tk').forEach(function (b) { var ch = b.getAttribute('data-ch'), st = set.indexOf(ch) >= 0 ? 'y' : set.indexOf('n' + ch) >= 0 ? 'n' : ''; b.setAttribute('data-s', st); b.textContent = CXT[st]; b.title = CXL[ch] + ': ' + (st === 'y' ? 'confirmed (tap for \u2717)' : st === 'n' ? 'not possible (tap to clear)' : 'not marked (tap to confirm)'); }); }
   var CFG = [];
@@ -23020,6 +23108,32 @@ html body input[type="checkbox"]:not(.cz-sw input):not(.keep-native):disabled{op
   .btn-add{min-height:40px!important;font-size:.86rem!important}
   .report-card{margin-bottom:10px!important}
 }
+
+/* ===== Round 51: WhatsApp / Email icon buttons and the tick button under each: ONE size, ONE design, kept separate ===== */
+:root{--mi:32px;--mk-chk:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E");--mk-x:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E")}
+.entry-mkw{--mi:28px}.cx-grid,.cx-pairs,.q39-pairs{--mi:30px}
+html :is(.entry-mk,.cx-pi,.q39-pi,.cx-ft:not(.cx-clr),.entry-tk,.cx-tk,.q39-tk,.rx-t){box-sizing:border-box;flex:0 0 var(--mi);width:var(--mi);height:var(--mi);min-height:0;padding:0;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border,rgba(128,128,128,.4));background:var(--tile-bg,rgba(0,0,0,.3));box-shadow:var(--bevel,none);color:var(--text3,#b9aeb1);opacity:1;line-height:0;cursor:pointer;position:relative}
+html :is(.entry-mk,.cx-pi,.q39-pi,.cx-ft:not(.cx-clr)) svg{width:16px;height:16px}
+html :is(.entry-tk,.cx-tk,.q39-tk,.rx-t,.cx-tkf){font-size:0;color:var(--text3,#b9aeb1)}
+html :is(.entry-tk,.cx-tk,.q39-tk,.rx-t,.cx-tkf)::before{content:"";width:16px;height:16px;background:currentColor;-webkit-mask:var(--mk-chk) center/contain no-repeat;mask:var(--mk-chk) center/contain no-repeat;opacity:.4}
+html :is(.entry-mk.g,.cx-ft[data-s="g"],.entry-tk[data-s="y"],.cx-tk[data-s="y"],.q39-tk[data-s="y"],.rx-t[data-s="y"]){color:#4ade80;border-color:rgba(74,222,128,.65);background:rgba(74,222,128,.15)}
+html :is(.entry-mk.r,.cx-ft[data-s="r"],.entry-tk[data-s="n"],.cx-tk[data-s="n"],.q39-tk[data-s="n"],.rx-t[data-s="n"]){color:#f87171;border-color:rgba(248,113,113,.65);background:rgba(248,113,113,.15)}
+html :is(.entry-tk[data-s="y"],.cx-tk[data-s="y"],.q39-tk[data-s="y"],.rx-t[data-s="y"],.cx-tkf[data-s="g"])::before{opacity:1}
+html :is(.entry-tk[data-s="n"],.cx-tk[data-s="n"],.q39-tk[data-s="n"],.rx-t[data-s="n"],.cx-tkf[data-s="r"])::before{opacity:1;-webkit-mask-image:var(--mk-x);mask-image:var(--mk-x)}
+html .cx-tkf{display:inline-flex}
+.cx-grid{display:inline-grid;grid-template-columns:repeat(2,var(--mi));gap:4px;vertical-align:middle;margin:0 6px}
+.entry-mkw{gap:3px}
+.rx-p{gap:4px}
+
+/* ===== Round 51: no shortcuts (call outcome, contact, quick-note chips, templates) anywhere except Quick Add ===== */
+:is(.qn-row,.hc-oc,.cx-co,.oc-row,.hc-hint,.q39-ch,.q39-tpl,.q39-cx):not(:is(#qaPanel,#ldQa,#tcQa,#dlQa,#hubQaPanel) *){display:none!important}
+/* entry rows keep readable boxes (they used to collapse to letter-sized boxes when Quick Add squeezed the page) */
+#blocks .input-row:not(.stage-row){flex-wrap:wrap}
+#blocks .input-row:not(.stage-row)>input:not(.hide):not([type=hidden]){flex:1 1 160px;min-width:130px}
+#blocks .input-row .btn-add{flex:0 0 auto}
+@media (max-width:820px){
+  #blocks .input-row:not(.stage-row)>input:not(.hide):not([type=hidden]){flex:0 0 auto;min-width:0;width:100%}
+}
 </style>
 <style id="hubMobile49">/* ===== Round 49: phone app layout (applies only when body.dk49: widths up to 820px). Compact, app-like, nothing removed. ===== */
 html body.dk49{--m-gap:8px}
@@ -23134,6 +23248,103 @@ html body.dk49:has(#noticeBar .kt-note) #frames{top:calc(env(safe-area-inset-top
 }
 @media (max-width:820px){
   html body.dk49 #ticketsView .bk-toggle{flex:0 0 auto!important;width:auto!important;min-width:0!important;padding:6px 14px!important;font-size:.78rem!important;min-height:34px!important;align-self:center}
+}
+</style>
+<style id="hubR51">/* ===== Round 51 (hub) ===== */
+/* Task folders: one compact drop-down with a short scrolling list (the chips and the native select are hidden) */
+#tasksView .tk-folders{display:flex;flex-wrap:wrap;align-items:center;gap:8px;position:relative}
+#tasksView .tk-folders .tk-fsel2,#tasksView .tk-folders .tk-fo:not(.tk-fm){display:none!important}
+.tkdd{position:relative;display:inline-block;flex:1 1 180px;max-width:300px;min-width:150px}
+.tkdd-b{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:36px;padding:6px 12px;border-radius:12px;border:1px solid var(--border);background:var(--card,var(--bar));color:var(--text);font:inherit;font-size:.82rem;cursor:pointer;text-align:left}
+.tkdd-b span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tkdd-b i{flex:0 0 auto;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);opacity:.7}
+.tkdd.open .tkdd-b{border-color:var(--accent)}
+.tkdd-l{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:60;max-height:208px;overflow-y:auto;overscroll-behavior:contain;padding:4px;border-radius:12px;border:1px solid var(--border-strong,var(--border));background:var(--card-solid,var(--bar));box-shadow:0 12px 30px rgba(0,0,0,.45);min-width:220px;scrollbar-width:thin}
+.tkdd.open .tkdd-l{display:block}
+.tkdd-i{display:block;width:100%;text-align:left;padding:8px 10px;border:0;border-radius:9px;background:transparent;color:var(--text);font:inherit;font-size:.8rem;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tkdd-i:hover,.tkdd-i.on{background:rgba(var(--accent-rgb),.16)}
+.tkdd-i.on{color:var(--accent)}
+body.dk49 #tasksView .tk-folders{flex-wrap:nowrap;overflow:visible}
+body.dk49 .tkdd{flex:1 1 0;min-width:0;max-width:none}
+html body.dk49 #tasksView .tk-folders{flex-wrap:wrap!important}
+html body.dk49 #tasksView .tkdd{flex:1 1 150px}
+/* Filters & more: one button, one pop-up (centred on a computer, bottom sheet on a phone) */
+.fk-panel.fk-pop.open{position:fixed!important;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,92vw);max-height:82vh;overflow:auto;margin:0!important;z-index:2147480500;align-content:flex-start;animation:none}
+.fk-panel.fk-pop .fk-h{flex:1 1 100%;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;opacity:.65;margin:4px 0 0}
+.fk-panel.fk-pop .tc-more{display:flex!important;flex-wrap:wrap;gap:6px;flex:1 1 100%}
+.fk-panel.fk-pop .tc-more>button{flex:0 1 auto}
+@media (max-width:640px){.fk-panel.fk-pop.open{left:0;right:0;top:auto;bottom:0;transform:none;width:auto;max-height:78vh}}
+/* Tickets / Deals header on a computer: one tidy order — title, pipeline, board/list, types, search, Filters & more, + New, Select */
+@media (min-width:821px){
+  html body :is(#ticketsView,#dealsView) .tc-wrap>.tc-head{order:1;margin-right:auto}
+  html body :is(#ticketsView,#dealsView) .tc-wrap>.tc-head+.tc-bar>.tc-seg:first-child{order:2}
+  html body :is(#ticketsView,#dealsView) .tc-wrap>.tc-head+.tc-bar>.tc-seg:last-child{order:3}
+  html body :is(#ticketsView,#dealsView) .tc-wrap>.tt-bar{order:4;flex:1 1 100%}
+  html body :is(#ticketsView) #tcQ,html body #dealsView #dlQ{order:5;flex:1 1 240px;min-width:180px;max-width:420px}
+  html body :is(#ticketsView,#dealsView) .fk-row{order:6}
+  html body :is(#ticketsView,#dealsView) .tc-tools{order:7}
+  html body :is(#ticketsView,#dealsView) .bk-toggle{order:7}
+}
+.fk-panel.fk-pop .tc-more>button,.fk-panel.fk-pop .ld-more>button{background:var(--bar);color:var(--text);border:1px solid var(--border);border-radius:99px;padding:7px 12px;font:inherit;font-size:.78rem;cursor:pointer}
+.fk-panel.fk-pop .tc-more>button:hover,.fk-panel.fk-pop .ld-more>button:hover{border-color:var(--accent)}
+@media (min-width:821px){
+  html body #dealsView .tc-wrap>.tc-bar>:is(label,select,.hc-dir){order:8}
+}
+/* the tick under each deal icon looks exactly like the icon tile above it */
+html .rx-t{border:0;background:#000;color:#b9aeb1;box-shadow:var(--bevel,none)}
+html .rx-t[data-s="y"]{color:#4ade80;background:radial-gradient(circle at 30% 20%,rgba(74,222,128,.22),transparent 65%),#000;box-shadow:var(--bevel,none),0 0 14px rgba(74,222,128,.28)}
+html .rx-t[data-s="n"]{color:#f87171;background:radial-gradient(circle at 30% 20%,rgba(248,113,113,.22),transparent 65%),#000;box-shadow:var(--bevel,none),0 0 14px rgba(248,113,113,.25)}
+
+/* Round 51 – Deals "Move to…" smaller, never over the card's name/copy button */
+html body #dealsView .cm-pc .dl-mv,html body #ticketsView .tc-card .dl-mv{width:auto;max-width:112px;margin-top:6px;font-size:.66rem;padding:2px 6px;height:24px;min-height:0;display:block}
+</style>
+<style id="hubR52">/* ===== Round 52 (hub): compact + organised; Tickets type tabs; stage tabs for boards ===== */
+
+/* --- Tickets: one tab per type (single row, underlined tabs, swipe) --- */
+html body #ticketsView .tt-bar{margin:2px 0 4px;display:block}
+html body #ticketsView .tt-row{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:2px;margin:0;padding:0;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--border);scroll-snap-type:x proximity}
+html body #ticketsView .tt-row::-webkit-scrollbar{display:none}
+html body #ticketsView .tt-row:not(.tt-sub) .tt-chip{flex:0 0 auto;background:transparent!important;border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;padding:7px 11px 6px;font-size:.78rem;color:var(--text2);scroll-snap-align:center}
+html body #ticketsView .tt-row:not(.tt-sub) .tt-chip.on{color:var(--text);border-bottom-color:var(--accent)!important;background:rgba(var(--accent-rgb),.10)!important}
+html body #ticketsView .tt-row:not(.tt-sub) .tt-chip em{font-size:.62rem;padding:0 5px;margin-left:5px;border-radius:99px;background:rgba(var(--accent-rgb),.16);opacity:1;color:var(--text2)}
+/* sub-types: lighter segmented strip, one row */
+html body #ticketsView .tt-row.tt-sub{border:0;padding:5px 0 0;margin:0;gap:4px}
+html body #ticketsView .tt-row.tt-sub .tt-chip{flex:0 0 auto;padding:4px 10px;font-size:.7rem;min-height:26px}
+html body #ticketsView .tt-row.tt-sub .tt-chip.on{background:rgba(var(--accent-rgb),.2)!important;border-color:var(--accent);color:var(--text)}
+
+/* --- stage tab strip above a board (phone) --- */
+.stt52{display:none}
+@media (max-width:820px){
+  html body #ticketsView .stt52{display:flex;gap:2px;overflow-x:auto;overflow-y:hidden;margin:2px 0 6px;padding:0;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:5;background:var(--bg);order:10!important}
+  html body #ticketsView .stt52::-webkit-scrollbar{display:none}
+  html body #ticketsView .stt52 button{flex:0 0 auto;font:600 .72rem inherit;font-family:inherit;background:transparent;border:0;border-bottom:2px solid transparent;color:var(--text2);padding:7px 10px 6px;min-height:30px;white-space:nowrap;cursor:pointer}
+  html body #ticketsView .stt52 button.on{color:var(--text);border-bottom-color:var(--accent);background:rgba(var(--accent-rgb),.10)}
+  html body #ticketsView .stt52 button em{font-style:normal;font-size:.62rem;margin-left:4px;padding:0 5px;border-radius:99px;background:rgba(var(--accent-rgb),.16)}
+  html body #ticketsView .cm-board{order:13;align-items:flex-start!important;display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;gap:10px;scrollbar-width:none}
+  html body #ticketsView .cm-board::-webkit-scrollbar{display:none}
+  html body #ticketsView .cm-board>.cm-col,html body #ticketsView .cm-board>.cm-col.cm-ec{display:flex!important;flex:0 0 92%!important;width:92%!important;min-width:92%!important;max-width:92%!important;scroll-snap-align:center;min-height:120px}
+  html body #ticketsView .cm-colh{display:none}   /* the strip names the stage */
+}
+
+/* --- compact rhythm (all hub sections) --- */
+html body :is(#dealsView,#ticketsView,#lostView,#tasksView,#crmView) :is(.tc-head,.ld-head){margin:0 0 4px}
+html body :is(#dealsView,#ticketsView,#lostView) .tc-head h1,html body #lostView .ld-head h1{font-size:1.2rem;margin:0}
+html body :is(#dealsView,#ticketsView,#lostView) .tc-sub2{margin:0 0 6px;font-size:.72rem}
+html body :is(#dealsView,#ticketsView,#lostView) :is(.tc-bar,.ld-bar){margin:4px 0;gap:6px}
+html body :is(#dealsView,#ticketsView,#lostView) .tc-tools,html body #lostView .ld-tools{margin:6px 0 8px;gap:6px}
+html body :is(#dealsView,#ticketsView) .tc-seg{padding:2px;gap:2px}
+html body :is(#dealsView,#ticketsView) .tc-seg button{padding:5px 11px;font-size:.76rem}
+html body :is(#dealsView,#ticketsView) .cm-pc,html body #ticketsView .tc-card{padding:8px 10px;margin-bottom:6px;border-radius:10px}
+html body :is(#dealsView,#ticketsView) .cm-pc .cm-sub{font-size:.68rem;margin-top:2px}
+html body :is(#dealsView,#ticketsView) .cm-pc .cm-nl{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html body :is(#dealsView,#ticketsView) .cm-col{padding:8px;border-radius:12px}
+html body :is(#dealsView,#ticketsView) .tc-tr{padding:7px 12px;gap:8px;font-size:.76rem}
+html body :is(#dealsView,#ticketsView,#lostView) .tc-pill,html body :is(#dealsView,#ticketsView) .cm-pill{padding:1px 7px;font-size:.66rem}
+html body :is(#dealsView,#ticketsView,#lostView) :is(.fk-pop,.tc-modal) h3{font-size:1rem}
+html body .fk-pop section+section,html body .fk-pop .fk-sec+.fk-sec{border-top:1px solid var(--border);padding-top:8px;margin-top:8px}
+@media (max-width:820px){
+  html body.dk49 :is(#dealsView,#ticketsView,#lostView){padding:8px 10px 90px}
+  html body.dk49 :is(#dealsView,#ticketsView,#lostView) .tc-head h1{font-size:1.05rem}
 }
 </style>
 <script>// Round 49: tasks for deals without a HubSpot link (button + optional automatic switch)
@@ -23370,6 +23581,41 @@ html body.dk49:has(#noticeBar .kt-note) #frames{top:calc(env(safe-area-inset-top
   window.addEventListener('load', function () { setTimeout(init, 900); });
 })();
 </script>
+<script id="hubR52js">// Round 52: stage tab strip for boards (phone) – follows the swipe, jumps on tap; type tab strip keeps its active tab in view.
+(function () {
+  'use strict';
+  var VIEWS = ['ticketsView'];   // Deals already has its own stage jump chips (.cm-jump)
+  function phone() { return window.matchMedia && window.matchMedia('(max-width:820px)').matches; }
+  function cnt(col) { return col.querySelectorAll('.cm-pc').length; }
+  function nm(col) { var b = col.querySelector('.cm-colh b'); return b ? b.textContent : (col.getAttribute('data-col') || ''); }
+  function build(v) {
+    var board = v.querySelector('.cm-board'); if (!board) return;
+    var old = v.querySelector('.stt52');
+    var cols = [].slice.call(board.querySelectorAll(':scope>.cm-col'));
+    var sig = cols.map(function (c) { return nm(c) + ':' + cnt(c); }).join('|');
+    if (old && old.getAttribute('data-sig') === sig && old.nextElementSibling === board) return;
+    if (old) old.remove();
+    var s = document.createElement('div'); s.className = 'stt52'; s.setAttribute('data-sig', sig); s.setAttribute('role', 'tablist');
+    s.innerHTML = cols.map(function (c, i) { return '<button type="button" role="tab" data-i="' + i + '"' + (i === 0 ? ' class="on"' : '') + '>' + nm(c).replace(/</g, '&lt;') + '<em>' + cnt(c) + '</em></button>'; }).join('');
+    board.parentNode.insertBefore(s, board);
+    function mark(i) { [].forEach.call(s.children, function (b, k) { b.classList.toggle('on', k === i); }); var b = s.children[i]; if (b && s.scrollTo) s.scrollTo({ left: b.offsetLeft - (s.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' }); }
+    s.addEventListener('click', function (e) { var b = e.target.closest('button[data-i]'); if (!b) return; var c = cols[+b.getAttribute('data-i')]; if (!c) return; board.scrollTo({ left: c.offsetLeft - board.offsetLeft - (board.clientWidth - c.offsetWidth) / 2, behavior: 'smooth' }); mark(+b.getAttribute('data-i')); });
+    var tm; board.addEventListener('scroll', function () { clearTimeout(tm); tm = setTimeout(function () { var mid = board.scrollLeft + board.clientWidth / 2, best = 0, bd = 1e9; cols.forEach(function (c, i) { var d = Math.abs(c.offsetLeft - board.offsetLeft + c.offsetWidth / 2 - mid); if (d < bd) { bd = d; best = i; } }); mark(best); }, 60); }, { passive: true });
+  }
+  function typeTabs(v) { var on = v.querySelector('.tt-row:not(.tt-sub) .tt-chip.on'); if (on && on.scrollIntoView) { var r = on.parentNode; r.scrollLeft = on.offsetLeft - (r.clientWidth - on.offsetWidth) / 2; } }
+  function run(v) { try { if (phone()) build(v); else { var o = v.querySelector('.stt52'); if (o) o.remove(); } typeTabs(v); } catch (e) {} }
+  function init() {
+    VIEWS.forEach(function (id) {
+      var v = document.getElementById(id); if (!v) return;
+      var busy = false, mo = new MutationObserver(function () { if (busy) return; busy = true; setTimeout(function () { busy = false; run(v); }, 30); });
+      mo.observe(v, { childList: true, subtree: true });
+      run(v);
+    });
+    window.addEventListener('resize', function () { VIEWS.forEach(function (id) { var v = document.getElementById(id); if (v) run(v); }); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
 <script id="hubBackupScript">// ===== Backup / Restore: one-click copy of all app data to a file, and back again =====
 // Added feature. It only reads and writes the app's own saved data (the keys below) and touches nothing else.
 // Backup downloads a .json file. Restore asks first, downloads a backup of what is there now, then loads the chosen file.
@@ -23456,6 +23702,10 @@ html body.dk49:has(#noticeBar .kt-note) #frames{top:calc(env(safe-area-inset-top
   function cfgGet() { try { var o = JSON.parse(localStorage.getItem(CFG_LS) || 'null'); if (o && o.url && o.anonKey) return o; } catch (e) {} return null; }
   if (CFG && CFG.url && CFG.anonKey) { try { localStorage.setItem(CFG_LS, JSON.stringify({ url: String(CFG.url).trim(), anonKey: String(CFG.anonKey).trim() })); } catch (e) {} }
   else { var sv = cfgGet(); if (sv) CFG = Object.assign({}, CFG || {}, sv); }
+  // Round 51: the project address + public (publishable) key are built in, so a new device only asks for e-mail and password. Anything in config.js or saved on the device still wins.
+  if (CFG && CFG.disabled === true) return;   // (used only by the test copy of the app: dist/config.js)
+  var BUILTIN = { url: 'https://xlogoqrnnqhxeuufpeqc.supabase.co', anonKey: 'sb_publishable_IEZqyzKEzsOtLq23KvMt3w_3r-gZ0Ke' };
+  if (!CFG || !CFG.url || !CFG.anonKey) CFG = Object.assign({}, BUILTIN);
   if (!CFG || !CFG.url || !CFG.anonKey) { setupOnly(); return; }
   function setupOnly() {
     function ready(fn) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn); else fn(); }

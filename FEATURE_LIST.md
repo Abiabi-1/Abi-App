@@ -472,3 +472,14 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 
 ## Round 50
 - **Phone bottom bar = the original top bar, moved**: every section tab in the same order (swipe to scroll, active one centred), Quick Add / Menu / Search pinned at the right end, still customizable.
+
+## Round 51
+- One original WhatsApp/Email icon set everywhere, with a separate Tick button under each (2×2) in Day End entries, Day End filter, Deals and the Tasks folder filter.
+- WhatsApp Today / Email Today removed from the Day End report (folders stay in Tasks).
+- Login on a new device needs only email + password (project URL and public key built in).
+- Day End entries un-squeezed; shortcuts and quick-note chips only in Quick Add; none in Deals/Tickets.
+- Deals/Tickets: one "Filters & more" pop-up; Tasks folder compact drop-down; smaller "Move to…"; "Copy notes" removed from Deals forms.
+
+## Round 52
+- Tickets: one scrolling tab per type + one-row sub-type strip; phone board = one stage per screen with a stage tab strip.
+- Compact spacing across Deals, Tickets, Lost Deals (headers, chips, cards, rows, pop-ups).
