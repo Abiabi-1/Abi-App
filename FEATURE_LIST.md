@@ -483,3 +483,12 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 ## Round 52
 - Tickets: one scrolling tab per type + one-row sub-type strip; phone board = one stage per screen with a stage tab strip.
 - Compact spacing across Deals, Tickets, Lost Deals (headers, chips, cards, rows, pop-ups).
+
+## Round 53
+- Fix: the "Seen N× · last … ago" line no longer squeezes the HubSpot link box (now on its own line under it).
+
+## Round 54
+- Quick notes and entry templates now activate Smart text: focus + caret at end + the Smart text list (continuations, or the best options for that box under "Smart text options"); picking one appends it.
+
+## Round 55
+- HubSpot links lose `?taskId=…` automatically (typing, paste, saves, saved data); "Use last details", "Already in Deals" and the "Seen N×" line recognise a deal by its HubSpot id; same-link duplicates and task-id-split deals merge. `hubLink` helper (`tools/links55.tpl.js`), test `tests/test_v55.py`. See `FEATURES_V55_*.md`. Not deployed.

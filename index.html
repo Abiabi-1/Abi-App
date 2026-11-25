@@ -520,6 +520,66 @@ html body #crmView .cm-lnb{max-width:62%;text-align:right;white-space:pre-wrap;o
   } catch (e) {}
 })();
 </script>
+<script>// Round 55: HubSpot link helper – removes "?taskId=…" (everything from taskid to the end of the link), cleans typing / paste / saved data, and gives one way to recognise the same deal. Same script in the hub and both frames.
+(function () {
+  'use strict';
+  if (window.hubLink) return;
+  var W = window, LS = null; try { LS = W.localStorage; } catch (e) {}
+  var TASK = /[?&]task[_-]?id\b[^\s"'<>\\]*/gi, QUICK = /task[_-]?id/i;
+  function clean(s) { if (s == null) return s; s = String(s); return QUICK.test(s) ? s.replace(TASK, '') : s; }
+  function isLink(s) { return /^(?:https?:\/\/|www\.)\S+$/i.test(String(s || '').trim()); }
+  // comparable identity of a link: the HubSpot record id when there is one, otherwise the cleaned text without protocol / www / trailing slash / # part
+  function key(s) {
+    s = clean(String(s || '').trim()); if (!s) return '';
+    var p = s.replace(/^[a-z]+:\/\//i, '').replace(/^www\./i, '').replace(/#.*$/, '').toLowerCase(), path = p.replace(/\?.*$/, '').replace(/\/+$/, '');
+    var m = null, rx = /\/(?:deals?|tickets?|contacts?|companies|company|record\/0-\d+|objects\/0-\d+)\/(\d{4,})(?=\/|$)/g, x;   // the LAST id in the path (the first one is the portal id)
+    while ((x = rx.exec(path))) m = x; if (!m) m = path.match(/\/(\d{5,})$/);
+    if (m) return 'hs:' + m[1];
+    return 'u:' + path + (/\?/.test(p) ? '?' + p.split('?')[1].replace(/\/+$/, '') : '');
+  }
+  function same(a, b) { var x = key(a), y = key(b); return !!x && x === y; }
+  function id(s) { var k = key(s); return /^hs:/.test(k) ? k.slice(3) : ''; }
+  W.hubLink = { clean: clean, isLink: isLink, key: key, same: same, id: id };
+
+  // ---- typing / paste: the box shows the clean link straight away ----
+  function fix(el) {
+    try {
+      if (!el || !el.tagName || !/^(INPUT|TEXTAREA)$/.test(el.tagName)) return;
+      var t = (el.type || '').toLowerCase(); if (t === 'password' || t === 'checkbox' || t === 'radio' || t === 'file') return;
+      var v = el.value; if (!v || !QUICK.test(v)) return; var nv = clean(v); if (nv === v) return;
+      var pos = null; try { pos = el.selectionStart; } catch (e) {}
+      el.value = nv;
+      try { if (pos != null) { var np = Math.min(pos, nv.length); if (document.activeElement === el) el.setSelectionRange(np, np); } } catch (e) {}
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    } catch (e) {}
+  }
+  var tm = null;   // typed text is cleaned a moment after typing stops (so '?taskId=' typed letter by letter does not leave '=555' behind); paste / blur / change clean at once
+  document.addEventListener('input', function (e) { var el = e.target; if (!el || !el.value || !QUICK.test(el.value)) return; clearTimeout(tm); tm = setTimeout(function () { fix(el); }, 450); }, true);
+  document.addEventListener('change', function (e) { fix(e.target); }, true);
+  document.addEventListener('paste', function (e) { var el = e.target; setTimeout(function () { fix(el); }, 0); }, true);
+  document.addEventListener('blur', function (e) { fix(e.target); }, true);
+
+  // ---- saved data: every later save is cleaned, and what is already saved is cleaned once at start ----
+  function dataKey(k) { try { return W.hubPrivacy && W.hubPrivacy.isData ? W.hubPrivacy.isData(k) : true; } catch (e) { return true; } }
+  try {
+    var prev = W.Storage.prototype.setItem;
+    W.Storage.prototype.setItem = function (k, v) {
+      try { if (this === LS && typeof v === 'string' && QUICK.test(v) && dataKey(k)) v = clean(v); } catch (e) {}
+      return prev.call(this, k, v);
+    };
+  } catch (e) {}
+  function migrate() {
+    if (!LS) return; var n = 0, keys = [], i;
+    try { for (i = 0; i < LS.length; i++) keys.push(LS.key(i)); } catch (e) {}
+    keys.forEach(function (k) {
+      try { if (!dataKey(k)) return; var raw = LS.getItem(k); if (typeof raw !== 'string' || !QUICK.test(raw)) return; var nv = clean(raw); if (nv !== raw) { LS.setItem(k, nv); n++; } } catch (e) {}
+    });
+    W.hubLink.migrated = n;
+  }
+  try { migrate(); } catch (e) {}
+  W.hubLink.migrate = migrate;
+})();
+</script>
 <style id="hubBackupStyle">/* ===== Backup / Restore buttons (top bar) ===== */
 #bar .bk-btn { margin-left: 8px; }
 #bar #hint + .st-open, #bar .st-open + .bk-btn { margin-left: 8px; }
@@ -2295,7 +2355,8 @@ window.addEventListener('DOMContentLoaded', function () {
     '.st-it:hover,.st-it.act{background:rgba(var(--accent-rgb,127,127,127),.16)}' +
     '.st-tx{flex:1;min-width:0;white-space:pre-line;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}' +
     '.st-dim{opacity:.55}.st-pin{flex:none;color:var(--accent,#c33);font-size:.75rem;line-height:1.6}' +
-    '.st-ft{padding:3px 10px 2px;font-size:.68rem;color:var(--text2,#888);opacity:.8}';
+    '.st-ft{padding:3px 10px 2px;font-size:.68rem;color:var(--text2,#888);opacity:.8}' +
+    '.st-hd{padding:3px 10px 4px;font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3,#888)}';
 
   function attach(win) {
     var doc; try { doc = win.document; } catch (e) { return; }
@@ -2311,6 +2372,7 @@ window.addEventListener('DOMContentLoaded', function () {
       var t = el.tagName;
       if (t === 'INPUT') { if ((el.getAttribute('type') || 'text').toLowerCase() !== 'text') return false; } else if (t !== 'TEXTAREA') return false;
       if (el.readOnly || el.disabled || (el.dataset && el.dataset.stOff)) return false;
+      if (doc.__stScoped && !(el.nextElementSibling && el.nextElementSibling.classList && el.nextElementSibling.classList.contains('q39-wrap'))) return false;   // hub: only the note boxes with quick-note chips
       var f0 = (el.dataset && el.dataset.f) || '', ph0 = el.placeholder || '';
       // note-like boxes are always on (extra-number notes, additional notes, reasons, descriptions ...) - a placeholder such as "Note for this number" must not switch them off
       if ((el.classList && (el.classList.contains('ph-note') || el.classList.contains('ph-anote'))) || /^(pnote|anote)\d*$/.test(f0) || (NOTE_RE.test(ph0) && !/search|passw|otp|verification|card|iban|e-?mail/i.test(ph0 + ' ' + el.id + ' ' + (el.name || '')) && !/^(number|phone|extra number)/i.test(ph0.trim()) && !/^(phone\d*|number|sender|email)$/i.test(f0))) return !(el.dataset && el.dataset.stOff);
@@ -2331,8 +2393,9 @@ window.addEventListener('DOMContentLoaded', function () {
       var kids = pop.children, i; for (i = 0; i < kids.length; i++) if (kids[i].className.indexOf('st-it') === 0) kids[i].className = 'st-it' + (+kids[i].getAttribute('data-i') === cur.act ? ' act' : '');
       var a = pop.querySelector('.act'); if (a && a.scrollIntoView) { try { a.scrollIntoView({ block: 'nearest' }); } catch (e) {} }
     }
-    function render(el, list) {
+    function render(el, list, head) {
       cur.el = el; cur.list = list; cur.act = -1; pop.textContent = '';
+      if (head) { var hd = doc.createElement('div'); hd.className = 'st-hd'; hd.textContent = head; pop.appendChild(hd); }
       list.forEach(function (b, i) {
         var row = doc.createElement('div'); row.className = 'st-it'; row.setAttribute('role', 'option'); row.setAttribute('data-i', String(i));
         var tx = doc.createElement('div'), hl = hlLen(b), text = b.it.text; tx.className = 'st-tx';
@@ -2350,6 +2413,32 @@ window.addEventListener('DOMContentLoaded', function () {
       var list = suggest(el); if (!list.length) { hide(); return; }
       render(el, list);
     }
+    // Round 54: a quick-note chip (or template) calls this after it wrote into the box -> focus, caret at the end, show the list (or the best options for this box)
+    function options(el) {
+      var v = el.value, info = fieldInfo(el), sur = toks(norm(info.sib)).filter(function (t) { return t.length >= 4 && !STOP[t]; }), nv = norm(v), maxLen = el.maxLength > 0 ? el.maxLength : 0;
+      var start = v.replace(/\s+$/, '').length, sep = start ? (/[.!?\u2026]$/.test(v.replace(/\s+$/, '')) ? ' ' : '. ') : '', out = [];
+      store.items.forEach(function (it) {
+        if (!it.pin && !it.man && it.count < 2 && it.sel < 1) return;
+        if (nv && (nv.indexOf(it.n) >= 0)) return;
+        if (maxLen && start + sep.length + it.text.length > maxLen) return;
+        var sc = score(it, 0.6, info, sur); if (sc < 0.05) return;
+        out.push({ it: it, s: sc, r: 0, start: start, end: v.length, scope: 'opt', qn: '', snap: v, sep: sep });
+      });
+      out.sort(function (a, b) { return b.s - a.s || b.it.count - a.it.count; });
+      return out.slice(0, MAX_SHOW);
+    }
+    doc.__stActivate = function (el) {
+      try {
+        if (!store.suggest || !isField(el)) return false;
+        if (doc.activeElement !== el) el.focus();
+        var L = el.value.length; try { el.setSelectionRange(L, L); } catch (e) {}
+        cur.sup = false; S(el).picked = false;
+        var list = suggest(el), head = '';
+        if (!list.length) { list = options(el); head = 'Smart text options'; }
+        if (!list.length) { hide(); return false; }
+        render(el, list, head); return true;
+      } catch (e) { return false; }
+    };
     function fireInput(el) {
       prog = true;
       try { el.dispatchEvent(new win.InputEvent('input', { bubbles: true, inputType: 'insertReplacementText' })); } catch (e) { try { el.dispatchEvent(new win.Event('input', { bubbles: true })); } catch (e2) {} }
@@ -2359,7 +2448,7 @@ window.addEventListener('DOMContentLoaded', function () {
       var b = cur.list[i], el = cur.el; if (!b || !el) return;
       var v = el.value; if (v !== b.snap) { hide(); return; }
       var text = b.it.text; if (el.tagName === 'INPUT') text = text.replace(/\s*\n+\s*/g, ' ');
-      var after = v.slice(b.end), ins = text;
+      var after = v.slice(b.end), ins = (b.sep || '') + text;
       if (after && !/^[\s.,;:!?)\]]/.test(after) && !/\s$/.test(ins)) ins += ' ';
       var nv = v.slice(0, b.start) + ins + after, caret = b.start + ins.length;
       el.value = nv; try { el.setSelectionRange(caret, caret); } catch (e) {}
@@ -2519,6 +2608,7 @@ window.addEventListener('DOMContentLoaded', function () {
     var s = document.createElement('style'); s.setAttribute('data-st-outer', '1'); s.textContent = PANEL_CSS; document.head.appendChild(s);
     var bar = document.getElementById('bar');
     if (bar) { var b = h('button', 'st-open', '✦'); b.appendChild(h('span', 'st-lb', 'Smart text')); b.setAttribute('aria-label', 'Smart text'); b.type = 'button'; b.title = 'Learned phrases and settings'; b.setAttribute('data-st-outer', '1'); b.onclick = openPanel; bar.appendChild(b); }
+    try { document.__stScoped = true; attach(window); } catch (e) {}   // Round 54: hub note boxes that carry quick-note chips (nothing else in the hub)
     ['fDay', 'fDeals'].forEach(function (id) {
       var f = document.getElementById(id); if (!f) return;
       function go() { try { attach(f.contentWindow); } catch (e) {} }
@@ -3506,6 +3596,66 @@ window.addEventListener('DOMContentLoaded', function () {
       }
     }
   } catch (e) {}
+})();
+&lt;/script&gt;
+&lt;script&gt;// Round 55: HubSpot link helper – removes &quot;?taskId=…&quot; (everything from taskid to the end of the link), cleans typing / paste / saved data, and gives one way to recognise the same deal. Same script in the hub and both frames.
+(function () {
+  'use strict';
+  if (window.hubLink) return;
+  var W = window, LS = null; try { LS = W.localStorage; } catch (e) {}
+  var TASK = /[?&amp;]task[_-]?id\b[^\s&quot;'&lt;&gt;\\]*/gi, QUICK = /task[_-]?id/i;
+  function clean(s) { if (s == null) return s; s = String(s); return QUICK.test(s) ? s.replace(TASK, '') : s; }
+  function isLink(s) { return /^(?:https?:\/\/|www\.)\S+$/i.test(String(s || '').trim()); }
+  // comparable identity of a link: the HubSpot record id when there is one, otherwise the cleaned text without protocol / www / trailing slash / # part
+  function key(s) {
+    s = clean(String(s || '').trim()); if (!s) return '';
+    var p = s.replace(/^[a-z]+:\/\//i, '').replace(/^www\./i, '').replace(/#.*$/, '').toLowerCase(), path = p.replace(/\?.*$/, '').replace(/\/+$/, '');
+    var m = null, rx = /\/(?:deals?|tickets?|contacts?|companies|company|record\/0-\d+|objects\/0-\d+)\/(\d{4,})(?=\/|$)/g, x;   // the LAST id in the path (the first one is the portal id)
+    while ((x = rx.exec(path))) m = x; if (!m) m = path.match(/\/(\d{5,})$/);
+    if (m) return 'hs:' + m[1];
+    return 'u:' + path + (/\?/.test(p) ? '?' + p.split('?')[1].replace(/\/+$/, '') : '');
+  }
+  function same(a, b) { var x = key(a), y = key(b); return !!x &amp;&amp; x === y; }
+  function id(s) { var k = key(s); return /^hs:/.test(k) ? k.slice(3) : ''; }
+  W.hubLink = { clean: clean, isLink: isLink, key: key, same: same, id: id };
+
+  // ---- typing / paste: the box shows the clean link straight away ----
+  function fix(el) {
+    try {
+      if (!el || !el.tagName || !/^(INPUT|TEXTAREA)$/.test(el.tagName)) return;
+      var t = (el.type || '').toLowerCase(); if (t === 'password' || t === 'checkbox' || t === 'radio' || t === 'file') return;
+      var v = el.value; if (!v || !QUICK.test(v)) return; var nv = clean(v); if (nv === v) return;
+      var pos = null; try { pos = el.selectionStart; } catch (e) {}
+      el.value = nv;
+      try { if (pos != null) { var np = Math.min(pos, nv.length); if (document.activeElement === el) el.setSelectionRange(np, np); } } catch (e) {}
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    } catch (e) {}
+  }
+  var tm = null;   // typed text is cleaned a moment after typing stops (so '?taskId=' typed letter by letter does not leave '=555' behind); paste / blur / change clean at once
+  document.addEventListener('input', function (e) { var el = e.target; if (!el || !el.value || !QUICK.test(el.value)) return; clearTimeout(tm); tm = setTimeout(function () { fix(el); }, 450); }, true);
+  document.addEventListener('change', function (e) { fix(e.target); }, true);
+  document.addEventListener('paste', function (e) { var el = e.target; setTimeout(function () { fix(el); }, 0); }, true);
+  document.addEventListener('blur', function (e) { fix(e.target); }, true);
+
+  // ---- saved data: every later save is cleaned, and what is already saved is cleaned once at start ----
+  function dataKey(k) { try { return W.hubPrivacy &amp;&amp; W.hubPrivacy.isData ? W.hubPrivacy.isData(k) : true; } catch (e) { return true; } }
+  try {
+    var prev = W.Storage.prototype.setItem;
+    W.Storage.prototype.setItem = function (k, v) {
+      try { if (this === LS &amp;&amp; typeof v === 'string' &amp;&amp; QUICK.test(v) &amp;&amp; dataKey(k)) v = clean(v); } catch (e) {}
+      return prev.call(this, k, v);
+    };
+  } catch (e) {}
+  function migrate() {
+    if (!LS) return; var n = 0, keys = [], i;
+    try { for (i = 0; i &lt; LS.length; i++) keys.push(LS.key(i)); } catch (e) {}
+    keys.forEach(function (k) {
+      try { if (!dataKey(k)) return; var raw = LS.getItem(k); if (typeof raw !== 'string' || !QUICK.test(raw)) return; var nv = clean(raw); if (nv !== raw) { LS.setItem(k, nv); n++; } } catch (e) {}
+    });
+    W.hubLink.migrated = n;
+  }
+  try { migrate(); } catch (e) {}
+  W.hubLink.migrate = migrate;
 })();
 &lt;/script&gt;
 &lt;/head&gt;
@@ -7140,7 +7290,7 @@ function cpIco(l) {
       var best = null;
       L.forEach(function (d) {
         if (!d.stage) return; var score = 0;
-        if (lk &amp;&amp; (d.links || []).some(function (x) { return String(x).toLowerCase() === lk; })) score += 3;
+        if (lk &amp;&amp; (d.links || []).some(function (x) { return String(x).toLowerCase() === lk || (window.hubLink &amp;&amp; window.hubLink.same(x, lk)); })) score += 3;
         if (nm.length &gt;= 3 &amp;&amp; String(d.name || '').trim().toLowerCase() === nm) score += 2;
         if (score &amp;&amp; (!best || score &gt; best.s || (score === best.s &amp;&amp; (d.last || 0) &gt; (best.d.last || 0)))) best = { s: score, d: d };
       });
@@ -7184,7 +7334,7 @@ function cpIco(l) {
   function dup(el) {
     var form = el.closest('[data-section=&quot;tasks&quot;]') || el.closest('#qaForm'); if (!form) return;
     var lk = String((form.querySelector('[data-f=&quot;number&quot;]') || {}).value || '').trim().toLowerCase(), nm = String((form.querySelector('[data-f=&quot;deal&quot;]') || {}).value || '').trim().toLowerCase();   // Round 47: matched by HubSpot link or deal name (no phone numbers / e-mails)
-    var hit = null; if (lk || nm.length &gt;= 3) list().forEach(function (d) { if (hit) return; if ((lk &amp;&amp; (d.links || []).some(function (x) { return String(x).toLowerCase() === lk; })) || (nm.length &gt;= 3 &amp;&amp; String(d.name || '').trim().toLowerCase() === nm)) hit = d; });
+    var hit = null; if (lk || nm.length &gt;= 3) list().forEach(function (d) { if (hit) return; if ((lk &amp;&amp; (d.links || []).some(function (x) { return String(x).toLowerCase() === lk || (window.hubLink &amp;&amp; window.hubLink.same(x, lk)); })) || (nm.length &gt;= 3 &amp;&amp; String(d.name || '').trim().toLowerCase() === nm)) hit = d; });
     var h = form.querySelector('.dp-hint'), host = (form.querySelector('[data-f=&quot;number&quot;]') || el);
     if (!hit) { if (h) h.remove(); return; }
     // Round 49: a known deal fills its HubSpot link and deal stage by itself (only into empty boxes)
@@ -7257,7 +7407,7 @@ function cpIco(l) {
     var c = e.target.closest &amp;&amp; e.target.closest('.qn-chip'); if (c) {
       var form2 = formOf(c), nt2 = form2 &amp;&amp; form2.querySelector('[data-f=&quot;notes&quot;]'); if (!nt2) return;
       if (c.getAttribute('data-qned')) return; if (c.getAttribute('data-qnadd')) { var t = prompt('New quick note'); if (t &amp;&amp; t.trim()) { var A = chips(); A.push(t.trim().slice(0, 40)); try { localStorage.setItem('hub_chips_v1', JSON.stringify(A)); } catch (x) {} draw(true); } return; }
-      var tx = c.textContent; nt2.value = nt2.value ? nt2.value.replace(/\s+$/, '') + '. ' + tx : tx; nt2.dispatchEvent(new Event('input', { bubbles: true })); nt2.focus();
+      var tx = c.textContent; nt2.value = nt2.value ? nt2.value.replace(/\s+$/, '') + '. ' + tx : tx; nt2.dispatchEvent(new Event('input', { bubbles: true })); nt2.focus(); try { if (document.__stActivate) document.__stActivate(nt2); } catch (x) {}   // Round 54
     }
   }, true);
   function chips() { try { var a = JSON.parse(localStorage.getItem('hub_chips_v1') || 'null'); if (Array.isArray(a)) return a; } catch (e) {} return ['No answer', 'Left message', 'Call back later', 'Interested', 'Not interested', 'Sent details']; }
@@ -7346,7 +7496,7 @@ function cpIco(l) {
     var c = e.target.closest &amp;&amp; e.target.closest('.rc-c,.qn-t'); if (!c) return; var form = formOf(c); if (!form) return;
     if (c.classList.contains('rc-c')) { var k = c.getAttribute('data-rk'); fillFrom(form, deals().filter(function (x) { return x.key === k; })[0]); return; }
     if (c.getAttribute('data-tadd')) { var nm = prompt('Template name'); if (!nm || !nm.trim()) return; var no = (form.querySelector('[data-f=&quot;notes&quot;]') || {}).value || '', sg = (form.querySelector('[data-f=&quot;stage&quot;]') || {}).value || ''; var A = etpl(); A.push({ n: nm.trim().slice(0, 24), notes: no, stage: sg }); try { localStorage.setItem('hub_etpl_v1', JSON.stringify(A)); } catch (x) {} document.querySelectorAll('.qn-tpl').forEach(function (r) { r.remove(); }); document.querySelectorAll('.qn-row[data-r34]').forEach(function (r) { r.removeAttribute('data-r34'); }); draw(); return; }
-    var t = etpl()[+c.getAttribute('data-ti')]; if (!t) return; var nt = form.querySelector('[data-f=&quot;notes&quot;]'); if (nt &amp;&amp; t.notes) { nt.value = nt.value ? nt.value.replace(/\s+$/, '') + '. ' + t.notes : t.notes; nt.dispatchEvent(new Event('input', { bubbles: true })); } if (t.stage) setv(form, 'stage', t.stage); if (nt) nt.focus();
+    var t = etpl()[+c.getAttribute('data-ti')]; if (!t) return; var nt = form.querySelector('[data-f=&quot;notes&quot;]'); if (nt &amp;&amp; t.notes) { nt.value = nt.value ? nt.value.replace(/\s+$/, '') + '. ' + t.notes : t.notes; nt.dispatchEvent(new Event('input', { bubbles: true })); } if (t.stage) setv(form, 'stage', t.stage); if (nt) { nt.focus(); try { if (document.__stActivate) document.__stActivate(nt); } catch (x) {} }
   }, true);
   var T0 = null; new MutationObserver(function () { clearTimeout(T0); T0 = setTimeout(draw, 350); }).observe(document.body, { childList: true, subtree: true }); setTimeout(draw, 900);
   // ---- promise tracker: &quot;will send price list&quot; in a note becomes a task due today (when the note has no date of its own) ----
@@ -8081,7 +8231,7 @@ function cpIco(l) {
   function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
   function esc(x) { return String(x == null ? '' : x).replace(/&amp;/g, '&amp;amp;').replace(/&quot;/g, '&amp;quot;').replace(/&lt;/g, '&amp;lt;'); }
   function dg(s) { return String(s || '').replace(/\D/g, ''); }
-  function tail(s) { var d = dg(s); return d.length &gt;= 6 ? d.slice(-7) : ''; }
+  function tail(s) { var L = window.hubLink; if (L &amp;&amp; L.isLink(s)) return L.key(s); var d = dg(s); return d.length &gt;= 6 ? d.slice(-7) : ''; }   // Round 55: a link is recognised by its HubSpot id, never by the digits of a task id
   function cfg() { try { return PAR.hubComfort ? PAR.hubComfort.cfg() : {}; } catch (e) { return {}; } }
   function ago(ms) { var m = Math.floor((Date.now() - ms) / 60000); if (m &lt; 2) return 'just now'; if (m &lt; 60) return m + ' min ago'; var h = Math.floor(m / 60); if (h &lt; 24) return h + ' h ago'; var d = Math.floor(h / 24); return d + (d === 1 ? ' day ago' : ' days ago'); }
   // ---- history for a number: every Day End entry + every Won Deal ----
@@ -8395,6 +8545,10 @@ html .cx-tkf{display:inline-flex}
 @media (max-width:820px){
   #blocks .input-row:not(.stage-row)&gt;input:not(.hide):not([type=hidden]){flex:0 0 auto;min-width:0;width:100%}
 }
+
+/* Round 53: the &quot;Seen N× · last … ago&quot; line goes UNDER the HubSpot link box on its own line (it used to sit beside it and squeeze the box) */
+:is(.input-row,.qa-inline):has(&gt;.e41-hint){flex-wrap:wrap!important}
+:is(.input-row,.qa-inline)&gt;.e41-hint{order:99;flex:0 0 100%;max-width:100%;min-width:0;margin:2px 0 0;max-height:4.6em;overflow:hidden}
 &lt;/style&gt;
 &lt;/body&gt;&lt;/html&gt;"></iframe>
 <iframe id="fDeals" allow="clipboard-write" style="display:none" srcdoc="&lt;!DOCTYPE html&gt;
@@ -8950,6 +9104,66 @@ html .cx-tkf{display:inline-flex}
       }
     }
   } catch (e) {}
+})();
+&lt;/script&gt;
+&lt;script&gt;// Round 55: HubSpot link helper – removes &quot;?taskId=…&quot; (everything from taskid to the end of the link), cleans typing / paste / saved data, and gives one way to recognise the same deal. Same script in the hub and both frames.
+(function () {
+  'use strict';
+  if (window.hubLink) return;
+  var W = window, LS = null; try { LS = W.localStorage; } catch (e) {}
+  var TASK = /[?&amp;]task[_-]?id\b[^\s&quot;'&lt;&gt;\\]*/gi, QUICK = /task[_-]?id/i;
+  function clean(s) { if (s == null) return s; s = String(s); return QUICK.test(s) ? s.replace(TASK, '') : s; }
+  function isLink(s) { return /^(?:https?:\/\/|www\.)\S+$/i.test(String(s || '').trim()); }
+  // comparable identity of a link: the HubSpot record id when there is one, otherwise the cleaned text without protocol / www / trailing slash / # part
+  function key(s) {
+    s = clean(String(s || '').trim()); if (!s) return '';
+    var p = s.replace(/^[a-z]+:\/\//i, '').replace(/^www\./i, '').replace(/#.*$/, '').toLowerCase(), path = p.replace(/\?.*$/, '').replace(/\/+$/, '');
+    var m = null, rx = /\/(?:deals?|tickets?|contacts?|companies|company|record\/0-\d+|objects\/0-\d+)\/(\d{4,})(?=\/|$)/g, x;   // the LAST id in the path (the first one is the portal id)
+    while ((x = rx.exec(path))) m = x; if (!m) m = path.match(/\/(\d{5,})$/);
+    if (m) return 'hs:' + m[1];
+    return 'u:' + path + (/\?/.test(p) ? '?' + p.split('?')[1].replace(/\/+$/, '') : '');
+  }
+  function same(a, b) { var x = key(a), y = key(b); return !!x &amp;&amp; x === y; }
+  function id(s) { var k = key(s); return /^hs:/.test(k) ? k.slice(3) : ''; }
+  W.hubLink = { clean: clean, isLink: isLink, key: key, same: same, id: id };
+
+  // ---- typing / paste: the box shows the clean link straight away ----
+  function fix(el) {
+    try {
+      if (!el || !el.tagName || !/^(INPUT|TEXTAREA)$/.test(el.tagName)) return;
+      var t = (el.type || '').toLowerCase(); if (t === 'password' || t === 'checkbox' || t === 'radio' || t === 'file') return;
+      var v = el.value; if (!v || !QUICK.test(v)) return; var nv = clean(v); if (nv === v) return;
+      var pos = null; try { pos = el.selectionStart; } catch (e) {}
+      el.value = nv;
+      try { if (pos != null) { var np = Math.min(pos, nv.length); if (document.activeElement === el) el.setSelectionRange(np, np); } } catch (e) {}
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    } catch (e) {}
+  }
+  var tm = null;   // typed text is cleaned a moment after typing stops (so '?taskId=' typed letter by letter does not leave '=555' behind); paste / blur / change clean at once
+  document.addEventListener('input', function (e) { var el = e.target; if (!el || !el.value || !QUICK.test(el.value)) return; clearTimeout(tm); tm = setTimeout(function () { fix(el); }, 450); }, true);
+  document.addEventListener('change', function (e) { fix(e.target); }, true);
+  document.addEventListener('paste', function (e) { var el = e.target; setTimeout(function () { fix(el); }, 0); }, true);
+  document.addEventListener('blur', function (e) { fix(e.target); }, true);
+
+  // ---- saved data: every later save is cleaned, and what is already saved is cleaned once at start ----
+  function dataKey(k) { try { return W.hubPrivacy &amp;&amp; W.hubPrivacy.isData ? W.hubPrivacy.isData(k) : true; } catch (e) { return true; } }
+  try {
+    var prev = W.Storage.prototype.setItem;
+    W.Storage.prototype.setItem = function (k, v) {
+      try { if (this === LS &amp;&amp; typeof v === 'string' &amp;&amp; QUICK.test(v) &amp;&amp; dataKey(k)) v = clean(v); } catch (e) {}
+      return prev.call(this, k, v);
+    };
+  } catch (e) {}
+  function migrate() {
+    if (!LS) return; var n = 0, keys = [], i;
+    try { for (i = 0; i &lt; LS.length; i++) keys.push(LS.key(i)); } catch (e) {}
+    keys.forEach(function (k) {
+      try { if (!dataKey(k)) return; var raw = LS.getItem(k); if (typeof raw !== 'string' || !QUICK.test(raw)) return; var nv = clean(raw); if (nv !== raw) { LS.setItem(k, nv); n++; } } catch (e) {}
+    });
+    W.hubLink.migrated = n;
+  }
+  try { migrate(); } catch (e) {}
+  W.hubLink.migrate = migrate;
 })();
 &lt;/script&gt;
 &lt;/head&gt;
@@ -11419,11 +11633,12 @@ function cpIco(l) {
     ov.addEventListener('keydown', function (e) { if (e.key === 'Escape') ov.remove(); });
     document.body.appendChild(ov);
   }
+  function smart(n) { try { var d = n.ownerDocument; if (d.__stActivate) d.__stActivate(n); } catch (e) {} }   // Round 54: quick notes / templates open Smart text
   document.addEventListener('click', function (e) {
     var b = e.target.closest &amp;&amp; e.target.closest('.q39-c,.q39-tk,.q39-pi'); if (!b) return; var w = b.closest('.q39-wrap'); if (!w) return; e.preventDefault(); var n = w._n, q = b.classList.contains('q39-c') ? b.getAttribute('data-q') : 'tk'; if (q === 'tk' &amp;&amp; !b.classList.contains('q39-tk')) b = b.parentNode.querySelector('.q39-tk');
-    if (q === 'chip') { n.value = n.value ? n.value.replace(/\s+$/, '') + '. ' + b.textContent : b.textContent; n.dispatchEvent(new Event('input', { bubbles: true })); n.focus(); }
+    if (q === 'chip') { n.value = n.value ? n.value.replace(/\s+$/, '') + '. ' + b.textContent : b.textContent; n.dispatchEvent(new Event('input', { bubbles: true })); n.focus(); smart(n); }
     else if (q === 'addchip') { var t = prompt('New quick note'); if (t &amp;&amp; t.trim()) { var A = get('hub_chips_v1', DEF_CHIPS); A.push(t.trim().slice(0, 40)); put('hub_chips_v1', A); redraw(); } }
-    else if (q === 'tpl') { var tp = get('hub_etpl_v1', DEF_TPL)[+b.getAttribute('data-ti')]; if (tp &amp;&amp; tp.notes) { n.value = n.value ? n.value.replace(/\s+$/, '') + '. ' + tp.notes : tp.notes; n.dispatchEvent(new Event('input', { bubbles: true })); n.focus(); } }
+    else if (q === 'tpl') { var tp = get('hub_etpl_v1', DEF_TPL)[+b.getAttribute('data-ti')]; if (tp &amp;&amp; tp.notes) { n.value = n.value ? n.value.replace(/\s+$/, '') + '. ' + tp.notes : tp.notes; n.dispatchEvent(new Event('input', { bubbles: true })); n.focus(); smart(n); } }
     else if (q === 'addtpl') { var nm = prompt('Template name'); if (nm &amp;&amp; nm.trim() &amp;&amp; n.value.trim()) { var B = get('hub_etpl_v1', DEF_TPL); B.push({ n: nm.trim().slice(0, 24), notes: n.value.trim() }); put('hub_etpl_v1', B); redraw(); } }
     else if (q === 'edchips') edit('chips'); else if (q === 'edtpl') edit('tpl');
     else if (q === 'tk') {
@@ -11486,7 +11701,7 @@ function cpIco(l) {
   function jget(k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } }
   function esc(x) { return String(x == null ? '' : x).replace(/&amp;/g, '&amp;amp;').replace(/&quot;/g, '&amp;quot;').replace(/&lt;/g, '&amp;lt;'); }
   function dg(s) { return String(s || '').replace(/\D/g, ''); }
-  function tail(s) { var d = dg(s); return d.length &gt;= 6 ? d.slice(-7) : ''; }
+  function tail(s) { var L = window.hubLink; if (L &amp;&amp; L.isLink(s)) return L.key(s); var d = dg(s); return d.length &gt;= 6 ? d.slice(-7) : ''; }   // Round 55: a link is recognised by its HubSpot id, never by the digits of a task id
   function cfg() { try { return PAR.hubComfort ? PAR.hubComfort.cfg() : {}; } catch (e) { return {}; } }
   function ago(ms) { var m = Math.floor((Date.now() - ms) / 60000); if (m &lt; 2) return 'just now'; if (m &lt; 60) return m + ' min ago'; var h = Math.floor(m / 60); if (h &lt; 24) return h + ' h ago'; var d = Math.floor(h / 24); return d + (d === 1 ? ' day ago' : ' days ago'); }
   // ---- history for a number: every Day End entry + every Won Deal ----
@@ -11684,6 +11899,10 @@ html .cx-tkf{display:inline-flex}
 @media (max-width:820px){
   #blocks .input-row:not(.stage-row)&gt;input:not(.hide):not([type=hidden]){flex:0 0 auto;min-width:0;width:100%}
 }
+
+/* Round 53: the &quot;Seen N× · last … ago&quot; line goes UNDER the HubSpot link box on its own line (it used to sit beside it and squeeze the box) */
+:is(.input-row,.qa-inline):has(&gt;.e41-hint){flex-wrap:wrap!important}
+:is(.input-row,.qa-inline)&gt;.e41-hint{order:99;flex:0 0 100%;max-width:100%;min-width:0;margin:2px 0 0;max-height:4.6em;overflow:hidden}
 &lt;/style&gt;
 &lt;/body&gt;
 &lt;/html&gt;
@@ -14418,6 +14637,7 @@ function installScrollNav(win, doc, getScroller) {
     var t = d.ts || 0, nt = ((d.meta && d.meta.__notes) || []); try { var D0 = load(); ((D0.notes || {})[d.key] || []).forEach(function (x) { if (x.ts > t) t = x.ts; }); } catch (e) {}
     return !!t && (Date.now() - t) / 864e5 >= n;
   }
+  function hasLink(arr, u) { return (arr || []).some(function (x) { return x === u || (window.hubLink && window.hubLink.same(x, u)); }); }   // Round 55
   function isLink(s) { return /^(?:https?:\/\/|www\.)\S+$/i.test(String(s || '').trim()); }
   function linkHref(s) { s = String(s || '').trim(); return /^https?:\/\//i.test(s) ? s : 'https://' + s; }
   function linkA(d, cls) { var u = (d.links || [])[0]; return u ? '<a class="' + (cls || 'dl-hs') + '" href="' + esc(linkHref(u)) + '" target="_blank" rel="noopener" title="Open the HubSpot deal" aria-label="Open the HubSpot deal" onclick="event.stopPropagation()">↗ HubSpot</a>' : ''; }
@@ -14429,19 +14649,19 @@ function installScrollNav(win, doc, getScroller) {
         var key = (dg ? dg.slice(-9) : '') + '|' + nm.toLowerCase(), d = map[key];
         if (!d) d = map[key] = { key: key, src: 'day', name: nm, numbers: [], links: [], email: '', entries: [], stage: '', plan: '', billing: '', price: '', mvr: '', regs: '', ts: 0, first: 0, pipeline: 'sales' };
         var ts = (t && t.at) || tsOf(k, hk, i), st = stageName(t.stage);
-        if (isLink(t.number) && d.links.indexOf(t.number) < 0) d.links.push(t.number);   // Round 47: no phone numbers or emails – only the HubSpot link
+        if (isLink(t.number) && !hasLink(d.links, t.number)) d.links.push(window.hubLink ? window.hubLink.clean(t.number) : t.number);   // Round 47: no phone numbers or emails – only the HubSpot link
         d.entries.push({ at: (t && t.at) || 0, ts: ts, day: k, hk: hk, stage: st, notes: String(t.notes || ''), plan: t.plan || '', price: t.price || '' });
         if (!d.first || ts < d.first) d.first = ts;
         if (ts >= d.ts) { d.ts = ts; if (st) d.stage = st; if (t.plan) { d.plan = t.plan; d.billing = t.billing || ''; d.price = t.price || ''; d.mvr = t.mvr || ''; d.regs = t.regs || ''; } }
       });
     } catch (e) {}
     Object.keys(map).forEach(function (k) { list.push(map[k]); });
-    D.manual.forEach(function (m) { list.push({ key: m.id, src: 'manual', name: m.name, numbers: [], links: isLink(m.number) ? [m.number] : [], email: '', entries: [], stage: m.stage || '', plan: m.plan || '', billing: m.billing || '', price: m.price || '', mvr: m.mvr || '', regs: m.regs || '', ts: m.ts || 0, first: m.ts || 0, pipeline: m.pipeline || 'sales', notes0: m.notes || '' }); });
+    D.manual.forEach(function (m) { list.push({ key: m.id, src: 'manual', name: m.name, numbers: [], links: isLink(m.number) ? [window.hubLink ? window.hubLink.clean(m.number) : m.number] : [], email: '', entries: [], stage: m.stage || '', plan: m.plan || '', billing: m.billing || '', price: m.price || '', mvr: m.mvr || '', regs: m.regs || '', ts: m.ts || 0, first: m.ts || 0, pipeline: m.pipeline || 'sales', notes0: m.notes || '' }); });
     // Round 35: merged duplicates – entries, numbers and the latest stage join the chosen deal
     (function () {
       var M = D.merge || {}, ks = Object.keys(M); if (!ks.length) return; var by = {}; list.forEach(function (d) { by[d.key] = d; });
       ks.forEach(function (from) { var f = by[from], t = by[M[from]]; if (!f || !t || f === t) return;
-        (f.links || []).forEach(function (n) { t.links = t.links || []; if (t.links.indexOf(n) < 0) t.links.push(n); });
+        (f.links || []).forEach(function (n) { t.links = t.links || []; if (!hasLink(t.links, n)) t.links.push(n); });
         t.entries = (t.entries || []).concat(f.entries || []); if (f.first && (!t.first || f.first < t.first)) t.first = f.first;
         if ((f.ts || 0) > (t.ts || 0)) { t.ts = f.ts; if (f.stage) t.stage = f.stage; if (f.plan) { t.plan = f.plan; t.billing = f.billing; t.price = f.price; t.mvr = f.mvr; t.regs = f.regs; } }
         f.__merged = true; });
@@ -21479,11 +21699,12 @@ function cpIco(l) {
     ov.addEventListener('keydown', function (e) { if (e.key === 'Escape') ov.remove(); });
     document.body.appendChild(ov);
   }
+  function smart(n) { try { var d = n.ownerDocument; if (d.__stActivate) d.__stActivate(n); } catch (e) {} }   // Round 54: quick notes / templates open Smart text
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('.q39-c,.q39-tk,.q39-pi'); if (!b) return; var w = b.closest('.q39-wrap'); if (!w) return; e.preventDefault(); var n = w._n, q = b.classList.contains('q39-c') ? b.getAttribute('data-q') : 'tk'; if (q === 'tk' && !b.classList.contains('q39-tk')) b = b.parentNode.querySelector('.q39-tk');
-    if (q === 'chip') { n.value = n.value ? n.value.replace(/\s+$/, '') + '. ' + b.textContent : b.textContent; n.dispatchEvent(new Event('input', { bubbles: true })); n.focus(); }
+    if (q === 'chip') { n.value = n.value ? n.value.replace(/\s+$/, '') + '. ' + b.textContent : b.textContent; n.dispatchEvent(new Event('input', { bubbles: true })); n.focus(); smart(n); }
     else if (q === 'addchip') { var t = prompt('New quick note'); if (t && t.trim()) { var A = get('hub_chips_v1', DEF_CHIPS); A.push(t.trim().slice(0, 40)); put('hub_chips_v1', A); redraw(); } }
-    else if (q === 'tpl') { var tp = get('hub_etpl_v1', DEF_TPL)[+b.getAttribute('data-ti')]; if (tp && tp.notes) { n.value = n.value ? n.value.replace(/\s+$/, '') + '. ' + tp.notes : tp.notes; n.dispatchEvent(new Event('input', { bubbles: true })); n.focus(); } }
+    else if (q === 'tpl') { var tp = get('hub_etpl_v1', DEF_TPL)[+b.getAttribute('data-ti')]; if (tp && tp.notes) { n.value = n.value ? n.value.replace(/\s+$/, '') + '. ' + tp.notes : tp.notes; n.dispatchEvent(new Event('input', { bubbles: true })); n.focus(); smart(n); } }
     else if (q === 'addtpl') { var nm = prompt('Template name'); if (nm && nm.trim() && n.value.trim()) { var B = get('hub_etpl_v1', DEF_TPL); B.push({ n: nm.trim().slice(0, 24), notes: n.value.trim() }); put('hub_etpl_v1', B); redraw(); } }
     else if (q === 'edchips') edit('chips'); else if (q === 'edtpl') edit('tpl');
     else if (q === 'tk') {
@@ -23134,6 +23355,10 @@ html .cx-tkf{display:inline-flex}
 @media (max-width:820px){
   #blocks .input-row:not(.stage-row)>input:not(.hide):not([type=hidden]){flex:0 0 auto;min-width:0;width:100%}
 }
+
+/* Round 53: the "Seen N× · last … ago" line goes UNDER the HubSpot link box on its own line (it used to sit beside it and squeeze the box) */
+:is(.input-row,.qa-inline):has(>.e41-hint){flex-wrap:wrap!important}
+:is(.input-row,.qa-inline)>.e41-hint{order:99;flex:0 0 100%;max-width:100%;min-width:0;margin:2px 0 0;max-height:4.6em;overflow:hidden}
 </style>
 <style id="hubMobile49">/* ===== Round 49: phone app layout (applies only when body.dk49: widths up to 820px). Compact, app-like, nothing removed. ===== */
 html body.dk49{--m-gap:8px}
