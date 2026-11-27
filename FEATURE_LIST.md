@@ -492,3 +492,10 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 
 ## Round 55
 - HubSpot links lose `?taskId=…` automatically (typing, paste, saves, saved data); "Use last details", "Already in Deals" and the "Seen N×" line recognise a deal by its HubSpot id; same-link duplicates and task-id-split deals merge. `hubLink` helper (`tools/links55.tpl.js`), test `tests/test_v55.py`. See `FEATURES_V55_*.md`. Not deployed.
+
+## Round 57 – One whole app, rebuilt (see FEATURES_V57_FULL_APP_REBUILD.md)
+- New app in `app/` (source) and `next/` (built): one codebase, no iframes, Day End Report and Won Deals still two sections.
+- New sync: one record per item, field-level merge, deletes never come back, offline outbox, no page reloads; same Supabase table, no SQL to run.
+- Design bases everywhere: nav-bar look for every tab/chip/button, glow rule, only add buttons filled, one data box, one sheet; phone bar = the same bar at the bottom.
+- Old data migrated automatically (device or cloud copy) without duplicates; Day End reports identical to the old app (tested).
+- Not rebuilt yet (data kept): HR extras, Automation Studio flows, dashboard builder, Smart text, Snippets, Templates page, Invoices, Excel/paste import.
