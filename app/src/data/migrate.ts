@@ -5,9 +5,11 @@ import { putLegacy, get, put, all } from './store';
 import { hash, isKey, lsGet, lsSet, slug, keyOf } from '../lib/util';
 import { linkKey, isLink } from '../lib/privacy';
 import type { SK } from '../domain/dayend';
+import { importSmartLegacy } from '../features/smart';
+import { importSnippetsLegacy } from '../features/snippets';
 
 export const LEGACY_KEYS = ['dayEndReport_v6', 'dealsTracker_v1', 'crm_v1', 'followTasks_v1', 'lostDeals_v1', 'tickets_v1', 'smartText_v1', 'deals_v1', 'tools_v1', 'hub_order_v1', 'hub_order_side_v1', 'hub_tools_hidden_v1', 'hub_snippets_v1', 'billing_v1', 'rules_v1', 'dash_v1', 'links_v1', 'hub_hr_v1', 'hub_owners', 'hub_views', 'hub_templates', 'hub_lists', 'hub_goals', 'hub_hr_files', 'hub_calls_v1', 'hub_sortmode_v1', 'hub_goals_v1', 'hub_recur_v1', 'hub_etpl_v1', 'hub_chips_v1', 'hub_runlog_v1', 'hub_bday_v1', 'hub_greet_v1', 'hub_obj_v1', 'hub_invoices_v1', 'hub_dtile_v1', 'hub_shortcuts_v1', 'hub_nodup_v1', 'hub_auto2_v1', 'hub_msgauto_v1', 'hub_flows_v1', 'hub_feat_v1', 'hub_qa_cfg_v1', 'hub_tools_cfg_v1', 'hub_priv_v1'];
-const HANDLED = new Set(['dayEndReport_v6', 'dealsTracker_v1', 'deals_v1', 'lostDeals_v1', 'tickets_v1', 'followTasks_v1', 'hub_hr_v1', 'billing_v1', 'hub_msgauto_v1', 'crm_v1']);
+const HANDLED = new Set(['smartText_v1', 'hub_snippets_v1', 'dayEndReport_v6', 'dealsTracker_v1', 'deals_v1', 'lostDeals_v1', 'tickets_v1', 'followTasks_v1', 'hub_hr_v1', 'billing_v1', 'hub_msgauto_v1', 'crm_v1']);
 const SECS: SK[] = ['tasks', 'calls', 'whatsapp', 'tickets', 'other'];
 
 export interface Report { at: number; source: string; counts: Record<string, number>; added: number; updated: number; legacy: number }
@@ -126,6 +128,10 @@ export function runMigration(src: Src, source: string): Report {
   // ---- Message tasks ----
   const MA = J(src.hub_msgauto_v1, null);
   if (MA) mig('cfg', 'msgauto', { on: MA.on !== false, start: MA.start || '2026-11-23' });
+
+  // ---- Smart text + Snippets (Round 60) ----
+  if (src.smartText_v1) inc('smartText', importSmartLegacy(src.smartText_v1, mig));
+  if (src.hub_snippets_v1) inc('snippets', importSnippetsLegacy(src.hub_snippets_v1, mig));
 
   // ---- everything else: kept unchanged, synced and backed up ----
   let legacy = 0;

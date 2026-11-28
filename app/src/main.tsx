@@ -20,6 +20,9 @@ import { Tasks } from './sections/tasks';
 import { Dashboard, Analytics } from './sections/insights';
 import { HR, Automations, Settings, runRules } from './sections/more';
 import { allTasks } from './domain/crm';
+import { installSmart, importSmartLegacy } from './features/smart';
+import { installSnippets, importSnippetsLegacy } from './features/snippets';
+import { all as allRecs, get as getRec, putLegacy } from './data/store';
 
 function Page() {
   const t = route.value.t;
@@ -80,6 +83,15 @@ async function boot() {
   let pend: string[] = [], t: any = 0;
   onLocalChange(r => { if (r.c !== 'entries') return; pend.push(r.id); clearTimeout(t); t = setTimeout(() => { runRules(pend); pend = []; }, 600); });
   reminders();
+  // Round 60: Smart text + Snippets. Users who migrated before this version: convert the old data carried over as 'legacy'
+  // (or this device's old app); with no old shortcuts, the starter pack once. Runs after the first sync so cloud data is in.
+  if (!lsGet('v2_smartsnip_done')) {
+    const raw = (k: string) => (getRec<any>('legacy', k)?.raw as string | undefined) || lsGet(k);
+    if (!allRecs('smart').length) importSmartLegacy(raw('smartText_v1'), putLegacy);
+    if (!allRecs('snippets').length) importSnippetsLegacy(raw('hub_snippets_v1') || null, putLegacy);
+    lsSet('v2_smartsnip_done', '1');
+  }
+  installSmart(); installSnippets();
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js').catch(() => { /* */ });
   void rev;
 }

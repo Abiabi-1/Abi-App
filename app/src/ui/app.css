@@ -166,3 +166,15 @@ details.hist summary { cursor: pointer; font-size: .74rem; margin-top: 4px; }
 .scr-btns { position: fixed; right: 14px; bottom: 90px; z-index: 850; display: flex; flex-direction: column; gap: 2px; }
 @media (max-width: 820px) { .notice { top: 10px; left: 12px; right: 12px; width: auto; transform: none; font-size: .8rem; } .notice span { flex: 1 1 auto; min-width: 0; } .scr-btns { right: 8px; bottom: calc(120px + env(safe-area-inset-bottom)); } }
 @media (max-width: 820px) { .ctl:has(> .b-add) { flex-wrap: nowrap; } .ctl:has(> .b-add) .search { flex: 1 1 60px; min-width: 60px; } .ctl .b-add { padding: 7px 12px; } }
+
+/* Smart text suggestions (as before) */
+.st-pop { position: fixed; z-index: 2147483150; display: none; overflow: auto; box-sizing: border-box; padding: 4px; border: 1px solid var(--border-strong); border-radius: 12px; background: var(--card-solid); color: var(--text); box-shadow: var(--shadow); font-size: .84rem; line-height: 1.35; }
+.st-pop.show { display: block; }
+.st-it { display: flex; gap: 8px; align-items: flex-start; padding: 7px 10px; border-radius: 8px; cursor: pointer; }
+.st-it:hover, .st-it.act { background: rgba(var(--accent-rgb), .16); }
+.st-tx { flex: 1; min-width: 0; white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.st-dim { opacity: .55; } .st-pin { flex: none; color: var(--accent2); font-size: .75rem; line-height: 1.6; }
+.st-ft { padding: 3px 10px 2px; font-size: .68rem; color: var(--text3); }
+.st-hd { padding: 3px 10px 4px; font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); }
+.sn-row.off { opacity: .5; }
+@media (max-width: 820px) { .sn-row, .st-row { flex-wrap: wrap; } .sn-row .main { flex: 1 1 calc(100% - 70px); } .sn-row .acts, .st-row .acts { width: 100%; justify-content: flex-end; } }

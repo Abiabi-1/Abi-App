@@ -510,3 +510,8 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 - Due-today notice + Today pop-up, weekly backup reminder, scroll to top / bottom.
 - Dashboard period picker + daily / weekly report (Copy / Download / Excel); Lost Deals "Open in Day End" + HubSpot link; Tasks order + "Messages by day" + Move to; Deals order.
 - Fix: old renewal dates (act / ren) were ignored after migration.
+
+## Round 60 – Smart text and Snippets back (see FEATURES_V60_SMART_TEXT_AND_SNIPPETS.md)
+- Smart text: same learning and ranking as before, suggestions in every text box (also inside Day End / Won Deals), Quick Add chips activate it, manager (✦ in the bar), phrases sync per record.
+- Snippets: same engine, commands and starter pack (75), ask pop-up, Backspace undo, instant shortcuts, manager (Menu, Settings, g then s) with Import / Export / Restore starter pack.
+- Old smartText_v1 / hub_snippets_v1 converted; fix: leaving the Day End with a focused box no longer breaks screen updates.

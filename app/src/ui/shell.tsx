@@ -27,6 +27,7 @@ export function Bar() {
   const st = status();
   const acts = <>
     <button type="button" class="ba" onClick={() => { searchOpen.value = true; }} title="Search (Ctrl+K)"><Icon n="search" /><span class="ba-l">Search</span></button>
+    <button type="button" class="ba" onClick={() => import('../features/smart').then(m => m.openSmart())} title="Smart text: learned phrases and settings"><span style={{ fontSize: '14px', lineHeight: 1 }}>✦</span><span class="ba-l">Smart text</span></button>
     <SyncPill />
     <button type="button" class="ba" onClick={() => toast('Backup downloaded (' + backup() + ' records)')} title="Download a backup"><Icon n="down" /><span class="ba-l">Backup</span></button>
     <label class="ba" title="Restore a backup file" style={{ cursor: 'pointer' }}><Icon n="up" /><span class="ba-l">Restore</span><input type="file" class="sr" accept=".json,application/json" onChange={async e => { const f = (e.target as HTMLInputElement).files?.[0]; if (!f) return; try { backup('before-restore'); const x = await restoreFile(f); toast(x.kind === 'old' ? 'Old-app backup imported (' + x.n + ')' : 'Restored ' + x.n + ' records'); } catch (er: any) { toast(er.message || 'Could not read that file'); } (e.target as HTMLInputElement).value = ''; }} /></label>
@@ -61,6 +62,8 @@ export function SideMenu() {
       <div class="sep" />
       <button type="button" class="side-i" onClick={() => { close(); quickAdd.value = {}; }}><Icon n="bolt" />Quick Add</button>
       <button type="button" class="side-i" onClick={() => { close(); searchOpen.value = true; }}><Icon n="search" />Search</button>
+      <button type="button" class="side-i" onClick={() => { close(); import('../features/smart').then(m => m.openSmart()); }}><span style={{ width: '17px', textAlign: 'center' }}>✦</span>Smart text</button>
+      <button type="button" class="side-i" onClick={() => { close(); import('../features/snippets').then(m => m.openSnippets()); }}><Icon n="note" />Snippets (text shortcuts)</button>
       <button type="button" class="side-i" onClick={() => { close(); toast('Backup downloaded (' + backup() + ' records)'); }}><Icon n="down" />Backup</button>
       {sync.email.value ? <button type="button" class="side-i" onClick={() => { close(); signOut(); }}><Icon n="cloud" />Sign out</button> : <button type="button" class="side-i" onClick={() => { close(); sync.loginOpen.value = true; }}><Icon n="cloud" />Sign in to sync</button>}
       <div class="faint side-v">New app · version 2 · {sync.email.value || 'this device only'}</div>

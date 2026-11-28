@@ -34,6 +34,8 @@ export function regsStep(v: V, d: number): V {
   return priced(o, 'regs');
 }
 
+// Round 54: a quick note / outcome chip writes into the box, then Smart text shows what usually follows
+function activateAfter(e: Event, f: string) { const root = (e.currentTarget as HTMLElement).closest('.ef'); setTimeout(() => import('../features/smart').then(m => m.smartActivate(root?.querySelector('[data-f="' + f + '"]'))), 30); }
 export function EntryForm(p: { sk: SK; day: string; hk: string; edit?: Entry | null; onDone?: (id?: string) => void; quick?: boolean; compact?: boolean; autoFocus?: boolean; initial?: V }) {
   const def = SECTIONS.find(s => s.key === p.sk)!;
   const blank = (): V => ({ ...(p.edit ? editFields(p.edit) : {}), ...(p.initial || {}) });
@@ -81,8 +83,8 @@ export function EntryForm(p: { sk: SK; day: string; hk: string; edit?: Entry | n
       {won && <input class={'in' + (isPaid(v.plan) && v.pricing !== 'custom' ? ' ro' : '')} readOnly={isPaid(v.plan) && v.pricing !== 'custom'} inputMode="decimal" data-f="mvr" placeholder="Price (MVR)" value={v.mvr || ''} onInput={e => set('mvr', (e.target as HTMLInputElement).value)} onKeyDown={key} />}
       {won && hasRegs(v.plan) && <div class="ef-regs" title="Professional only · extra registers $20 / 300 MVR per month each (×6 biannual, ×12 annual)"><span class="lbl">Extra registers</span><button type="button" class="bi sm" onClick={() => setV(o => regsStep(o, -1))} aria-label="Fewer registers">−</button><b class="mono">{v.regs || '0'}</b><button type="button" class="bi sm" onClick={() => setV(o => regsStep(o, 1))} aria-label="More registers">+</button></div>}
     </div>}
-    {p.quick && p.sk === 'tasks' && <div class="row-scroll ef-sc">{CALL_OUTCOMES.map(o => <button type="button" class="chip" onClick={() => setV(x => ({ ...x, notes: x.notes ? x.notes + '. ' + o : o }))}>{o}</button>)}</div>}
-    {p.quick && <div class="row-scroll ef-sc">{QUICK_NOTES.map(o => <button type="button" class="chip" onClick={() => { const f = p.sk === 'tasks' ? 'notes' : def.fields[def.fields.length - 1].name; setV(x => ({ ...x, [f]: x[f] ? x[f] + '. ' + o : o })); }}>{o}</button>)}</div>}
+    {p.quick && p.sk === 'tasks' && <div class="row-scroll ef-sc">{CALL_OUTCOMES.map(o => <button type="button" class="chip" onClick={e => { setV(x => ({ ...x, notes: x.notes ? x.notes + '. ' + o : o })); activateAfter(e, 'notes'); }}>{o}</button>)}</div>}
+    {p.quick && <div class="row-scroll ef-sc">{QUICK_NOTES.map(o => <button type="button" class="chip" onClick={e => { const f = p.sk === 'tasks' ? 'notes' : def.fields[def.fields.length - 1].name; setV(x => ({ ...x, [f]: x[f] ? x[f] + '. ' + o : o })); activateAfter(e, f); }}>{o}</button>)}</div>}
     <div class="ef-go">
       {p.edit && <Btn onClick={() => { setV(p.initial ? { ...p.initial } : {}); p.onDone?.(); }}>Cancel</Btn>}
       <button type="button" class="b-add" onClick={submit}>{p.edit ? 'Save changes' : <><Icon n="plus" />Add</>}</button>

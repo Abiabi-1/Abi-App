@@ -150,6 +150,7 @@ function Privacy() {
   const [p, setP] = useState(lsJSON<{ linkInReport?: boolean }>('hub_priv_v1', {}));
   return <div class="card">
     <p class="muted" style={{ marginTop: 0 }}>No phone numbers, e-mails or contact data are ever stored. Every save, import and update from your other device goes through the same cleaner. Only deal names, ticket names and the HubSpot deal link are kept.</p>
+    <div class="ctl" style={{ flexWrap: 'wrap' }}><Btn onClick={() => import('../features/smart').then(m => m.openSmart())}>✦ Smart text</Btn><Btn onClick={() => import('../features/snippets').then(m => m.openSnippets())}>Snippets (text shortcuts)</Btn></div>
     <div class="ctl"><span class="grow">Include the HubSpot link in reports</span><Switch on={!!p.linkInReport} onChange={x => { const n = { ...p, linkInReport: x }; setP(n); lsSet('hub_priv_v1', JSON.stringify(n)); }} /></div>
     <div class="faint" style={{ fontSize: '.78rem' }}>Cleaned out since this app started: {privacyHits.value}</div>
   </div>;

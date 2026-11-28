@@ -55,4 +55,4 @@ Everything in §1 and §2 is done. Extra problems found while doing it, also fix
 - **The Deals Report was missing its "Renewals" block** (the old report ends with "Renewals / Deal: activated …, due …"). It is back, and the report now matches the old app exactly (test).
 - **The due-today notice was squeezed on phone.** It now uses the full width.
 
-Tests: `won_look` 27 checks (including Deals Report and All days report equal to the old app, the Revenue line, the MRR box, the renewal-date migration), `ui` 55, `parity` 5, `dayend_look` 33, `import` 4, `sync` 16. All pass.
+Tests: `won_look` 27 checks (including Deals Report and All days report equal to the old app, the Revenue line, the MRR box, the renewal-date migration), `ui` 52, `parity` 5, `dayend_look` 33, `import` 4, `sync` 16. All pass.

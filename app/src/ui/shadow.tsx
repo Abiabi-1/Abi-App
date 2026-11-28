@@ -8,7 +8,7 @@ import { theme, PALETTES } from './state';
 export function Shadow({ css, children, onRoot }: { css: string; children: ComponentChildren; onRoot?: (r: ShadowRoot) => void }) {
   const ref = useRef<HTMLDivElement>(null); const [mount, setMount] = useState<HTMLElement | null>(null);
   useLayoutEffect(() => {
-    const host = ref.current!; const sr = host.shadowRoot || host.attachShadow({ mode: 'open' }); onRoot?.(sr);
+    const host = ref.current!; const sr = host.shadowRoot || host.attachShadow({ mode: 'open' }); onRoot?.(sr); import('../features/smart').then(m => m.smartRoot(sr));
     if (!sr.querySelector('style')) { const st = document.createElement('style'); st.textContent = css; sr.appendChild(st); }
     let m = sr.querySelector('.de-body') as HTMLElement | null; if (!m) { m = document.createElement('div'); m.className = 'de-body'; sr.appendChild(m); }
     setMount(m);
