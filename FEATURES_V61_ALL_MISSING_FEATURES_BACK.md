@@ -118,4 +118,35 @@ The lists use one shared list and editor that reads the same field definitions a
 - Webhook flows: not brought back. Sending data to outside services would need its own privacy decision. Tell me if you want it.
 
 ## Status
-(filled in after implementation)
+**Built and tested in Chromium (PC 1280 px, phone 390 px). Pushed to the branch `claude/app-rebuild-sync-fixes-ozrbm2` (not merged). NOT deployed, NOT tested on a real iPhone.**
+
+| Part | State |
+|---|---|
+| §0 Old HR data that was dropped (lists, slips, timesheets, notes, audit, pay settings, leave types) | **Fixed.** It is read once more on the first start of this version (cloud copy when signed in, otherwise this device). Things you deleted in the new app stay deleted. Test: converted, with no phone / e-mail. |
+| §1 HR & Time – 30 tabs | **Done.** Every tab opens without an error (test). Leave balances, holidays in the leave maths, weekly schedule (used by lateness / overtime), pay estimate + Copy / Download / Print / Bank CSV, salary slips + trend, time tracker, timesheet Submit / Approve & lock, analytics, audit log, the extra settings. |
+| §2 Tools page – 22 tools + My shortcuts | **Done.** Every tool opens without an error (test); paste-a-list, recurring tasks, restore points and the calendar are tested by hand-steps in the test too. |
+| §3 Jump to, focus, one-hand, app lock, comfort, voice, daily notification, owner filter + saved views, bulk select, “No HubSpot link” filter | **Done.** Tested: Alt+J, focus mode, PIN lock (wrong / right PIN, only a hash kept), Tickets Select. |
+| §4 Automation Studio + Closed Won check | **Done.** Tested: an old flow converts, fires once on a matching entry; an unsupported old flow shows “not supported yet”; Closed Won without a plan asks, “Save anyway” saves. |
+| §5 Dashboard Customize / Arrange / Build your own, saved Analytics reports | **Done.** Tested: the converted widget shows; Customize hides a block. |
+
+**Bugs found while doing this, also fixed:**
+- **The old data on a device was only picked up if that device had Day End, task or deal data.** A device with only HR or tools data was skipped. Now any old key counts. (Found by the new test.)
+- **Paste a list of deals didn't skip a duplicate inside the same paste.** Fixed and tested.
+- **The local copy kept for re-imports was cleaned as one long text,** which broke HubSpot links in it (only on this device, never synced). It is now kept field by field.
+- **The app lock needs the browser's secure crypto, which is missing on a plain http page.** A built-in SHA-256 is used there. A test checks it gives the same result as the standard one.
+
+**Different from the old app, or not complete (honest):**
+- **Flows the new app can't run:**
+  - Old flows that use these parts are kept and listed, switched off, as “not supported yet”:
+    - triggers: “best hour starts”, “I log a call outcome”, “calls in a row not answered”, “contact becomes hot” (contact score) and the two WhatsApp / email intent triggers;
+    - actions: webhook, “message task with the message ready”, “complete / move / re-prioritise this contact’s tasks”, “mark as messaged” and “change the Tasks order”.
+  - The supported parts are those listed in §4.
+- **Old Dashboard hidden tiles:** these are not converted, because the old tile names don't match the new blocks. Your old widgets *are* converted.
+- **Old call outcomes that were keyed by a phone number** are not converted (privacy). Those keyed by deal name are.
+- **Old Lists:** items that pointed at old contact records may show their old id instead of a name.
+- **Message templates:** if you had saved your own list in the old app, it is kept exactly as it was, and the starter set is not added (same as the old app).
+- **Trash “delete forever”** removes the item from the Trash list. It stays deleted, but there is no hard erase of the record from the sync history.
+- **One-hand mode (phone)** gives bigger buttons and starts the page lower so it is easier to reach. The phone bar is already at the bottom, so nothing else moves.
+- **Phone layout:** on phone, the Pay tiles scroll sideways inside their row, the same way the HR week tiles do.
+
+Tests: new `r61` 39 checks; `ui` 52, `won_look` 31, `dayend_look` 33, `smart` 29, `sync` 16, `parity` 5, `import` 4. All pass.

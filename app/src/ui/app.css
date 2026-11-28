@@ -178,3 +178,60 @@ details.hist summary { cursor: pointer; font-size: .74rem; margin-top: 4px; }
 .st-hd { padding: 3px 10px 4px; font-size: .62rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text3); }
 .sn-row.off { opacity: .5; }
 @media (max-width: 820px) { .sn-row, .st-row { flex-wrap: wrap; } .sn-row .main { flex: 1 1 calc(100% - 70px); } .sn-row .acts, .st-row .acts { width: 100%; justify-content: flex-end; } }
+
+/* ===== Round 61: HR tabs, lists, tools, studio, comfort ===== */
+.hr-tabs { margin: 0 0 12px; padding-bottom: 2px; }
+.hr-part > .h2:first-child, .h2.first { margin-top: 4px; }
+.coll-sum { font-size: .74rem; margin: -4px 0 8px; }
+.coll-prog { height: 4px; border-radius: 4px; background: rgba(var(--accent-rgb), .12); margin-top: 6px; overflow: hidden; }
+.coll-prog i { display: block; height: 100%; background: linear-gradient(90deg, var(--t1), var(--t2)); border-radius: 4px; }
+.coll-it .ck { margin-top: 2px; }
+.sched-row { align-items: center; flex-wrap: wrap; } .sched-row .main { min-width: 90px; }
+.tw .tot td { font-weight: 700; border-top: 1px solid var(--border-strong); }
+.ts-note { min-width: 120px; padding: 4px 8px; min-height: 28px; font-size: .78rem; }
+.lt-list { display: flex; flex-direction: column; gap: 6px; text-transform: none; letter-spacing: 0; }
+.lt-row { display: grid; grid-template-columns: minmax(0, 1fr) 80px 80px auto; gap: 6px; align-items: center; }
+.warn-card { color: var(--amber); font-size: .84rem; margin: 10px 0; }
+.tool-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; }
+.tool-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--border); background: var(--card-solid); color: var(--text); cursor: pointer; font: inherit; }
+.tool-tile b { font-size: .86rem; } .tool-tile span { font-size: .72rem; color: var(--text2); overflow-wrap: anywhere; }
+.tool-tile svg { color: var(--accent2); }
+.tool-tile:hover, .tool-tile:focus-visible { border-color: rgba(var(--accent-rgb), .45); box-shadow: 0 0 18px rgba(var(--accent-rgb), .18); outline: none; }
+.tpl-prev { white-space: pre-wrap; font: .82rem/1.5 var(--font, inherit); background: var(--card-solid); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin: 10px 0 0; overflow-wrap: anywhere; }
+.x-mini { border: 0; background: none; color: var(--text3); cursor: pointer; padding: 0 0 0 4px; font-size: .9rem; }
+.inv-row { display: grid; grid-template-columns: minmax(0, 1fr) 70px 100px auto; gap: 6px; margin-bottom: 6px; align-items: center; }
+table.heat { border-collapse: separate; border-spacing: 2px; font: .62rem var(--mono); }
+table.heat th { color: var(--text3); font-weight: 500; padding: 2px; } table.heat td { width: 26px; height: 22px; text-align: center; border-radius: 4px; color: var(--text); border: 1px solid var(--border); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-h { font-size: .66rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); text-align: center; padding: 4px 0; }
+.cal-d { min-height: 58px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 5px 6px; border-radius: 10px; border: 1px solid var(--border); background: var(--card-solid); color: var(--text); cursor: pointer; font: inherit; }
+.cal-d.out { opacity: .4; } .cal-d.today { border-color: rgba(var(--accent-rgb), .6); } .cal-d.sel { box-shadow: 0 0 0 2px rgba(var(--accent-rgb), .55); }
+.cal-n { font-size: .8rem; font-weight: 600; } .cal-dots { display: flex; gap: 2px; flex-wrap: wrap; } .cal-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); }
+.cal-dots i.k-ren { background: var(--green); } .cal-dots i.k-hr { background: var(--amber); } .cal-dots i.k-deal { background: #6aa8ff; }
+.ren-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.dup-g { margin-bottom: 10px; }
+.flow-act { margin-bottom: 8px; }
+.dash-n { display: flex; align-items: baseline; gap: 10px; padding: 8px 0; } .dash-n b { font-size: 2rem; color: var(--accent2); }
+.bulk-bar { padding: 6px 8px; border-radius: 12px; background: rgba(var(--accent-rgb), .07); }
+.ef-tpl .lbl { flex: 0 0 auto; margin-right: 4px; }
+.jump-it.sel { border-color: rgba(var(--accent-rgb), .55); }
+.lock-ov { position: fixed; inset: 0; z-index: 5000; background: var(--bg); display: grid; place-items: center; }
+.lock-box { display: flex; flex-direction: column; align-items: center; gap: 12px; width: min(320px, calc(100% - 32px)); text-align: center; }
+.lock-box .in { text-align: center; font-size: 1.3rem; letter-spacing: .3em; }
+.focus-exit { position: fixed; right: 12px; bottom: 12px; z-index: 900; border: 1px solid var(--border); background: var(--card-solid); color: var(--text2); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: .74rem; cursor: pointer; }
+html.focus-mode .fmoon, html.focus-mode .notice, html.focus-mode .bk-note, html.focus-mode .qa-tab, html.focus-mode .scr-btns, html.focus-mode .night, html.focus-mode .moon-tab { display: none !important; }
+html.big-text { font-size: 18px; }
+html.less-motion *, html.less-motion *::before, html.less-motion *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+html.compact .item { padding: 6px 10px; } html.compact .item + .item { margin-top: 3px; } html.compact .item .n { display: none; }
+@media (max-width: 820px) {
+  .ren-board { grid-template-columns: 1fr; }
+  .tool-grid { grid-template-columns: 1fr 1fr; } .tool-tile { padding: 10px; }
+  .cal-d { min-height: 46px; padding: 4px; } .cal-d small { display: none; }
+  .inv-row { grid-template-columns: minmax(0, 1fr) 54px 76px auto; }
+  .lt-row { grid-template-columns: minmax(0, 1fr) 62px 62px auto; }
+  .focus-exit { bottom: calc(64px + env(safe-area-inset-bottom)); }
+  html.one-hand .b, html.one-hand .bi, html.one-hand .chip, html.one-hand .b-add, html.one-hand .tab { min-height: 44px; }
+  html.one-hand .page { padding-top: 30vh; }
+  html.one-hand .sheet { max-height: 75vh; }
+  .coll-it { flex-wrap: wrap; } .coll-it .main { flex: 1 1 calc(100% - 80px); }
+}

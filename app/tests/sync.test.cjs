@@ -71,8 +71,9 @@ const session = { access: 'tok', refresh: 'ref', exp: Date.now() + 36e5, user: {
   const bad = await get(A, 'entries', 'bad1');
   H.check('phone numbers / e-mails from the cloud are cleaned out', bad && bad.text.indexOf('1234') < 0 && bad.text.indexOf('@') < 0, bad && bad.text);
   const stored = await A.evaluate(() => JSON.stringify(window.__abi.store.rawAll().map(r => r.d)));
+  if (process.env.DBG) console.log(await A.evaluate(() => JSON.stringify(window.__abi.store.rawAll().filter(r => JSON.stringify(r.d).indexOf("11122233") >= 0).map(r => [r.c, r.id, r.d]))));
   const m = stored.replace(/https?:\/\/[^"]+/g, '').replace(/"(at|ord|created|ts|exp|placeTs|updated|closed|doneAt)":\d+/g, '').match(/\+?\d[\d ().-]{6,}\d/g);
-  H.check('nothing phone- or e-mail-like is stored on the device', !(m || []).some(x => x.replace(/\D/g, '').length >= 7 && !/^\d{4}-\d{2}-\d{2}/.test(x)) && stored.indexOf(em) < 0, JSON.stringify(m));
+  H.check('nothing phone- or e-mail-like is stored on the device', !(m || []).some(x => x.replace(/\D/g, '').length >= 7 && !/^\d{4}-\d{2}-\d{2}/.test(x)) && stored.indexOf(em) < 0, JSON.stringify((m || []).filter(x => x.replace(/\D/g, "").length >= 7 && !/^\d{4}-\d{2}-\d{2}/.test(x))));
 
   // an item too large to send is reported and does not block the others
   await A.evaluate(() => window.__abi.store.put('legacy', 'huge_test', { raw: 'x'.repeat(4600000) }));

@@ -7,6 +7,7 @@ import { csv, download, fmtDay, keyOf, todayKey, uid, cx, copyText, h12 } from '
 import { Add, Btn, Chips, DangerBtn, Empty, Field, IconBtn, PageHead, SearchBox, Seg, Sheet, Stat, Tiles, closeModal, openMenu, openModal, toast } from '../ui/kit';
 import { go, isPhone, route } from '../ui/state';
 
+const selT = signal<string[] | null>(null);   // Round 61: Select (bulk)
 const V = signal({ type: '', sub: '', view: 'board' as 'board' | 'list', q: '', stage: '', pri: '', show: 'all' as 'all' | 'open' | 'closed' });
 const typeLabel = (x: { t: string; s: string }, types: TType[]) => { const ty = types.find(y => y.id === x.t); return ty ? (x.s ? x.s + ' ' + ty.name : ty.name) : ''; };
 const isToday = (t: Ticket) => !isClosedT(t) && (t.due === todayKey() || keyOf(new Date(t.updated)) === todayKey());
@@ -30,13 +31,15 @@ export function Tickets() {
     <div class="ctl" style={{ marginTop: '10px' }}>
       <Seg value={v.view} onChange={x => set({ view: x })} opts={[['board', 'Board'], ['list', 'List']]} />
       <SearchBox value={v.q} onInput={x => set({ q: x })} ph="Search subject, deal, note" />
+      <Btn on={selT.value != null} onClick={() => { selT.value = selT.value ? null : []; }}>{selT.value ? 'Done' : 'Select'}</Btn>
       <Btn icon="filter" on={!!(v.pri || v.show !== 'all')} onClick={() => openModal(() => <TicketFilters />)}>{isPhone.value ? '' : 'Filters & more'}</Btn>
       <Add onClick={() => openModal(() => <TicketForm pre={v.type ? { tt: [{ t: v.type, s: v.sub || (ty ? ty.defSub : '') }] } : {}} />)}>New</Add>
     </div>
     <Chips value={v.type} onChange={x => set({ type: x, sub: '' })} opts={[['', 'All types', byTypeCount(base, '')], ...types.map(t => [t.id, t.name, byTypeCount(base, t.id)] as [string, string, number])]} />
     {ty && <div style={{ marginTop: '2px' }}><Chips value={v.sub} onChange={x => set({ sub: x })} opts={[['', 'All', byType.length], ...ty.subs.map(s => [s, s, byType.filter(t => (t.tt || []).some(x => x.t === ty.id && x.s === s)).length] as [string, string, number])]} /></div>}
+    {selT.value && <BulkTickets shown={shown} />}
     <div style={{ marginTop: '8px' }}>
-      {v.view === 'list' ? <TicketTable list={shown} />
+      {selT.value ? <div class="bulk-list">{shown.map(t => <TicketCard t={t} />)}{!shown.length && <Empty>No tickets shown.</Empty>}</div> : v.view === 'list' ? <TicketTable list={shown} />
         : isPhone.value ? <><Chips value={stageCur} onChange={x => set({ stage: x })} opts={cols.map(c => [c.id, c.name, c.items.length] as [string, string, number])} /><div style={{ marginTop: '8px' }}>{colCur.items.map(t => <TicketCard t={t} />)}{!colCur.items.length && <Empty>Nothing here.</Empty>}</div></>
           : <div class="board">{cols.map(c => <TCol c={c} />)}</div>}
     </div>
@@ -63,9 +66,17 @@ function Resolve({ t, stage }: { t: Ticket; stage: string }) {
   return <Sheet title="Close ticket" onClose={closeModal} foot={<><Btn onClick={closeModal}>Cancel</Btn><button class="b-add" onClick={() => { if (!r.trim()) return toast('A resolution is needed to close'); saveTicket({ id: t.id, stage, resolution: r.trim(), closed: Date.now(), history: [...(t.history || []), { ts: Date.now(), from: t.stage, to: stage }] }); closeModal(); toast('Ticket closed'); }}>Close ticket</button></>}>
     <Field label="Resolution"><textarea class="in" autoFocus rows={3} value={r} onInput={e => setR((e.target as HTMLTextAreaElement).value)} /></Field></Sheet>;
 }
+function BulkTickets({ shown }: { shown: Ticket[] }) {
+  const cfg = ticketCfg(), sel = new Set(selT.value || []), L = tickets().filter(t => sel.has(t.id));
+  return <div class="ctl bulk-bar" style={{ flexWrap: 'wrap' }}><span class="faint">{L.length} selected</span><Btn onClick={() => { selT.value = shown.length && shown.every(t => sel.has(t.id)) ? [] : shown.map(t => t.id); }}>{shown.length && shown.every(t => sel.has(t.id)) ? 'None' : 'All shown'}</Btn>
+    <select class="in" style={{ width: 'auto' }} aria-label="Move to stage" disabled={!L.length} value="" onChange={e => { const st = (e.target as HTMLSelectElement).value; if (!st) return; L.forEach(t => saveTicket({ id: t.id, stage: st })); toast(L.length + ' moved'); }}><option value="">Move to…</option>{cfg.pipelines[0].stages.map(s => <option value={s.id}>{s.name}</option>)}</select>
+    <select class="in" style={{ width: 'auto' }} aria-label="Set priority" disabled={!L.length} value="" onChange={e => { const pr = (e.target as HTMLSelectElement).value; if (!pr) return; L.forEach(t => saveTicket({ id: t.id, priority: pr })); toast(L.length + ' updated'); }}><option value="">Priority…</option>{cfg.pris.map(x => <option>{x}</option>)}</select>
+    <DangerBtn onConfirm={() => { L.forEach(t => removeTicket(t)); selT.value = []; toast(L.length + ' deleted'); }}>Delete</DangerBtn></div>;
+}
 function TicketCard({ t }: { t: Ticket }) {
-  const types = ticketCfg().types, over = !isClosedT(t) && t.due && t.due < todayKey();
-  return <div class="item" draggable onDragStart={e => e.dataTransfer?.setData('text/ticket', t.id)} onClick={() => go('tickets', t.id)} style={{ cursor: 'pointer' }}>
+  const types = ticketCfg().types, over = !isClosedT(t) && t.due && t.due < todayKey(), S = selT.value;
+  return <div class="item" draggable onDragStart={e => e.dataTransfer?.setData('text/ticket', t.id)} onClick={() => { if (S) selT.value = S.indexOf(t.id) >= 0 ? S.filter(i => i !== t.id) : [...S, t.id]; else go('tickets', t.id); }} style={{ cursor: 'pointer' }}>
+    {S && <input type="checkbox" class="ck" aria-label={'Select ' + t.subject} checked={S.indexOf(t.id) >= 0} onClick={e => e.stopPropagation()} onChange={x => { selT.value = (x.target as HTMLInputElement).checked ? [...S, t.id] : S.filter(i => i !== t.id); }} />}
     <div class="main"><div class="t">{t.subject || '(no subject)'}</div>
       <div class="s">{t.deal ? t.deal + ' · ' : ''}{ticketStageName(t)} · {fmtDay(keyOf(new Date(t.created)))}</div>
       <div class="pills">{(t.tt || []).slice(0, 2).map(x => <span class="pill acc">{typeLabel(x, types)}</span>)}{t.priority && /High|Urgent/.test(t.priority) && <span class="pill warn">{t.priority}</span>}{over && <span class="pill bad">Overdue</span>}{t.auto && <span class="pill">Day End</span>}</div>

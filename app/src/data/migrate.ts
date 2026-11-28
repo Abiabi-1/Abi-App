@@ -3,7 +3,7 @@
 // Records already migrated but changed in the old app since then are updated (re-import), detected by a content hash.
 import { putLegacy, get, put, all } from './store';
 import { hash, isKey, lsGet, lsSet, slug, keyOf } from '../lib/util';
-import { linkKey, isLink } from '../lib/privacy';
+import { linkKey, isLink, cleanValue } from '../lib/privacy';
 import type { SK } from '../domain/dayend';
 import { HR_DEF } from '../domain/hr';
 import { importSmartLegacy } from '../features/smart';
@@ -23,12 +23,12 @@ function mig(c: string, id: string, d: Record<string, any>) {
   const h = hash(JSON.stringify(d)), cur = get<any>(c, id);
   if (!cur) { if (putLegacy(c, id, { ...d, _src: h })) added++; return; }
   if (cur._src && cur._src !== h) {   // changed in the old app after the last import
-    const prev = get<any>('_migsrc', c + ':' + id); const prevD = prev ? J(prev.d, {}) : {};
+    const prev = get<any>('_migsrc', c + ':' + id); const prevD = prev ? (prev.o && typeof prev.o === 'object' ? prev.o : J(prev.d, {})) : {};
     const patch: Record<string, any> = { _src: h };
-    Object.keys(d).forEach(f => { if (JSON.stringify(d[f]) !== JSON.stringify(prevD[f])) patch[f] = d[f]; });
+    const dc = cleanValue(d) as Record<string, any>; Object.keys(d).forEach(f => { if (JSON.stringify(dc[f]) !== JSON.stringify(prevD[f])) patch[f] = d[f]; });
     put(c, id, patch); updated++;
   }
-  put('_migsrc', c + ':' + id, { d: JSON.stringify(d) }, { quiet: true });
+  put('_migsrc', c + ':' + id, { o: d, d: undefined }, { quiet: true });
 }
 function legacyDealKey(link: string, name: string) { return String(link || '').replace(/\D/g, '').slice(-9) + '|' + String(name || '').trim().toLowerCase(); }
 
@@ -162,7 +162,7 @@ export function runMigration(src: Src, source: string): Report {
 }
 function newDealKey(name: string, link: string) { const n = slug(name); if (n.length >= 2) return 'n-' + n; const l = link && isLink(link) ? linkKey(link) : ''; return l ? 'l-' + slug(l) : ''; }
 export function localLegacy(): Src { const o: Src = {}; [...LEGACY_KEYS, 'dayEndReport_v5'].forEach(k => { const v = lsGet(k); if (v != null) o[k] = v; }); return o; }
-export function hasLocalLegacy() { return !!(lsGet('dayEndReport_v6') || lsGet('followTasks_v1') || lsGet('deals_v1')); }
+export function hasLocalLegacy() { return LEGACY_KEYS.some(k => !!lsGet(k)) || !!lsGet('dayEndReport_v5'); }
 export function lastReport(): Report | null { return J(lsGet('v2_migration'), null); }
 export function migratedCounts() { return { entries: all('entries').length, days: all('days').length, tasks: all('tasks').length, tickets: all('tickets').length, deals: all('deals').length, lost: all('lost').length, punches: all('punches').length }; }
 

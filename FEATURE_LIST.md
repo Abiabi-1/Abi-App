@@ -515,3 +515,10 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 - Smart text: same learning and ranking as before, suggestions in every text box (also inside Day End / Won Deals), Quick Add chips activate it, manager (✦ in the bar), phrases sync per record.
 - Snippets: same engine, commands and starter pack (75), ask pop-up, Backspace undo, instant shortcuts, manager (Menu, Settings, g then s) with Import / Export / Restore starter pack.
 - Old smartText_v1 / hub_snippets_v1 converted; fix: leaving the Day End with a focused box no longer breaks screen updates.
+
+## Round 61 – All missing features back (see FEATURES_V61_ALL_MISSING_FEATURES_BACK.md)
+- HR & Time: all 30 old tabs (leave + balances, holidays, shifts, weekly schedule, rota & swaps, pay & payslip, salary slips, overtime & comp-off, expenses, goals, reviews, cycles, learning, documents, benefits & assets, people, on/offboarding, announcements, requests, pulse, surveys, policies, hiring, timesheets, time tracker, analytics, audit log, settings). No phone / e-mail fields.
+- Fix: the old HR lists, slips, timesheets and audit log were never carried over (Round 57); now converted once. Fix: a device with only HR / tools data was not migrated.
+- Tools section (22 tools): templates, Quick Add templates & chips, call log + best hours + call-back queue, lists, invoices, speed report, week in review, deeper insights, missing info, duplicates, import / paste deals, trash & activity, restore points, calendar, recurring tasks, goals, renewals board, stuck deals, renewal messages, draft my Day End, my shortcuts, comfort.
+- Jump to (Alt+J), focus mode, one-hand mode, app lock (PIN hash), comfort & speed, voice note, daily follow-up notification, deal owners + saved views, bulk select on Lost Deals / Tickets, "No HubSpot link" task filter.
+- Automation Studio flows (old flows converted; unsupported parts kept off), "Ask before Closed Won without details", Dashboard Customize / Arrange / Build your own, saved Analytics reports.

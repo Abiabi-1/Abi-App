@@ -2,7 +2,7 @@
 import { signal } from '@preact/signals';
 import { useState } from 'preact/hooks';
 import { rev, put, get } from '../data/store';
-import { Task, allTasks, folders, saveTask, setTaskDone, removeTask, bestHours, MSG_FOLDERS } from '../domain/crm';
+import { Task, allTasks, folders, saveTask, setTaskDone, removeTask, bestHours, MSG_FOLDERS , deals } from '../domain/crm';
 import { fmtDay, lsJSON, lsSet, shiftDayKey, todayKey, cx, isKey, uid, csv, download } from '../lib/util';
 import { Add, Btn, Chips, DangerBtn, Field, IconBtn, MarkGrid, PageHead, SearchBox, Seg, Sheet, Stat, Tiles, closeModal, openMenu, openModal, toast, Empty } from '../ui/kit';
 
@@ -41,6 +41,8 @@ function FolderSheet() {
   </Sheet>;
 }
 
+/** Round 61: a task whose deal has no HubSpot link (or that was made by Missing information for one). */
+function noLinkTask(t: Task) { if (/^nl-/.test(t.id)) return true; if (!t.deal) return false; const d = deals().find(x => x.name.toLowerCase() === String(t.deal).toLowerCase()); return !!d && !d.links.length; }
 export function Tasks() {
   void rev.value; const v = V.value, m = mf.value, td = todayKey();
   const all = allTasks(), fl = folders();
@@ -54,7 +56,7 @@ export function Tasks() {
     return want('wa') || want('em') || tick('wa') || tick('em');
   };
   const q = v.q.trim().toLowerCase();
-  let list = all.filter(t => inFolder(t) && passMsg(t) && (v.show === 'all' || (v.show === 'done' ? t.done : !t.done)) && (!v.day || t.due === v.day) && (!q || (t.title + ' ' + (t.notes || '') + ' ' + (t.deal || '')).toLowerCase().indexOf(q) >= 0));
+  let list = all.filter(t => inFolder(t) && passMsg(t) && (v.show === 'all' || (v.show === 'done' ? t.done : !t.done)) && (!v.day || t.due === v.day) && (!(v as any).nolink || noLinkTask(t)) && (!q || (t.title + ' ' + (t.notes || '') + ' ' + (t.deal || '')).toLowerCase().indexOf(q) >= 0));
   const hrs = bestHours();
   const hNow = new Date().getHours(), bestRank = (t: Task) => { const bh = t.deal ? bestHours(t.deal) : hrs; const i = bh.indexOf(hNow); return i < 0 ? 99 : i; };
   list = list.sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || (v.ord === 'new' ? b.created - a.created : v.ord === 'best' ? ((a.due || '9999') <= td ? 0 : 1) - ((b.due || '9999') <= td ? 0 : 1) || bestRank(a) - bestRank(b) || (a.due || '9999').localeCompare(b.due || '9999') : (a.due || '9999').localeCompare(b.due || '9999') || (a.time || '').localeCompare(b.time || '')));
@@ -72,6 +74,7 @@ export function Tasks() {
       </select>
       <MarkGrid wa={m.wa} em={m.em} twa={m.twa === 'g' ? 'y' : m.twa === 'r' ? 'n' : ''} tem={m.tem === 'g' ? 'y' : m.tem === 'r' ? 'n' : ''} onMark={k => setM({ ...m, [k]: m[k] === '' ? 'g' : m[k] === 'g' ? 'r' : '' })} onTick={k => { const kk = ('t' + k) as 'twa' | 'tem'; setM({ ...m, [kk]: m[kk] === '' ? 'g' : m[kk] === 'g' ? 'r' : '' }); }} />
       <SearchBox value={v.q} onInput={x => set({ q: x })} ph="Search tasks" />
+      <Btn on={!!(v as any).nolink} title="Tasks for deals without a HubSpot link" onClick={() => set({ nolink: !(v as any).nolink } as any)}>No HubSpot link</Btn>
       <button class="b" onClick={e => openMenu(e, [{ label: 'Manage folders', fn: () => openModal(() => <FolderSheet />) }, { label: 'Export CSV', fn: () => download('tasks.csv', csv([['Title', 'Due', 'Time', 'Folder', 'Priority', 'Done', 'Deal', 'Notes'], ...list.map(t => [t.title, t.due, t.time, fl.find(f => f.id === (t.folder || ''))?.name || '', t.priority, t.done ? 'yes' : '', t.deal || '', t.notes])])) }, { label: 'Clear message filter', fn: () => setM({ wa: '', em: '', twa: '', tem: '' }) }])}>Filters &amp; more</button>
     </div>
     <div class="ctl">

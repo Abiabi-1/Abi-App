@@ -10,7 +10,8 @@ import { Btn, Empty, PageHead, Seg, Sheet, Stat, Tiles, closeModal, openModal, t
 import { buildXlsx, XLSX_MIME } from '../lib/xlsx';
 import { copyText } from '../lib/util';
 import { Bars, Columns } from '../ui/charts';
-import { go } from '../ui/state';
+import { go, isPhone } from '../ui/state';
+import { DashCustomize, DashWidgets, dashOrder, dashHidden, SavedReports } from './dashbuild';
 
 function listSheet(title: string, rows: { t: string; s?: string; go?: () => void }[]) {
   openModal(() => <Sheet title={title + ' (' + rows.length + ')'} onClose={closeModal} foot={<Btn icon="down" onClick={() => download(title.toLowerCase().replace(/\W+/g, '-') + '.csv', csv([['Item', 'Details'], ...rows.map(r => [r.t, r.s || ''])]))}>CSV</Btn>}>
@@ -45,7 +46,9 @@ export function Dashboard() {
   const byStage = DEAL_STAGES.map(s => ({ k: s, label: s, v: D.filter(d => d.stage === s).length }));
   const last14 = Array.from({ length: 14 }, (_, i) => addDays(td, i - 13)).map(k => ({ k, label: k.slice(8), v: entriesOf(k).length }));
   return <div class="page">
-    <PageHead icon="dash" title="Dashboard" sub={fmtDay(td, true)} right={<select class="in" style={{ width: 'auto' }} aria-label="Period" value={DP.value} onChange={e => { DP.value = (e.target as HTMLSelectElement).value as any; }}>{Object.keys(DPL).map(k => <option value={k}>{DPL[k]}</option>)}</select>} />
+    <PageHead icon="dash" title="Dashboard" sub={fmtDay(td, true)} right={<><Btn icon="gear" onClick={() => openModal(() => <DashCustomize />)}>{isPhone.value ? '' : 'Customize'}</Btn><select class="in" style={{ width: 'auto' }} aria-label="Period" value={DP.value} onChange={e => { DP.value = (e.target as HTMLSelectElement).value as any; }}>{Object.keys(DPL).map(k => <option value={k}>{DPL[k]}</option>)}</select></>} />
+    {dashOrder().map(id => { if (dashHidden().indexOf(id) >= 0) return null; switch (id) {
+      case 'today': return <>
     <div class="h2">Today</div>
     <Tiles>
       <Stat l="Entries today" v={te.length} tone={te.length ? 'acc' : ''} c={te.filter(e => e.sk === 'tasks').length + ' tasks · ' + te.filter(e => e.sk === 'calls').length + ' calls'} onClick={() => go('day')} />
@@ -53,6 +56,8 @@ export function Dashboard() {
       <Stat l="Open tickets" v={tOpen.length} onClick={() => go('tickets')} />
       <Stat l="Worked" v={c.n ? dur(c.worked, true) : '—'} c={st.state === 'out' ? 'clocked out' : st.state === 'break' ? 'on break' : 'clocked in'} onClick={() => go('hr')} />
     </Tiles>
+      </>;
+      case 'deals': return <>
     <div class="h2">Deals</div>
     <Tiles>
       <Stat l={'Won · ' + DPL[DP.value]} v={wonM.length} tone={wonM.length ? 'good' : ''} onClick={() => listSheet('Won · ' + DPL[DP.value], wonM.map(w => ({ t: w.deal, s: fmtDay(w.day) + ' · ' + planLabel(w), go: () => go('deals') })))} />
@@ -61,11 +66,18 @@ export function Dashboard() {
       <Stat l="Renewals in 30 days" v={ren30.length} tone={ren30.length ? 'acc' : ''} onClick={() => listSheet('Renewals in 30 days', ren30.map(w => ({ t: w.deal, s: 'due ' + fmtDay(renewalOf(w).due) })))} />
       <Stat l="Follow-ups due" v={follow.length} onClick={() => listSheet('Follow-ups due', follow.map(d => ({ t: d.name, s: 'follow-up ' + fmtDay(d.follow), go: () => go('dealboard', d.key) })))} />
     </Tiles>
+      </>;
+      case 'charts': return <>
     <div class="grid2" style={{ marginTop: '12px' }}>
       <div class="card"><div class="lbl">Deals per stage</div><Bars data={byStage} onPick={k => listSheet(k, D.filter(d => d.stage === k).map(d => ({ t: d.name, s: planLabel(d), go: () => go('dealboard', d.key) })))} /></div>
       <div class="card"><div class="lbl">Entries, last 14 days</div><Columns data={last14} onPick={k => listSheet(fmtDay(k), entriesOf(k).map(entryRow))} /></div>
     </div>
+      </>;
+      case 'reports': return <>
     <div class="grid2" style={{ marginTop: '12px' }}>{(['daily', 'weekly'] as const).map(kind => { const t = summaryText(kind).text; return <div><div class="h2">{kind === 'daily' ? 'Daily report' : 'Weekly report'}<span class="r"><Btn icon="copy" onClick={async () => toast((await copyText(t)) ? 'Copied' : 'Copy failed')}>Copy</Btn><Btn icon="down" onClick={() => download(kind + '-report-' + todayKey() + '.txt', t)}>Download</Btn><Btn onClick={() => sumXlsx(kind)}>Excel</Btn></span></div><pre class="rep">{t}</pre></div>; })}</div>
+      </>;
+      case 'widgets': return <DashWidgets />;
+      default: return null; } })}
   </div>;
 }
 
@@ -94,7 +106,7 @@ export function Analytics() {
   const exportAll = () => download('analytics-' + r + '.csv', csv([['Day', 'Entries', 'Tasks', 'Calls', 'WhatsApp', 'Tickets', 'Other'], ...days.map(k => { const e = entriesOf(k); return [k, e.length, ...(['tasks', 'calls', 'whatsapp', 'tickets', 'other'] as const).map(s => e.filter(x => x.sk === s).length)]; })]));
   return <div class="page">
     <PageHead icon="chart" title="Analytics" sub="Press any bar or number to see the records behind it." right={<Btn icon="down" onClick={exportAll}>CSV</Btn>} />
-    <div class="ctl"><Seg value={r} onChange={x => { R.value = x; }} opts={[['7', '7 days'], ['30', '30 days'], ['90', '90 days'], ['month', 'This month'], ['year', 'This year'], ['all', 'All time']]} /></div>
+    <div class="ctl" style={{ flexWrap: 'wrap' }}><Seg value={r} onChange={x => { R.value = x; }} opts={[['7', '7 days'], ['30', '30 days'], ['90', '90 days'], ['month', 'This month'], ['year', 'This year'], ['all', 'All time']]} /><SavedReports cur={r} apply={x => { R.value = x as Range; }} /></div>
     <Tiles>
       <Stat l="Entries" v={ents.length} c={keys.length + ' days logged'} tone="acc" onClick={() => listSheet('Entries', ents.slice(-300).reverse().map(entryRow))} />
       <Stat l="Lead → Closed Won" v={funnel[0].v ? Math.round((funnel[4].v / funnel[0].v) * 100) + '%' : '–'} c={funnel[4].v + ' of ' + funnel[0].v + ' deals'} />

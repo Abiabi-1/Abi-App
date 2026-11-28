@@ -18,7 +18,24 @@ effect(() => {
 
 // ---------- app lock ----------
 const LK = 'v2_lock';
-async function sha(s: string) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''); }
+async function sha(s: string) { if (crypto.subtle) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''); } return sha256(s); }
+/** plain SHA-256 for pages without crypto.subtle (not https); same output as the browser's. */
+function sha256(str: string) {
+  const K: number[] = [], H: number[] = []; let n = 2, c = 0; const isP = (x: number) => { for (let i = 2; i * i <= x; i++) if (x % i === 0) return false; return true; }, fr = (x: number) => ((x - Math.floor(x)) * 4294967296) | 0;
+  while (c < 64) { if (isP(n)) { if (c < 8) H[c] = fr(Math.pow(n, 1 / 2)); K[c] = fr(Math.pow(n, 1 / 3)); c++; } n++; }
+  const by = Array.from(new TextEncoder().encode(str)), l = by.length * 8; by.push(0x80); while (by.length % 64 !== 56) by.push(0);
+  for (let i = 7; i >= 0; i--) by.push(i > 3 ? 0 : (l >>> (i * 8)) & 255);
+  const r = (x: number, k: number) => (x >>> k) | (x << (32 - k));
+  for (let o = 0; o < by.length; o += 64) {
+    const w: number[] = []; for (let i = 0; i < 16; i++) w[i] = (by[o + i * 4] << 24) | (by[o + i * 4 + 1] << 16) | (by[o + i * 4 + 2] << 8) | by[o + i * 4 + 3];
+    for (let i = 16; i < 64; i++) { const s0 = r(w[i - 15], 7) ^ r(w[i - 15], 18) ^ (w[i - 15] >>> 3), s1 = r(w[i - 2], 17) ^ r(w[i - 2], 19) ^ (w[i - 2] >>> 10); w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0; }
+    let [a, b, cc, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) { const t1 = (h + (r(e, 6) ^ r(e, 11) ^ r(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) | 0, t2 = ((r(a, 2) ^ r(a, 13) ^ r(a, 22)) + ((a & b) ^ (a & cc) ^ (b & cc))) | 0; h = g; g = f; f = e; e = (d + t1) | 0; d = cc; cc = b; b = a; a = (t1 + t2) | 0; }
+    H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + cc) | 0; H[3] = (H[3] + d) | 0; H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
+  }
+  return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+}
+export const _sha256 = sha256;
 export const lockOn = () => !!lsJSON<{ h?: string }>(LK, {}).h;
 export const locked = signal(false);
 export async function setPin(pin: string | null) { if (!pin) { lsSet(LK, '{}'); return; } const salt = Math.random().toString(36).slice(2, 10); lsSet(LK, JSON.stringify({ s: salt, h: await sha(salt + pin) })); }

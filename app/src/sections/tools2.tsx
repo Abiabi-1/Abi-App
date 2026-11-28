@@ -85,8 +85,8 @@ export function parseDealList(text: string) {
   return out;
 }
 export function importDeals(list: ReturnType<typeof parseDealList>) {
-  const have = deals(); let n = 0, skip = 0;
-  list.forEach(x => { const k = dealKeyOf(x.name, x.link); if (have.some(d => d.key === k || (x.link && d.links.some(l => linkKey(l) === linkKey(x.link))))) { skip++; return; } put('deals', uid('m'), { name: x.name, link: x.link, stage: x.stage, pipeline: 'sales', ts: Date.now() }); n++; });
+  const have = deals(), keys = new Set(have.map(d => d.key)), links = new Set(have.flatMap(d => d.links.map(l => linkKey(l))).filter(Boolean)); let n = 0, skip = 0;
+  list.forEach(x => { const k = dealKeyOf(x.name, x.link), lk = x.link ? linkKey(x.link) : ''; if (keys.has(k) || (lk && links.has(lk))) { skip++; return; } keys.add(k); if (lk) links.add(lk); put('deals', uid('m'), { name: x.name, link: x.link, stage: x.stage, pipeline: 'sales', ts: Date.now() }); n++; });
   return { n, skip };
 }
 function ImportDeals() {

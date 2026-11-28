@@ -62,6 +62,7 @@ export function SideMenu() {
       <div class="sep" />
       <button type="button" class="side-i" onClick={() => { close(); quickAdd.value = {}; }}><Icon n="bolt" />Quick Add</button>
       <button type="button" class="side-i" onClick={() => { close(); searchOpen.value = true; }}><Icon n="search" />Search</button>
+      <button type="button" class="side-i" onClick={() => { close(); import('../features/comfort').then(m => { m.jumpOpen.value = true; }); }}><Icon n="right" />Jump to… (Alt+J)</button>
       <button type="button" class="side-i" onClick={() => { close(); import('../features/smart').then(m => m.openSmart()); }}><span style={{ width: '17px', textAlign: 'center' }}>✦</span>Smart text</button>
       <button type="button" class="side-i" onClick={() => { close(); import('../features/snippets').then(m => m.openSnippets()); }}><Icon n="note" />Snippets (text shortcuts)</button>
       <button type="button" class="side-i" onClick={() => { close(); toast('Backup downloaded (' + backup() + ' records)'); }}><Icon n="down" />Backup</button>
