@@ -48,7 +48,7 @@ These were in the old app's Tools menu or are larger features. Their saved data 
 - All earlier tests (parity, Day End look, import, sync, ui) re-run.
 
 ## Status
-**Built and tested in Chromium (PC 1200–1280 px and phone 390 px). NOT deployed, NOT pushed (GitHub access is still refused), NOT tested on a real iPhone.**
+**Built and tested in Chromium (PC 1200–1280 px and phone 390 px). Pushed to the branch `claude/app-rebuild-sync-fixes-ozrbm2` (not merged). NOT deployed, NOT tested on a real iPhone.**
 
 Everything in §1 and §2 is done. Extra problems found while doing it, also fixed:
 - **Renewal dates from the old app were ignored (bug from Round 57).** The old app saved them as `act` / `ren`, and the new app read other names. Activation and renewal dates you set in the old app now show again, and Mark renewed works like before. Test added.

@@ -38,7 +38,7 @@ Both are rebuilt to work the way they did in the old app (same rules, same start
 - All earlier test suites re-run.
 
 ## Status
-**Built and tested in Chromium (PC 1280 px and phone 390 px). NOT deployed, NOT pushed (GitHub access is still refused), NOT tested on a real iPhone keyboard.**
+**Built and tested in Chromium (PC 1280 px and phone 390 px). Pushed to the branch `claude/app-rebuild-sync-fixes-ozrbm2` (not merged). NOT deployed, NOT tested on a real iPhone keyboard.**
 
 | Part | State |
 |---|---|
