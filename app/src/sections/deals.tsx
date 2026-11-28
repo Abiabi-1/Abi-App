@@ -1,7 +1,7 @@
 // Deals – redone: one controls row (pipeline · Board/List · search · Filters & more · + New), compact cards, record page.
 import { signal } from '@preact/signals';
 import { useState } from 'preact/hooks';
-import { rev, put, del, get } from '../data/store';
+import { rev, put, del, get, all } from '../data/store';
 import { bestHours, Deal, deals, pipelines, savePipelines, moveDeal, addDealNote, tickets, isClosedT, Pipeline } from '../domain/crm';
 import { CYCLES, PLANS, WON, LOST, entryText, stageTone, planLabel, priceText, mkOf } from '../domain/dayend';
 import { ago, copyText, csv, download, fmtDay, keyOf, lsJSON, lsSet, parsePrice, fmtNum, uid, cx } from '../lib/util';
@@ -10,9 +10,12 @@ import { Add, Btn, Chips, DangerBtn, Empty, Field, IconBtn, MarkGrid, PageHead, 
 import { go, isPhone } from '../ui/state';
 import { openTaskForm } from './tasks';
 
-const V = signal({ ord: 'default', ...lsJSON('hub_fl_deals3', { pid: 'sales', view: 'board' as 'board' | 'list', q: '', stage: '', tag: '', plan: '', hasLink: '', phStage: '' }) } as { pid: string; view: 'board' | 'list'; q: string; stage: string; tag: string; plan: string; hasLink: string; phStage: string; ord: string });
+const V = signal({ ord: 'default', ...lsJSON('hub_fl_deals3', { pid: 'sales', view: 'board' as 'board' | 'list', q: '', stage: '', tag: '', plan: '', hasLink: '', phStage: '' }) } as { pid: string; view: 'board' | 'list'; q: string; stage: string; tag: string; plan: string; hasLink: string; phStage: string; ord: string; owner?: string });
 const setV = (p: Partial<typeof V.value>) => { V.value = { ...V.value, ...p }; lsSet('hub_fl_deals3', JSON.stringify(V.value)); };
 const selS = signal<string[]>([]);
+/** Round 61: owners (from deals, the HR people list and "Me") and saved views. */
+export function owners(): string[] { const S = new Set<string>(); deals().forEach(d => { if (d.meta?.owner) S.add(d.meta.owner); }); all<any>('hrc').forEach(x => { if (x.col === 'directory' && x.name) S.add(x.name); }); return Array.from(S).sort(); }
+const savedViews = (): { name: string; vals: Partial<typeof V.value> }[] => (get<any>('cfg', 'views')?.deals || []);
 const rxNext = (s?: string) => (s === '' || !s ? 'y' : s === 'y' ? 'n' : '');
 const dmk = (d: Deal, k: 'wa' | 'em') => { let s = ''; d.entries.forEach(e => { const m = mkOf(e, k); if (m) s = m; }); return s; };
 
@@ -23,7 +26,7 @@ export function DealBoard() {
   const q = v.q.trim().toLowerCase();
   const list = deals().filter(d => (d.pipeline || 'sales') === p.id || (p.id === 'sales' && p.stages.indexOf(d.stage) >= 0 && !P.some(x => x.id === d.pipeline && x.id !== 'sales')))
     .filter(d => (!q || (d.name + ' ' + d.entries.map(e => e.notes || '').join(' ') + ' ' + d.notes.map(n => n.text).join(' ')).toLowerCase().indexOf(q) >= 0)
-      && (!v.tag || d.tags.indexOf(v.tag) >= 0) && (!v.plan || d.plan === v.plan) && (!v.hasLink || (v.hasLink === 'y' ? d.links.length > 0 : !d.links.length)));
+      && (!v.owner || (v.owner === '__none' ? !d.meta?.owner : d.meta?.owner === v.owner)) && (!v.tag || d.tags.indexOf(v.tag) >= 0) && (!v.plan || d.plan === v.plan) && (!v.hasLink || (v.hasLink === 'y' ? d.links.length > 0 : !d.links.length)));
   const hNow = new Date().getHours();
   if (v.ord === 'best') list.sort((a, b) => { const ra = bestHours(a.name).indexOf(hNow), rb = bestHours(b.name).indexOf(hNow); return (ra < 0 ? 99 : ra) - (rb < 0 ? 99 : rb); });
   else if (v.ord === 'name') list.sort((a, b) => a.name.localeCompare(b.name)); else if (v.ord === 'old') list.sort((a, b) => a.ts - b.ts);
@@ -41,6 +44,8 @@ export function DealBoard() {
       <Seg value={v.view} onChange={x => setV({ view: x })} opts={[['board', 'Board'], ['list', 'List']]} />
       <select class="in hide-phone" style={{ width: 'auto' }} aria-label="Order" value={v.ord} onChange={e => setV({ ord: (e.target as HTMLSelectElement).value })}><option value="default">Newest activity</option><option value="best">Best time now</option><option value="name">Name A–Z</option><option value="old">Oldest first</option></select>
       <SearchBox value={v.q} onInput={x => setV({ q: x })} ph="Search deals and notes" />
+      {owners().length > 0 && <select class="in" style={{ width: 'auto' }} aria-label="Filter by owner" value={v.owner || ''} onChange={e => setV({ owner: (e.target as HTMLSelectElement).value })}><option value="">Owner: anyone</option><option value="__none">Unassigned</option>{owners().map(o => <option>{o}</option>)}</select>}
+      <Btn icon="star" title="Saved views" onClick={e => openMenu(e, [...savedViews().map(x => ({ label: '★ ' + x.name, fn: () => { setV(x.vals); toast('View applied: ' + x.name); } })), savedViews().length ? { sep: true, label: '' } : null, { label: 'Save current view…', fn: () => { const n = prompt('Name for this view'); if (!n || !n.trim()) return; const { q, owner, pid, ord, tag, plan, hasLink, view } = V.value; put('cfg', 'views', { deals: [...savedViews().filter(x => x.name !== n.trim()), { name: n.trim(), vals: { q, owner: owner || '', pid, ord, tag, plan, hasLink, view } }] }); toast('View saved'); } }, ...savedViews().map(x => ({ label: 'Delete “' + x.name + '”', danger: true, fn: () => put('cfg', 'views', { deals: savedViews().filter(y => y.name !== x.name) }) }))])}>{isPhone.value ? '' : 'Views'}</Btn>
       <Btn icon="filter" on={nFilters > 0} onClick={() => openModal(() => <DealFilters tags={tags} />)}>{isPhone.value ? '' : 'Filters & more'}{nFilters ? ' · ' + nFilters : ''}</Btn>
       <Add onClick={() => openModal(() => <NewDeal pid={p.id} stage={p.stages[0]} />)}>New</Add>
     </div>
@@ -139,6 +144,10 @@ function DealRecord({ d }: { d: Deal }) {
       right={<><IconBtn icon="copy" title="Copy the deal name" onClick={async () => toast((await copyText(d.name)) ? 'Name copied' : 'Copy failed')} />{d.links[0] && <a class="b" href={openUrl(d.links[0])} target="_blank" rel="noopener">↗ HubSpot</a>}
         <IconBtn icon="dots" title="Actions" onClick={e => openMenu(e, [
           { label: 'Add follow-up task', fn: () => openTaskForm({ title: 'Follow up — ' + d.name, deal: d.name }) },
+          { label: 'Log a call outcome', fn: () => import('./tools').then(m => m.logOutcomeSheet(d.key)) },
+          { label: 'Use a message template', fn: () => import('./tools').then(m => m.pickTemplate(d)) },
+          { label: 'Assign owner…', fn: () => { const n = prompt('Owner (empty = unassigned)', d.meta?.owner || 'Me'); if (n != null) put('dealmeta', d.key, { owner: n.trim() || undefined }); } },
+          { label: 'Add to a list…', fn: () => { const L = all<any>('lists'); const n = prompt('List name' + (L.length ? ' (' + L.map(l => l.name).join(', ') + ')' : '')); if (!n || !n.trim()) return; const l = L.find(x => x.name.toLowerCase() === n.trim().toLowerCase()); if (l) { if (!(l.items || []).some((i: any) => i.id === d.key)) put('lists', l.id, { items: [...(l.items || []), { k: 'd', id: d.key }] }); } else put('lists', uid('l'), { name: n.trim(), items: [{ k: 'd', id: d.key }] }); toast('Added to ' + n.trim()); } },
           { label: 'New ticket for this deal', fn: () => go('tickets', 'new:' + d.name) },
           { label: 'Rename', fn: () => { const n = prompt('Deal name', d.name); if (n && n.trim()) d.src === 'manual' ? put('deals', d.key, { name: n.trim() }) : put('dealmeta', d.key, { name: n.trim() }); } },
           { label: 'Set follow-up date', fn: () => { const n = prompt('Follow-up date (YYYY-MM-DD)', d.follow || ''); if (n != null) put('dealmeta', d.key, { follow: n.trim() || undefined }); } },

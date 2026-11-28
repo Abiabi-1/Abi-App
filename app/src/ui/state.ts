@@ -3,20 +3,22 @@ import { signal, effect } from '@preact/signals';
 import { get, put } from '../data/store';
 import { lsJSON, lsSet } from '../lib/util';
 
-export type Tab = 'day' | 'dashboard' | 'analytics' | 'deals' | 'dealboard' | 'lost' | 'tickets' | 'tasks' | 'hr' | 'auto' | 'settings';
+export type Tab = 'day' | 'dashboard' | 'analytics' | 'deals' | 'dealboard' | 'lost' | 'tickets' | 'tasks' | 'hr' | 'auto' | 'tools' | 'settings';
 export const SECTIONS: { id: Tab; label: string; icon: string }[] = [
   { id: 'day', label: 'Day End Report', icon: 'day' }, { id: 'dashboard', label: 'Dashboard', icon: 'dash' }, { id: 'analytics', label: 'Analytics', icon: 'chart' },
   { id: 'dealboard', label: 'Deals', icon: 'deal' }, { id: 'deals', label: 'Won Deals', icon: 'won' }, { id: 'lost', label: 'Lost Deals', icon: 'lost' },
   { id: 'tickets', label: 'Tickets', icon: 'ticket' }, { id: 'tasks', label: 'Tasks', icon: 'tasks' }, { id: 'hr', label: 'HR & Time', icon: 'hr' },
-  { id: 'auto', label: 'Automations', icon: 'auto' }, { id: 'settings', label: 'Settings', icon: 'gear' },
+  { id: 'auto', label: 'Automations', icon: 'auto' }, { id: 'tools', label: 'Tools', icon: 'board' }, { id: 'settings', label: 'Settings', icon: 'gear' },
 ];
-const DEFAULT_HIDDEN: Tab[] = ['hr', 'auto', 'settings'];
+const DEFAULT_HIDDEN: Tab[] = ['hr', 'auto', 'tools', 'settings'];
+const NEW_TABS: Tab[] = ['tools'];   // Round 61: sections added later start hidden in the bar for people who already arranged it
 export function navCfg(): { order: Tab[]; hidden: Tab[] } {
-  const c: { order?: Tab[]; hidden?: Tab[] } = get<{ order?: Tab[]; hidden?: Tab[] }>('cfg', 'nav') || {};
+  const c: { order?: Tab[]; hidden?: Tab[]; known?: Tab[] } = get<{ order?: Tab[]; hidden?: Tab[]; known?: Tab[] }>('cfg', 'nav') || {};
   const order = (c.order || []).filter(t => SECTIONS.some(s => s.id === t)); SECTIONS.forEach(s => { if (order.indexOf(s.id) < 0) order.push(s.id); });
-  return { order, hidden: c.hidden || DEFAULT_HIDDEN };
+  const hidden = c.hidden ? [...c.hidden, ...NEW_TABS.filter(t => !(c.known || []).includes(t) && !c.hidden!.includes(t))] : DEFAULT_HIDDEN;
+  return { order, hidden };
 }
-export function saveNav(order: Tab[], hidden: Tab[]) { put('cfg', 'nav', { order, hidden }); }
+export function saveNav(order: Tab[], hidden: Tab[]) { put('cfg', 'nav', { order, hidden, known: SECTIONS.map(s => s.id) }); }
 
 function parseHash(): { t: Tab; id?: string } {
   const m = location.hash.match(/^#\/([a-z]+)(?:\/(.+))?$/); const t = m && SECTIONS.some(s => s.id === m[1]) ? (m[1] as Tab) : (lsJSON<Tab>('v2_tab', 'day'));

@@ -2,10 +2,14 @@
 import { useEffect, useState } from 'preact/hooks';
 import { signal } from '@preact/signals';
 import { rev, put, get, all, del, trash, restore, privacyHits } from '../data/store';
+import { HrMoreSettings } from './hr';
+import { Studio } from '../features/flows';
+import { lateMin, otMs, isWork } from '../domain/hr';
+import { holiday, leaveOn } from '../domain/hrlists';
 import { act, calc, status, hrSet, HR_DEF, punchesOf, addPunch, movePunch, removePunch, weekKeys, t as hrT } from '../domain/hr';
 import { allEntryDays, entriesOf, entryText, Entry } from '../domain/dayend';
 import { folders, saveTask, saveTicket, classify, ticketCfg, msgCfg, allTasks } from '../domain/crm';
-import { clock, dur, fmtDay, keyOf, lsGet, lsJSON, lsSet, shiftDayKey, todayKey, uid, cx, ago, download } from '../lib/util';
+import { csv, clock, dur, fmtDay, keyOf, lsGet, lsJSON, lsSet, shiftDayKey, todayKey, uid, cx, ago, download } from '../lib/util';
 import { Add, Btn, DangerBtn, Empty, Field, IconBtn, PageHead, Seg, Sheet, Stat, Switch, Tiles, closeModal, openModal, toast } from '../ui/kit';
 import { PALETTES, SECTIONS, Tab, navCfg, saveNav, theme } from '../ui/state';
 import { sync, signOut, listDevices, removeDevice, deviceInfo, cycle } from '../data/sync';
@@ -14,14 +18,15 @@ import { lastReport, localLegacy, runMigration, migratedCounts } from '../data/m
 import { moonHidden } from '../ui/moon';
 
 // ================= HR & time =================
-export function HR() {
+export function HR({ part = 'all' }: { part?: 'all' | 'dash' | 'att' | 'set' }) {
   void rev.value; const [now, setNow] = useState(Date.now()); useEffect(() => { const i = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(i); }, []);
   const st = status(), c = calc(st.key, now), [day, setDay] = useState(todayKey()), S = hrSet();
   const wk = weekKeys(day).map(k => ({ k, c: calc(k, now) })), wkWorked = wk.reduce((n, x) => n + x.c.worked, 0);
   const days = Array.from(new Set(all<any>('punches').map(p => p.day))).sort().reverse();
-  return <div class="page">
-    <PageHead icon="hr" title="HR & Time" sub="Clock in/out and breaks with exact times" />
-    <div class="card tex hr-clock">
+  const P = (x: string) => part === 'all' || part === x;
+  return <div class={part === 'all' ? 'page' : 'hr-part'}>
+    {part === 'all' && <PageHead icon="hr" title="HR & Time" sub="Clock in/out and breaks with exact times" />}
+    {P('dash') && <><div class="card tex hr-clock">
       <div><div class="lbl">{st.state === 'out' ? 'Clocked out' : st.state === 'break' ? 'On break' : 'Clocked in'}</div><div class="mono hr-big">{clock(c.worked)}</div><div class="faint">Worked today · breaks {dur(c.brk, true)}</div></div>
       <div class="ctl" style={{ marginLeft: 'auto', marginBottom: 0 }}>
         {st.state === 'out' && <button class="b-add" onClick={() => toast(act('in'))}>Clock in</button>}
@@ -35,9 +40,11 @@ export function HR() {
     {punchesOf(day).length ? punchesOf(day).map(p => <div class="item"><div class="main"><div class="t">{({ in: 'Clock in', bs: 'Break start', be: 'Break end', out: 'Clock out' } as any)[p.k]}{p.bt ? ' (' + p.bt + ')' : ''}</div></div>
       <input class="in mono" type="time" step={1} style={{ width: '130px' }} value={tm(p.at)} onChange={e => { const v = (e.target as HTMLInputElement).value; if (v) { const [h, m, s] = v.split(':').map(Number); const d = new Date(p.at); d.setHours(h, m, s || 0); movePunch(p.id, +d); } }} />
       <DangerBtn onConfirm={() => removePunch(p.id)}>✕</DangerBtn></div>) : <Empty>No punches on this day.</Empty>}
-    <div class="h2">Attendance</div>
-    <div class="tw"><table class="table"><thead><tr><th>Day</th><th>In</th><th>Out</th><th>Breaks</th><th>Worked</th></tr></thead><tbody>{days.slice(0, 60).map(k => { const x = calc(k); return <tr onClick={() => setDay(k)} style={{ cursor: 'pointer' }}><td>{fmtDay(k)}</td><td class="mono">{hrT(x.first)}</td><td class="mono">{x.last ? hrT(x.last) : x.missed ? '⚠ missing' : ''}</td><td class="mono">{dur(x.brk, true)}</td><td class="mono">{dur(x.worked, true)}</td></tr>; })}</tbody></table>{!days.length && <Empty>No attendance yet.</Empty>}</div>
-    <div class="h2">Settings</div>
+    </>}
+    {P('att') && <><div class="h2">Attendance{part === 'att' && <span class="r"><Btn icon="down" onClick={() => download('attendance.csv', csv([['Day', 'In', 'Out', 'Breaks', 'Worked', 'Late (min)', 'Overtime'], ...days.map(k => { const x = calc(k); return [k, hrT(x.first), x.last ? hrT(x.last) : '', dur(x.brk, true), dur(x.worked, true), lateMin(k, x) || '', otMs(k, x) ? dur(otMs(k, x), true) : '']; })]))}>CSV</Btn></span>}</div>
+    <div class="tw"><table class="table"><thead><tr><th>Day</th><th>In</th><th>Out</th><th>Breaks</th><th>Worked</th>{part === 'att' && <><th>Late</th><th>OT</th><th>Note</th></>}</tr></thead><tbody>{days.slice(0, part === 'att' ? 400 : 60).map(k => { const x = calc(k), lm = lateMin(k, x), om = otMs(k, x); return <tr onClick={() => setDay(k)} style={{ cursor: 'pointer' }}><td>{fmtDay(k)}</td><td class="mono">{hrT(x.first)}</td><td class="mono">{x.last ? hrT(x.last) : x.missed ? '⚠ missing' : ''}</td><td class="mono">{dur(x.brk, true)}</td><td class="mono">{dur(x.worked, true)}</td>{part === 'att' && <><td class="mono">{lm ? lm + 'm' : ''}</td><td class="mono">{om ? dur(om, true) : ''}</td><td>{holiday(k) || (leaveOn(k)?.type || '') || (!isWork(k) ? 'Day off' : '')}</td></>}</tr>; })}</tbody></table>{!days.length && <Empty>No attendance yet.</Empty>}</div>
+    </>}
+    {P('set') && <><div class="h2">Settings</div>
     <div class="card"><div class="form">
       <Field label="Shift start"><input class="in" type="time" value={S.shiftStart} onChange={e => put('cfg', 'hr', { shiftStart: (e.target as HTMLInputElement).value })} /></Field>
       <Field label="Shift end"><input class="in" type="time" value={S.shiftEnd} onChange={e => put('cfg', 'hr', { shiftEnd: (e.target as HTMLInputElement).value })} /></Field>
@@ -45,7 +52,8 @@ export function HR() {
       <Field label="Hours per day"><input class="in" type="number" value={S.dayH} onChange={e => put('cfg', 'hr', { dayH: +(e.target as HTMLInputElement).value || HR_DEF.dayH })} /></Field>
       <Field label="Auto clock-out after (hours, 0 = off)"><input class="in" type="number" value={S.autoOutH} onChange={e => put('cfg', 'hr', { autoOutH: +(e.target as HTMLInputElement).value || 0 })} /></Field>
       <Field label="Show seconds"><Switch on={S.sec} onChange={v => put('cfg', 'hr', { sec: v })} /></Field>
-    </div></div>
+      {part === 'set' && <HrMoreSettings />}
+    </div></div></>}
   </div>;
 }
 const tm = (ms: number) => { const d = new Date(ms); return [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2, '0')).join(':'); };
@@ -94,6 +102,9 @@ export function Automations() {
     {R.length ? R.map(r => <div class="item"><div class="main"><div class="t">{r.name || r.phrase}</div><div class="s">{r.mode} “{r.phrase}”{r.not ? ' · NOT ' + r.not : ''} → {r.action === 'task' ? 'task in ' + (folders().find(f => f.id === r.folder)?.name || 'Follow-ups') + (r.due ? ', due +' + r.due + 'd' : '') : 'ticket'}</div></div>
       <Switch on={r.on} onChange={v => put('rules', r.id, { on: v })} label="On" /><Btn onClick={() => openModal(() => <RuleForm r={r} />)}>Edit</Btn><DangerBtn onConfirm={() => del('rules', r.id)}>Delete</DangerBtn></div>) : <Empty>No rules yet. Example: “no answer” → task “Call back {'{deal}'}” due tomorrow.</Empty>}
     <p class="faint" style={{ fontSize: '.74rem' }}>Rules run on new Day End entries automatically. Deal stages follow the latest entry by themselves.</p>
+    <div class="card" style={{ marginTop: '12px' }}><div class="ctl" style={{ marginBottom: 0 }}><div class="grow"><b>Ask before Closed Won without details</b><div class="faint" style={{ fontSize: '.78rem' }}>Saving a Closed Won entry without a plan or price asks first.</div></div><Switch on={get<any>('cfg', 'wonCheck')?.on !== false} onChange={v => put('cfg', 'wonCheck', { on: v })} label="Ask before Closed Won without details" /></div></div>
+    <div class="h2">Automation Studio</div>
+    <Studio />
   </div>;
 }
 function RuleForm({ r }: { r: Rule | null }) {

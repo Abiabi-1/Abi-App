@@ -4,7 +4,10 @@ import { CYCLES, Entry, PLANS, SK, STAGES, WON, calcPrice, hasRegs, isPaid, join
 import { lastDetails } from '../domain/crm';
 import { openUrl, cleanLink, stripText } from '../lib/privacy';
 import { parsePrice, ago } from '../lib/util';
-import { Btn, IconBtn, toast } from '../ui/kit';
+import { Btn, IconBtn, toast, confirmBox } from '../ui/kit';
+import { get } from '../data/store';
+import { qaTemplates, qaChips } from './tools';
+import { voiceOk, voiceInto } from '../features/comfort';
 import { Icon } from '../ui/icons';
 
 export const CALL_OUTCOMES = ['No answer', 'Busy', 'Call back later', 'Interested', 'Not interested', 'Demo booked', 'Wrong person'];
@@ -27,6 +30,12 @@ export function priced(v: V, trigger: string): V {
   }
   return o;
 }
+/** Round 61: "Ask before Closed Won without details" (switch in Automations). true = asked, wait for the answer. */
+export function wonCheck(vals: V, again: () => void) {
+  if (vals.stage !== WON || get<any>('cfg', 'wonCheck')?.on === false) return false;
+  const miss = [!vals.plan && 'plan', vals.plan && isPaid(vals.plan) && !vals.billing && 'billing', vals.plan && isPaid(vals.plan) && !vals.price && 'price'].filter(Boolean).join(', ');
+  if (!miss) return false; confirmBox('Closed Won without details', 'This Closed Won entry has no ' + miss + '. Save it anyway?', 'Save anyway', again); return true;
+}
 export function regsStep(v: V, d: number): V {
   if (!hasRegs(v.plan)) return v; const cur = Math.max(0, parseInt(v.regs, 10) || 0), next = Math.max(0, cur + d); if (next === cur) return v;
   const o: V = { ...v, regs: next ? String(next) : '' };
@@ -45,7 +54,7 @@ export function EntryForm(p: { sk: SK; day: string; hk: string; edit?: Entry | n
   useEffect(() => { if (p.autoFocus || p.edit) setTimeout(() => first.current?.focus(), 30); }, [p.edit?.id, p.sk]);
   const set = (k: string, val: string) => setV(o => (p.sk === 'tasks' && /^(stage|plan|billing|pricing|price|mvr)$/.test(k) ? priced({ ...o, [k]: val }, k) : { ...o, [k]: val }));
   const ld = useMemo(() => (p.sk === 'tasks' && !p.edit ? lastDetails(v.deal || '') : null), [v.deal, p.sk]);
-  const submit = () => {
+  const submit = (force = false) => {
     const vals: V = {}; Object.keys(v).forEach(k => { if (k.charAt(0) !== '_') vals[k] = String(v[k] ?? '').trim(); });
     let cut = 0;
     Object.keys(vals).forEach(k => { if (k === 'number' && p.sk === 'tasks') { const u = vals[k] ? cleanLink(vals[k]) : ''; if (u !== vals[k]) cut++; vals[k] = u; } else if (!/^(price|mvr|regs|stage|plan|billing|pricing)$/.test(k)) { const r = stripText(vals[k]); if (r.n) { cut += r.n; vals[k] = r.s; } } });
@@ -57,6 +66,7 @@ export function EntryForm(p: { sk: SK; day: string; hk: string; edit?: Entry | n
     if (p.sk === 'other' && !vals.note) return toast('Missing: note');
     if (p.sk === 'tasks' && vals.price && isNaN(parsePrice(vals.price))) return toast('Price should be a number');
     if (p.sk === 'tasks' && vals.mvr && isNaN(parsePrice(vals.mvr))) return toast('MVR price should be a number');
+    if (p.sk === 'tasks' && !force && wonCheck(vals, () => submit(true))) return;
     let data: Partial<Entry>;
     if (p.sk === 'tasks') data = { ...makeTask(vals), text: undefined }; else { const t = joinFields(p.sk, vals); if (!t) return; data = { text: t }; }
     let id: string | undefined;
@@ -83,11 +93,13 @@ export function EntryForm(p: { sk: SK; day: string; hk: string; edit?: Entry | n
       {won && <input class={'in' + (isPaid(v.plan) && v.pricing !== 'custom' ? ' ro' : '')} readOnly={isPaid(v.plan) && v.pricing !== 'custom'} inputMode="decimal" data-f="mvr" placeholder="Price (MVR)" value={v.mvr || ''} onInput={e => set('mvr', (e.target as HTMLInputElement).value)} onKeyDown={key} />}
       {won && hasRegs(v.plan) && <div class="ef-regs" title="Professional only · extra registers $20 / 300 MVR per month each (×6 biannual, ×12 annual)"><span class="lbl">Extra registers</span><button type="button" class="bi sm" onClick={() => setV(o => regsStep(o, -1))} aria-label="Fewer registers">−</button><b class="mono">{v.regs || '0'}</b><button type="button" class="bi sm" onClick={() => setV(o => regsStep(o, 1))} aria-label="More registers">+</button></div>}
     </div>}
-    {p.quick && p.sk === 'tasks' && <div class="row-scroll ef-sc">{CALL_OUTCOMES.map(o => <button type="button" class="chip" onClick={e => { setV(x => ({ ...x, notes: x.notes ? x.notes + '. ' + o : o })); activateAfter(e, 'notes'); }}>{o}</button>)}</div>}
+    {p.quick && p.sk === 'tasks' && <div class="row-scroll ef-sc">{qaChips(CALL_OUTCOMES).map(o => <button type="button" class="chip" onClick={e => { setV(x => ({ ...x, notes: x.notes ? x.notes + '. ' + o : o })); activateAfter(e, 'notes'); }}>{o}</button>)}</div>}
     {p.quick && <div class="row-scroll ef-sc">{QUICK_NOTES.map(o => <button type="button" class="chip" onClick={e => { const f = p.sk === 'tasks' ? 'notes' : def.fields[def.fields.length - 1].name; setV(x => ({ ...x, [f]: x[f] ? x[f] + '. ' + o : o })); activateAfter(e, f); }}>{o}</button>)}</div>}
+    {p.quick && <div class="row-scroll ef-sc ef-tpl"><span class="lbl">Templates</span>{qaTemplates().map(t => <button type="button" class="chip" onClick={e => { const f = p.sk === 'tasks' ? 'notes' : def.fields[def.fields.length - 1].name; setV(x => ({ ...x, [f]: x[f] ? x[f].replace(/\s+$/, '') + '. ' + t.notes : t.notes })); activateAfter(e, f); }}>{t.n}</button>)}</div>}
     <div class="ef-go">
+      {p.quick && voiceOk() && <Btn title="Voice note: speak and it is typed into the notes" onClick={() => { const f = p.sk === 'tasks' ? 'notes' : def.fields[def.fields.length - 1].name; voiceInto(t => setV(x => ({ ...x, [f]: x[f] ? x[f].replace(/\s+$/, '') + ' ' + t : t }))); }}>🎤 Voice</Btn>}
       {p.edit && <Btn onClick={() => { setV(p.initial ? { ...p.initial } : {}); p.onDone?.(); }}>Cancel</Btn>}
-      <button type="button" class="b-add" onClick={submit}>{p.edit ? 'Save changes' : <><Icon n="plus" />Add</>}</button>
+      <button type="button" class="b-add" onClick={() => submit()}>{p.edit ? 'Save changes' : <><Icon n="plus" />Add</>}</button>
     </div>
   </div>;
 }

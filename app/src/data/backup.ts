@@ -9,8 +9,9 @@ export function backup(tag = '') {
   lsSet('v2_last_backup', String(Date.now()));
   return recs.length;
 }
-export async function restoreFile(file: File): Promise<{ kind: 'v2' | 'old'; n: number; report?: Report }> {
-  const txt = await file.text(); const o = JSON.parse(txt);
+export function snapshotJSON() { return JSON.stringify({ app: 'abi-app', v: 2, at: new Date().toISOString(), records: rawAll().filter(r => r.c.charAt(0) !== '_').map(r => ({ c: r.c, id: r.id, d: r.d, t: r.t, x: r.x || null, u: r.u })) }); }
+export async function restoreFile(file: File): Promise<{ kind: 'v2' | 'old'; n: number; report?: Report }> { return restoreObj(JSON.parse(await file.text())); }
+export async function restoreObj(o: any): Promise<{ kind: 'v2' | 'old'; n: number; report?: Report }> {
   if (o && o.app === 'abi-app' && Array.isArray(o.records)) {
     let n = 0;
     (o.records as Rec[]).forEach(r => {

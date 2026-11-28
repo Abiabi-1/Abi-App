@@ -4,11 +4,11 @@ import './ui/base.css';
 import './ui/app.css';
 import { initStore, storeReady, onLocalChange, rev } from './data/store';
 import { initSync, onConnected, fetchLegacyRows, cloudFlag, writeCloudFlag, sync } from './data/sync';
-import { runMigration, localLegacy, hasLocalLegacy } from './data/migrate';
+import { runMigration, localLegacy, hasLocalLegacy, legacySrcFromRecords } from './data/migrate';
 import { lsGet, lsSet } from './lib/util';
 import { route, quickAdd, searchOpen, go } from './ui/state';
 import { Bar, SideMenu, QuickAdd, Search, Login } from './ui/shell';
-import { Toast, Modal, Menu } from './ui/kit';
+import { Toast, Modal, Menu, toast } from './ui/kit';
 import { FloatMoon } from './ui/moon';
 import { TodayNotice, BackupReminder, ScrollButtons } from './ui/notices';
 import { DayEnd } from './sections/dayend';
@@ -18,7 +18,13 @@ import { LostDeals } from './sections/lost';
 import { Tickets } from './sections/tickets';
 import { Tasks } from './sections/tasks';
 import { Dashboard, Analytics } from './sections/insights';
-import { HR, Automations, Settings, runRules } from './sections/more';
+import { Automations, Settings, runRules } from './sections/more';
+import { HRPage } from './sections/hr';
+import { ToolsPage } from './sections/tools';
+import { runRecurring, logActivity } from './sections/tools2';
+import { JumpTo, LockScreen, installLock, jumpOpen, comfort, setComfort, dailyNotify } from './features/comfort';
+import { autoPoints } from './features/restorepoints';
+import { installFlows } from './features/flows';
 import { allTasks } from './domain/crm';
 import { installSmart, importSmartLegacy } from './features/smart';
 import { installSnippets, importSnippetsLegacy } from './features/snippets';
@@ -29,14 +35,16 @@ function Page() {
   switch (t) {
     case 'day': return <DayEnd />; case 'deals': return <WonDeals />; case 'dealboard': return <DealBoard />; case 'lost': return <LostDeals />;
     case 'tickets': return <Tickets />; case 'tasks': return <Tasks />; case 'dashboard': return <Dashboard />; case 'analytics': return <Analytics />;
-    case 'hr': return <HR />; case 'auto': return <Automations />; case 'settings': return <Settings />; default: return <DayEnd />;
+    case 'hr': return <HRPage />; case 'auto': return <Automations />; case 'tools': return <ToolsPage />; case 'settings': return <Settings />; default: return <DayEnd />;
   }
 }
 function App() {
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target as HTMLElement).tagName);
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); searchOpen.value = true; }
+      if ((e.altKey && !e.ctrlKey && e.code === 'KeyJ') || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'k')) { e.preventDefault(); jumpOpen.value = true; }
+      else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); searchOpen.value = true; }
+      else if (e.key === 'Escape' && comfort.value.focus && !document.querySelector('.ov, .sheet')) { setComfort({ focus: false }); toast('Focus mode off'); }
       else if ((e.ctrlKey || e.metaKey) && e.key === ',') { e.preventDefault(); go('settings'); }
       else if (!typing && !e.ctrlKey && !e.metaKey && !e.altKey && (e.key === 'q' || e.key === 'Q')) { e.preventDefault(); quickAdd.value = {}; }
     };
@@ -50,7 +58,8 @@ function App() {
     <main><Page /></main>
     <TodayNotice /><ScrollButtons />
     {route.value.t === 'day' && <button type="button" class="qa-tab" onClick={() => { quickAdd.value = {}; }} title="Quick Add (Q)">⚡ Quick Add</button>}
-    <FloatMoon /><SideMenu /><QuickAdd /><Search /><Modal /><Menu /><Login /><Toast />
+    <FloatMoon /><SideMenu /><QuickAdd /><Search /><JumpTo /><Modal /><Menu /><Login /><Toast /><LockScreen />
+    {comfort.value.focus && <button type="button" class="focus-exit" onClick={() => setComfort({ focus: false })}>Leave focus mode</button>}
   </>;
 }
 
@@ -61,10 +70,12 @@ function reminders() {
     const now = new Date(), done: Record<string, 1> = JSON.parse(lsGet('v2_reminded') || '{}');
     allTasks().forEach(t => { if (t.done || !t.remind || !t.due || done[t.id]) return; const at = new Date(t.due + 'T' + (t.time || '09:00') + ':00'); if (at <= now && +now - +at < 36e5 * 12) { try { new Notification(t.title, { body: t.notes || 'Task due', icon: './icon-192.png' }); } catch { /* */ } done[t.id] = 1; } });
     lsSet('v2_reminded', JSON.stringify(done));
+    dailyNotify();
   }, 30000);
 }
 
 async function boot() {
+  installLock();
   render(<App />, document.getElementById('app')!);
   await initStore();
   // migration: the cloud copy of the old data (if signed in) is the merged one; otherwise this device's copy
@@ -83,6 +94,10 @@ async function boot() {
   let pend: string[] = [], t: any = 0;
   onLocalChange(r => { if (r.c !== 'entries') return; pend.push(r.id); clearTimeout(t); t = setTimeout(() => { runRules(pend); pend = []; }, 600); });
   reminders();
+  // Round 61: activity log, recurring tasks, automatic restore points, Automation Studio flows
+  onLocalChange(r => logActivity(r.c, r.id, !!r.x));
+  setTimeout(() => { try { runRecurring(); } catch { /* */ } }, 4000); setInterval(() => { try { runRecurring(); } catch { /* */ } }, 30 * 6e4);
+  autoPoints(); installFlows();
   // Round 60: Smart text + Snippets. Users who migrated before this version: convert the old data carried over as 'legacy'
   // (or this device's old app); with no old shortcuts, the starter pack once. Runs after the first sync so cloud data is in.
   if (!lsGet('v2_smartsnip_done')) {
@@ -90,6 +105,17 @@ async function boot() {
     if (!allRecs('smart').length) importSmartLegacy(raw('smartText_v1'), putLegacy);
     if (!allRecs('snippets').length) importSnippetsLegacy(raw('hub_snippets_v1') || null, putLegacy);
     lsSet('v2_smartsnip_done', '1');
+  }
+  // Round 61: the HR lists / slips / audit and the old Tools data were not converted before. Read the old data once more
+  // (cloud copy when signed in, else this device). Ids are deterministic and deleted items stay deleted.
+  if (!lsGet('v2_r61_done') && (lsGet('v2_migrated_cloud') || lsGet('v2_migrated_local'))) {
+    try {
+      let src: Record<string, string | null> = legacySrcFromRecords();
+      if (sync.status.value === 'synced') { const rows = await fetchLegacyRows(); src = { ...src, ...rows }; }
+      if (!src.hub_hr_v1 && hasLocalLegacy()) src = { ...localLegacy(), ...src };
+      if (Object.keys(src).length) runMigration(src, 'Round 61 update');
+      lsSet('v2_r61_done', '1');
+    } catch { /* retried on the next start */ }
   }
   installSmart(); installSnippets();
   if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js').catch(() => { /* */ });

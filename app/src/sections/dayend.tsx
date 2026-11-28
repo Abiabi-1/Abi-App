@@ -1,5 +1,6 @@
 // Day End Report – the old page's look, exactly: same markup and class names, the old page's own stylesheet
 // (dayend-old.css, captured from the old app) inside an isolated shadow root, the old moon drawing and night sky.
+import { wonCheck } from './entryform';
 import { Shadow as ShadowBase } from '../ui/shadow';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { signal } from '@preact/signals';
@@ -185,7 +186,7 @@ export function OldForm({ day, hk, sk, edit, onDone, quick }: { day: string; hk:
   const first = useRef<HTMLInputElement>(null);
   const set = (k: string, val: string) => setV(o => (sk === 'tasks' && /^(stage|plan|billing|pricing|price|mvr)$/.test(k) ? priced({ ...o, [k]: val }, k === 'stage' ? 'plan' : k) : { ...o, [k]: val }));
   const ld = useMemo(() => (sk === 'tasks' && !edit ? lastDetails(v.deal || '') : null), [v.deal]);
-  const submit = () => {
+  const submit = (force = false) => {
     const vals: Record<string, string> = {}; Object.keys(v).forEach(k => { if (k.charAt(0) !== '_') vals[k] = String(v[k] ?? '').trim(); });
     let cut = 0;
     Object.keys(vals).forEach(k => { if (k === 'number' && sk === 'tasks') { const u = vals[k] ? cleanLink(vals[k]) : ''; if (u !== vals[k]) cut++; vals[k] = u; } else if (!/^(price|mvr|regs|stage|plan|billing|pricing)$/.test(k)) { const r = stripText(vals[k]); if (r.n) { cut += r.n; vals[k] = r.s; } } });
@@ -198,6 +199,7 @@ export function OldForm({ day, hk, sk, edit, onDone, quick }: { day: string; hk:
     if (sk === 'other' && !vals.note) return toast('Missing: note');
     if (sk === 'tasks' && vals.price && isNaN(parsePrice(vals.price))) return toast('Price should be a number');
     if (sk === 'tasks' && vals.mvr && isNaN(parsePrice(vals.mvr))) return toast('MVR price should be a number');
+    if (sk === 'tasks' && !force && wonCheck(vals, () => submit(true))) return;
     const data: Partial<Entry> = sk === 'tasks' ? { ...makeTask(vals), text: undefined } : { text: joinFields(sk, vals) };
     if (sk !== 'tasks' && !data.text) return;
     if (edit) { updateEntry(edit.id, data); toast('Entry updated'); }
@@ -213,7 +215,7 @@ export function OldForm({ day, hk, sk, edit, onDone, quick }: { day: string; hk:
     <div class="input-row">
       {def.fields.map((fd, i) => <>{inp(fd, i)}{fd.name === 'number' && sk === 'tasks' && <button type="button" class="plus-btn open-link" title="Open the HubSpot deal link" aria-label="Open the HubSpot deal link" onClick={() => { const u = openUrl(v.number); if (u) window.open(u, '_blank', 'noopener'); else toast('Paste the HubSpot deal link first'); }}>↗</button>}</>)}
       {ld && <div class="e41-hint"><span class="lb">Seen {ld.seen}× · last {fmtDay(new Date(ld.last).toISOString().slice(0, 10))}</span><button type="button" class="qn-chip" onClick={() => setV(o => priced({ ...o, deal: ld.name, number: o.number || ld.link, stage: ld.stage || o.stage || '' }, 'plan'))}>Use last details</button></div>}
-      <button class="btn-add" onClick={submit}>{edit ? 'Save changes' : '+ Add'}</button>{edit && <button class="btn" onClick={() => { setV({}); onDone?.(); }}>Cancel</button>}
+      <button class="btn-add" onClick={() => submit()}>{edit ? 'Save changes' : '+ Add'}</button>{edit && <button class="btn" onClick={() => { setV({}); onDone?.(); }}>Cancel</button>}
     </div>
     {sk === 'tasks' && <div class="input-row stage-row">
       <select data-f="stage" value={v.stage || ''} onChange={e => set('stage', (e.target as HTMLSelectElement).value)}><option value="">Deal stage</option>{STAGES.map(s => <option value={s}>{s}</option>)}{v.stage && STAGES.indexOf(v.stage) < 0 && <option value={v.stage}>{v.stage}</option>}</select>

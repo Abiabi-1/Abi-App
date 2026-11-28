@@ -1,5 +1,6 @@
 // Won Deals – its own page with the old look (the old page's stylesheet + structure, isolated), same rules as before:
 // one deal per customer (later entries go into the note history), deals are Day End "Closed Won All" entries.
+import { wonCheck } from './entryform';
 import { signal } from '@preact/signals';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import OLD_CSS from './won-old.css?inline';
@@ -135,7 +136,7 @@ function WonForm({ k, edit, onDone }: { k: string; edit: WonDeal | null; onDone:
   useEffect(() => { setV(blank()); if (edit) setTimeout(() => first.current?.focus(), 20); }, [edit?.id]);
   const set = (f: string, val: string) => setV(o => (/^(plan|billing|pricing|price|mvr)$/.test(f) ? priced({ ...o, [f]: val }, f) : { ...o, [f]: val }));
   const std = isPaid(v.plan || '') && v.pricing !== 'custom';
-  const submit = () => {
+  const submit = (force = false) => {
     const vals: Record<string, string> = {}; Object.keys(v).forEach(f => { if (f.charAt(0) !== '_') vals[f] = String(v[f] ?? '').trim(); });
     let cut = 0; const u = vals.number ? cleanLink(vals.number) : ''; if (u !== vals.number) { cut++; vals.number = u; }
     ['deal', 'notes'].forEach(f => { const r = stripText(vals[f]); if (r.n) { cut += r.n; vals[f] = r.s; } });
@@ -143,6 +144,7 @@ function WonForm({ k, edit, onDone }: { k: string; edit: WonDeal | null; onDone:
     if (!vals.deal && !vals.number) return toast('Add a deal name or the HubSpot link');
     if (vals.price && isNaN(parsePrice(vals.price))) return toast('Price should be a number');
     if (vals.mvr && isNaN(parsePrice(vals.mvr))) return toast('MVR price should be a number');
+    if (!force && wonCheck({ ...vals, stage: WON }, () => submit(true))) return;
     const data = { ...makeTask({ ...vals, stage: WON }), text: undefined } as Partial<Entry>;
     if (edit) { updateEntry(edit.id, data); toast('Deal updated'); } else { addEntry(k, currentHour(k), 'tasks', data); toast('Deal added'); }
     setV({ stage: WON }); onDone();
@@ -158,7 +160,7 @@ function WonForm({ k, edit, onDone }: { k: string; edit: WonDeal | null; onDone:
     <div class="field"><label for="fPrice">Price (USD)</label><input id="fPrice" type="text" inputMode="decimal" placeholder="0.00" readOnly={std} class={std ? 'ro' : ''} value={v.price || ''} onInput={e => set('price', (e.target as HTMLInputElement).value)} onKeyDown={key} /></div>
     <div class="field"><label for="fMvr">Price (MVR)</label><input id="fMvr" type="text" inputMode="decimal" placeholder="0.00" readOnly={std} class={std ? 'ro' : ''} value={v.mvr || ''} onInput={e => set('mvr', (e.target as HTMLInputElement).value)} onKeyDown={key} /></div>
     <div class={'field' + (hasRegs(v.plan || '') ? '' : ' hidden')} id="regsField"><label>Extra registers</label><div class="regs"><button type="button" aria-label="Fewer registers" onClick={() => setV(o => regsStep(o, -1))}>▼</button><b id="regsVal">{v.regs || '0'}</b><button type="button" aria-label="More registers" onClick={() => setV(o => regsStep(o, 1))}>▲</button><small>Professional only · $20 / 300 MVR per month each (×6 biannual, ×12 annual)</small></div></div>
-    <div class="form-actions">{edit && <button class="btn" onClick={() => { setV({ stage: WON }); onDone(); }}>Cancel</button>}<button class="btn-add" id="addBtn" onClick={submit}>{edit ? 'Save' : 'Add'}</button></div>
+    <div class="form-actions">{edit && <button class="btn" onClick={() => { setV({ stage: WON }); onDone(); }}>Cancel</button>}<button class="btn-add" id="addBtn" onClick={() => submit()}>{edit ? 'Save' : 'Add'}</button></div>
   </div>;
 }
 

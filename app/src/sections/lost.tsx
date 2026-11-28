@@ -10,6 +10,7 @@ import { go } from '../ui/state';
 import { openUrl, cleanLink } from '../lib/privacy';
 
 const V = signal({ sub: 'lost' as 'lost' | 'churn', per: 'month' as 'day' | 'month' | 'year' | 'all', q: '' });
+const selL = signal<string[] | null>(null);   // Round 61: Select (bulk); null = not selecting
 export function LostDeals() {
   void rev.value; const v = V.value, td = todayKey();
   const inP = (k: string) => v.per === 'all' || (v.per === 'day' ? k === td : v.per === 'month' ? k.slice(0, 7) === td.slice(0, 7) : k.slice(0, 4) === td.slice(0, 4));
@@ -28,12 +29,22 @@ export function LostDeals() {
     <div class="ctl" style={{ marginTop: '10px' }}><SearchBox value={v.q} onInput={x => set({ q: x })} ph="Search lost deals" />
       <Btn icon="copy" onClick={async () => toast((await copyText(report())) ? 'Report copied' : 'Copy failed')}>Copy</Btn>
       <Btn icon="down" onClick={() => download('lost-deals.csv', csv([['Day', 'Kind', 'Deal', 'Reason', 'Plan', 'Billing', 'Price', 'Value lost', 'Notes'], ...cur.map(e => [e.day, e.kind, e.deal, e.reason, e.plan, e.billing, e.price, lostValue(e) || '', e.notes])]))}>CSV</Btn>
-      <Btn onClick={() => openModal(() => <Reasons />)}>Reasons</Btn></div>
+      <Btn onClick={() => openModal(() => <Reasons />)}>Reasons</Btn><Btn on={selL.value != null} onClick={() => { selL.value = selL.value ? null : []; }}>{selL.value ? 'Done' : 'Select'}</Btn></div>
+    {selL.value && <BulkLost cur={cur} />}
     {cur.length ? cur.map(e => <LostRow e={e} />) : <Empty>Nothing here for {per}. Mark a Day End task as {v.sub === 'churn' ? 'Churn' : 'Closed Lost All'}, or add one.</Empty>}
   </div>;
 }
+function BulkLost({ cur }: { cur: Lost[] }) {
+  const sel = new Set(selL.value || []), L = cur.filter(e => sel.has(e.id));
+  const apply = (p: Record<string, string>) => { L.forEach(e => { if (e.src === 'day') put('lostmeta', e.id, p); else put('lost', e.id, p); }); toast(L.length + ' updated'); };
+  return <div class="ctl bulk-bar" style={{ flexWrap: 'wrap' }}><span class="faint">{L.length} selected</span><Btn onClick={() => { selL.value = sel.size === cur.length ? [] : cur.map(e => e.id); }}>{sel.size === cur.length ? 'None' : 'All'}</Btn>
+    <select class="in" style={{ width: 'auto' }} aria-label="Set reason" disabled={!L.length} value="" onChange={e => { const r = (e.target as HTMLSelectElement).value; if (r) apply({ reason: r }); }}><option value="">Set reason…</option>{lostReasons().map(r => <option>{r}</option>)}</select>
+    <Btn icon="copy" onClick={async () => toast((await copyText(L.map(e => e.deal).join('\n'))) ? 'Names copied' : 'Copy failed')}>Copy names</Btn>
+    <DangerBtn onConfirm={() => { let n = 0, k = 0; L.forEach(e => { if (e.src === 'manual') { del('lost', e.id); n++; } else k++; }); selL.value = []; toast(n + ' deleted' + (k ? ' · ' + k + ' come from Day End (change them there)' : '')); }}>Delete</DangerBtn></div>;
+}
 function LostRow({ e }: { e: Lost }) {
-  return <div class="item"><div class="main"><div class="t">{e.deal || '(no name)'}</div>
+  const S = selL.value;
+  return <div class="item">{S && <input type="checkbox" class="ck" aria-label={'Select ' + e.deal} checked={S.indexOf(e.id) >= 0} onChange={x => { selL.value = (x.target as HTMLInputElement).checked ? [...S, e.id] : S.filter(i => i !== e.id); }} />}<div class="main"><div class="t">{e.deal || '(no name)'}</div>
     <div class="pills"><span class="pill">{fmtDay(e.day)}</span>{e.reason && <span class="pill bad">{e.reason}</span>}{e.plan && <span class="pill acc">{planLabel(e)}</span>}{lostValue(e) > 0 && <span class="pill warn">${fmtNum(lostValue(e))}</span>}{e.src === 'day' && <span class="pill">Day End</span>}</div>
     {e.notes && <div class="n">{e.notes}</div>}</div>
     <div class="acts"><Btn onClick={() => openModal(() => <LostForm kind={e.kind} e={e} />)}>Edit</Btn>{e.src === 'day' && <Btn onClick={() => import('./dayend').then(m => { m.selDay.value = e.day; go('day'); setTimeout(() => m.scrollToEntry(e.id), 300); })}>Open in Day End</Btn>}{e.number && <a class="b" href={openUrl(e.number)} target="_blank" rel="noopener">↗ HubSpot</a>}{e.src === 'manual' && <DangerBtn onConfirm={() => del('lost', e.id)}>Delete</DangerBtn>}</div></div>;

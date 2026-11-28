@@ -4,9 +4,14 @@ import { all, put, get, del } from '../data/store';
 import { addDays, dur, h12, keyOf, parseKey, todayKey, uid, timeToMin } from '../lib/util';
 
 export interface Punch { id: string; day: string; k: 'in' | 'bs' | 'be' | 'out'; at: number; bt?: string; n?: string }
-export interface HrSet { shiftStart: string; shiftEnd: string; grace: number; sec: boolean; autoOutH: number; autoBreakMin: number; autoBreakAfterH: number; dayH: number; week: number[]; punchRound: number }
+export interface LeaveType { id: string; name: string; days: number; carry?: number }
+export interface HrSet { shiftStart: string; shiftEnd: string; grace: number; sec: boolean; autoOutH: number; autoBreakMin: number; autoBreakAfterH: number; dayH: number; week: number[]; punchRound: number;
+  round: number; weekH: number; otNormal: number; otRest: number; rate: number; rateType: 'hour' | 'month'; cur: string; name: string; pensionEmp: number; pensionEr: number; taxPct: number; otApproval: boolean; accrue: boolean; leaveTypes: LeaveType[];
+  sched: Record<string, { off?: boolean; s?: string; e?: string }>; dayoff: Record<string, 0 | 1>; dayshift: Record<string, { s: string; e: string }>; notifyAt?: string }
 const HR = 36e5;
-export const HR_DEF: HrSet = { shiftStart: '09:00', shiftEnd: '17:00', grace: 10, sec: true, autoOutH: 0, autoBreakMin: 0, autoBreakAfterH: 5, dayH: 8, week: [0, 1, 2, 3, 4], punchRound: 0 };
+export const HR_DEF: HrSet = { shiftStart: '09:00', shiftEnd: '17:00', grace: 10, sec: true, autoOutH: 0, autoBreakMin: 0, autoBreakAfterH: 5, dayH: 8, week: [0, 1, 2, 3, 4], punchRound: 0,
+  round: 0, weekH: 48, otNormal: 1.25, otRest: 1.5, rate: 0, rateType: 'hour', cur: 'MVR', name: '', pensionEmp: 0, pensionEr: 0, taxPct: 0, otApproval: false, accrue: false,
+  leaveTypes: [{ id: 'annual', name: 'Annual leave', days: 30 }, { id: 'sick', name: 'Sick leave', days: 30 }, { id: 'other', name: 'Other / unpaid', days: 0 }], sched: {}, dayoff: {}, dayshift: {} };
 export function hrSet(): HrSet { return { ...HR_DEF, ...(get('cfg', 'hr') || {}) } as HrSet; }
 export const t = (ms: number) => h12(ms, hrSet().sec);
 
@@ -50,11 +55,12 @@ export function addPunch(day: string, kind: Punch['k'], at: number) { put('punch
 export function movePunch(id: string, at: number) { put('punches', id, { at }); }
 export function removePunch(id: string) { del('punches', id); }
 
-function isWork(k: string) { return hrSet().week.indexOf(parseKey(k).getDay()) >= 0; }
-function setFor(k: string) { const S = hrSet(); const d = get<{ shiftStart: string; shiftEnd: string }>('days', k); return { s: d?.shiftStart || S.shiftStart, e: d?.shiftEnd || S.shiftEnd }; }
-function lateMin(k: string, c: ReturnType<typeof calc>) { if (!c.first) return 0; const sh = setFor(k), d = new Date(c.first), m = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60; return Math.max(0, Math.round(m - timeToMin(sh.s) - hrSet().grace)); }
-function earlyMin(k: string, c: ReturnType<typeof calc>) { if (!c.last || c.open) return 0; const sh = setFor(k), d = new Date(c.last), m = d.getHours() * 60 + d.getMinutes(); return Math.max(0, Math.round(timeToMin(sh.e) - hrSet().grace - m)); }
-function otMs(k: string, c: ReturnType<typeof calc>) { const lim = hrSet().dayH * HR; if (!isWork(k)) return c.worked; return Math.max(0, c.worked - lim); }
+/** working day: a date override wins, then the weekly schedule (Round 61), then the work-week setting (as before). */
+export function isWork(k: string) { const S = hrSet(); if (S.dayoff && S.dayoff[k] != null) return S.dayoff[k] === 0; const n = parseKey(k).getDay(), r = S.sched && S.sched[n]; if (r && r.off != null) return !r.off; return S.week.indexOf(n) >= 0; }
+export function setFor(k: string) { const S = hrSet(); const ds = S.dayshift && S.dayshift[k]; if (ds) return { s: ds.s, e: ds.e }; const d = get<{ shiftStart: string; shiftEnd: string }>('days', k); const r = S.sched && S.sched[parseKey(k).getDay()]; return { s: d?.shiftStart || r?.s || S.shiftStart, e: d?.shiftEnd || r?.e || S.shiftEnd }; }
+export function lateMin(k: string, c: ReturnType<typeof calc>) { if (!c.first) return 0; const sh = setFor(k), d = new Date(c.first), m = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60; return Math.max(0, Math.round(m - timeToMin(sh.s) - hrSet().grace)); }
+export function earlyMin(k: string, c: ReturnType<typeof calc>) { if (!c.last || c.open) return 0; const sh = setFor(k), d = new Date(c.last), m = d.getHours() * 60 + d.getMinutes(); return Math.max(0, Math.round(timeToMin(sh.e) - hrSet().grace - m)); }
+export function otMs(k: string, c: ReturnType<typeof calc>) { const lim = hrSet().dayH * HR; if (!isWork(k)) return c.worked; return Math.max(0, c.worked - lim); }
 const cap = (s: string) => { s = String(s || ''); return s.charAt(0).toUpperCase() + s.slice(1); };
 
 /** Lines in the Day End report (same text as before). */
