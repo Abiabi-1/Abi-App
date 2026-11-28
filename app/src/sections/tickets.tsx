@@ -4,7 +4,7 @@ import { useState } from 'preact/hooks';
 import { rev } from '../data/store';
 import { Ticket, TType, tickets, ticketCfg, saveTicketCfg, saveTicket, removeTicket, isClosedT, ticketStageName, classify, DEF_SUBS, deals } from '../domain/crm';
 import { csv, download, fmtDay, keyOf, todayKey, uid, cx, copyText, h12 } from '../lib/util';
-import { Add, Btn, Chips, DangerBtn, Empty, Field, IconBtn, PageHead, SearchBox, Seg, Sheet, Stat, Tiles, closeModal, openMenu, openModal, toast } from '../ui/kit';
+import { ColTitle, Add, Btn, Chips, DangerBtn, Empty, Field, IconBtn, PageHead, SearchBox, Seg, Sheet, Stat, Tiles, closeModal, openMenu, openModal, toast } from '../ui/kit';
 import { go, isPhone, route } from '../ui/state';
 
 const selT = signal<string[] | null>(null);   // Round 61: Select (bulk)
@@ -51,7 +51,7 @@ function TCol({ c }: { c: { id: string; name: string; smart: boolean; items: Tic
   return <div class={cx('col', over && 'drop')} style={c.smart ? { borderStyle: 'dashed' } : undefined}
     onDragOver={e => { if (c.smart) return; e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
     onDrop={e => { e.preventDefault(); setOver(false); const id = e.dataTransfer?.getData('text/ticket'); const t = tickets().find(x => x.id === id); if (t && !c.smart) moveTicket(t, c.id); }}>
-    <div class="col-h"><span>{c.name}</span><span class="c">{c.items.length}{c.smart ? ' · auto' : ''}</span></div>
+    <div class="col-h"><ColTitle name={c.name} closed={/closed/i.test(c.name)} /><span class="c">{c.items.length}{c.smart ? ' · auto' : ''}</span></div>
     {c.items.map(t => <TicketCard t={t} />)}
   </div>;
 }

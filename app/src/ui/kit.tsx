@@ -103,3 +103,10 @@ export function confirmBox(title: string, text: string, ok: string, fn: () => vo
 }
 export function Field(p: { label: string; children: ComponentChildren; full?: boolean }) { return <label class={cx('f', p.full && 'full')}>{p.label}{p.children}</label>; }
 export function Empty({ children }: { children: ComponentChildren }) { return <div class="empty">{children}</div>; }
+
+/** Round 62: stage dots exactly as the old boards (colour + soft glow). */
+const DOT: Record<string, string> = { 'lead': '150, 150, 160', 'interested': '96, 165, 250', 'demo completed': '251, 191, 36', 'going live': '251, 120, 40', 'closed won all': '74, 222, 128', 'no response': '167, 139, 250', 'waiting on contact': '45, 212, 191', 'overdue': '248, 70, 80', 'churn': '190, 18, 60', 'closed lost all': '136, 50, 70', 'pending': '251, 191, 36', 'waiting on us': '251, 120, 40', 'closed all': '74, 222, 128', 'closed this month': '74, 222, 128', 'closed': '74, 222, 128' };
+export function ColTitle({ name, closed }: { name: string; closed?: boolean }) {
+  const c = DOT[name.toLowerCase()] || (closed ? DOT.closed : '');
+  return <><span class="col-dot" style={c ? { background: 'rgba(' + c + ', .9)', boxShadow: '0 0 8px rgba(' + c + ', .35)' } : { display: 'none' }} /><b class="col-t">{name}</b></>;
+}

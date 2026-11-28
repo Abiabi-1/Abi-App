@@ -41,9 +41,10 @@ effect(() => {
   const th = theme.value; lsSet('v2_theme', JSON.stringify(th));
   const r = document.documentElement; r.dataset.theme = th.mode;
   const p = PALETTES.find(x => x.id === th.pal) || PALETTES[0];
-  const cols = BASE.map(([, s, l]) => hsl(p.id === 'crimson' ? 355 : p.h, s * p.s, l + p.l));
+  // Round 62: the crimson palette uses the old app's exact colours (the formula was one step off)
+  const cols = p.id === 'crimson' ? [[90, 5, 17], [225, 42, 57], [254, 89, 104], [134, 10, 26], [255, 135, 145]] : BASE.map(([, s, l]) => hsl(p.h, s * p.s, l + p.l));
   cols.forEach((c, i) => { r.style.setProperty('--t' + i, 'rgb(' + c.join(',') + ')'); });
-  r.style.setProperty('--accent-rgb', cols[1].join(',')); r.style.setProperty('--accent2-rgb', cols[2].join(','));
+  r.style.setProperty('--accent-rgb', p.id === 'crimson' ? '229,48,63' : cols[1].join(',')); r.style.setProperty('--accent2-rgb', cols[2].join(','));
   r.style.setProperty('--on-accent', p.on || '#fff');
   const meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', th.mode === 'light' ? '#f4f2f3' : '#000000');
 });

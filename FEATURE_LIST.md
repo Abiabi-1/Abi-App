@@ -522,3 +522,8 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 - Tools section (22 tools): templates, Quick Add templates & chips, call log + best hours + call-back queue, lists, invoices, speed report, week in review, deeper insights, missing info, duplicates, import / paste deals, trash & activity, restore points, calendar, recurring tasks, goals, renewals board, stuck deals, renewal messages, draft my Day End, my shortcuts, comfort.
 - Jump to (Alt+J), focus mode, one-hand mode, app lock (PIN hash), comfort & speed, voice note, daily follow-up notification, deal owners + saved views, bulk select on Lost Deals / Tickets, "No HubSpot link" task filter.
 - Automation Studio flows (old flows converted; unsupported parts kept off), "Ask before Closed Won without details", Dashboard Customize / Arrange / Build your own, saved Analytics reports.
+
+## Round 62 – Exact old design in every section, merged and deployed (see FEATURES_V62_EXACT_OLD_DESIGN_AND_DEPLOY.md)
+- Old values measured from the old app and applied to every section: section glow, filigree cards with the light rim (22 / 16 px), crimson glyph lettering for titles and board columns, old stage dots, bordered buttons, crimson main button, textured inputs, mono labels, bars, pills, notices.
+- Crimson palette uses the old exact colours. Test `look62` (39 checks).
+- Merged into main; the new app is at the site root, the old app at old/index.html; config.js kept.

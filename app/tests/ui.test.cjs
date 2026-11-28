@@ -30,9 +30,10 @@ const TABS = ['day', 'dashboard', 'analytics', 'dealboard', 'deals', 'lost', 'ti
   // ---- behaviour (PC) ----
   const ctx = await H.context(b, { init: seed }); const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto('http://app.local/next/#/day'); await p.waitForTimeout(1200);
-  // only add buttons are filled: every visible button with a background image/colour must be .b-add
-  const filled = await p.evaluate(() => [...document.querySelectorAll('button, .b, .chip, .tab, .ba')].filter(e => e.offsetParent && !e.closest('.b-add') && !e.classList.contains('b-add') && !e.classList.contains('sw') && !e.classList.contains('ck') && !e.classList.contains('stat')).filter(e => { const s = getComputedStyle(e); return (s.backgroundImage !== 'none') || (/rgb\(/.test(s.backgroundColor) && !/rgba\(.*, 0\)$/.test(s.backgroundColor)) || parseFloat(s.borderTopWidth) > 0 && !/rgba\(0, 0, 0, 0\)/.test(s.borderTopColor); }).map(e => e.className + ':' + e.textContent.slice(0, 20)));
-  H.check('only add buttons are filled; all other buttons are borderless', filled.length === 0, filled.join(' | '));
+  // Round 62: the old design – only the main (+ add) buttons carry the crimson gradient; other buttons are the old bordered ones
+  const filled = await p.evaluate(() => [...document.querySelectorAll('button, .b, .chip, .tab, .ba')].filter(e => e.offsetParent && !e.closest('.b-add') && !e.classList.contains('b-add') && !e.classList.contains('sw') && !e.classList.contains('ck') && !e.classList.contains('stat') && !e.closest('#app > :not(main):not(.notice)') ).filter(e => /gradient\(.*(225, 42, 57|134, 10, 26)/.test(getComputedStyle(e).backgroundImage)).map(e => e.className + ':' + e.textContent.trim()));
+  const bordered = await p.evaluate(() => [...document.querySelectorAll('main .b, .notice .b')].filter(e => e.offsetParent).every(e => { const s = getComputedStyle(e); return s.borderTopWidth === '1px' && s.borderTopLeftRadius === '13px'; }));
+  H.check('only the add buttons have the crimson gradient; other buttons have the old bordered look', filled.length === 0 && bordered, filled.join(' | '));
   // add an entry in the open hour of today through the form
   const sec = p.locator('.hour-block.open .section[data-section="tasks"]').first();
   await sec.locator('[data-f="deal"]').fill('Omega Bistro'); await sec.locator('[data-f="notes"]').fill('Interested, emailed them the price list');

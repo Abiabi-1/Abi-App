@@ -6,7 +6,7 @@ import { bestHours, Deal, deals, pipelines, savePipelines, moveDeal, addDealNote
 import { CYCLES, PLANS, WON, LOST, entryText, stageTone, planLabel, priceText, mkOf } from '../domain/dayend';
 import { ago, copyText, csv, download, fmtDay, keyOf, lsJSON, lsSet, parsePrice, fmtNum, uid, cx } from '../lib/util';
 import { openUrl } from '../lib/privacy';
-import { Add, Btn, Chips, DangerBtn, Empty, Field, IconBtn, MarkGrid, PageHead, SearchBox, Seg, Sheet, Stat, Tiles, closeModal, openMenu, openModal, toast } from '../ui/kit';
+import { ColTitle, Add, Btn, Chips, DangerBtn, Empty, Field, IconBtn, MarkGrid, PageHead, SearchBox, Seg, Sheet, Stat, Tiles, closeModal, openMenu, openModal, toast } from '../ui/kit';
 import { go, isPhone } from '../ui/state';
 import { openTaskForm } from './tasks';
 
@@ -64,7 +64,7 @@ function Col({ s, p, items, sel }: { s: string; p: Pipeline; items: Deal[]; sel:
   const [over, setOver] = useState(false); const val = items.reduce((n, d) => n + (parsePrice(d.price) || 0), 0);
   return <div class={cx('col', over && 'drop')} onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)}
     onDrop={e => { e.preventDefault(); setOver(false); const k = e.dataTransfer?.getData('text/deal'); const d = deals().find(x => x.key === k); if (d && d.stage !== s) { moveDeal(d, s, p.id); toast('Moved to ' + s); } }}>
-    <div class="col-h"><span class={'pill ' + stageTone(s)}>{s}</span><span class="c">{items.length}{val ? ' · $' + fmtNum(val) : ''}</span></div>
+    <div class="col-h"><ColTitle name={s} /><span class="c">{items.length}{val ? ' · $' + fmtNum(val) : ''}</span></div>
     {items.map(d => <DealCard d={d} p={p} sel={sel.has(d.key)} />)}
   </div>;
 }

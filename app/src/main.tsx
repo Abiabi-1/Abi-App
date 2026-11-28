@@ -2,6 +2,7 @@ import { render } from 'preact';
 import { useEffect } from 'preact/hooks';
 import './ui/base.css';
 import './ui/app.css';
+import './ui/oldlook.css';
 import { initStore, storeReady, onLocalChange, rev } from './data/store';
 import { initSync, onConnected, fetchLegacyRows, cloudFlag, writeCloudFlag, sync } from './data/sync';
 import { runMigration, localLegacy, hasLocalLegacy, legacySrcFromRecords } from './data/migrate';
@@ -52,7 +53,7 @@ function App() {
   }, []);
   if (!storeReady.value) return <div class="boot"><div class="fmoon-img" /></div>;
   return <>
-    <div class="app-bg" />
+    <div class="app-bg" data-s={route.value.t} />
     <Bar />
     <BackupReminder />
     <main><Page /></main>
