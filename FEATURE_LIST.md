@@ -527,3 +527,6 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 - Old values measured from the old app and applied to every section: section glow, filigree cards with the light rim (22 / 16 px), crimson glyph lettering for titles and board columns, old stage dots, bordered buttons, crimson main button, textured inputs, mono labels, bars, pills, notices.
 - Crimson palette uses the old exact colours. Test `look62` (39 checks).
 - Merged into main; the new app is at the site root, the old app at old/index.html; config.js kept.
+
+## Round 63 – Back to exactly the way it was before (see FEATURES_V63_BACK_TO_EXACTLY_BEFORE.md)
+- Site root restored byte-for-byte to the old app (abi-deploy.zip): all old designs and features (Quick Add, full Analytics …). The rebuild is kept at next/ and app/ and is no longer the main page.
