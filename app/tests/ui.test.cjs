@@ -23,6 +23,7 @@ const TABS = ['day', 'dashboard', 'analytics', 'dealboard', 'deals', 'lost', 'ti
     // tab look: text only, borderless, glow when active
     const tab = await p.evaluate(() => { const a = document.querySelector('.tab.on'), s = getComputedStyle(a); return { b: s.borderTopColor, bg: s.backgroundColor, ts: s.textShadow, svg: a.querySelectorAll('svg').length }; });
     H.check(name + ': active tab is borderless, unfilled, text-only with a glow', /rgba\(0, 0, 0, 0\)|transparent/.test(tab.b) && /rgba\(0, 0, 0, 0\)|transparent/.test(tab.bg) && tab.ts !== 'none' && tab.svg === 0, JSON.stringify(tab));
+    if (name === 'phone') { await p.evaluate(() => { location.hash = '#/tickets'; }); await p.waitForTimeout(300); const ys = await p.evaluate(() => { const r = document.querySelector('.ctl:has(> .b-add)'); return [...r.children].map(c => Math.round(c.getBoundingClientRect().top)); }); H.check('phone: Tickets controls stay on one line', Math.max(...ys) - Math.min(...ys) < 12, ys.join(',')); }
     H.check(name + ': no page errors', !errs.length, errs.join(' | '));
     await ctx.close();
   }
@@ -51,7 +52,7 @@ const TABS = ['day', 'dashboard', 'analytics', 'dealboard', 'deals', 'lost', 'ti
   H.check('a phone number typed in a note is not saved', piTxt.indexOf('1234') < 0 && piTxt.indexOf('77712') < 0, piTxt);
   // Won Deals shows it, the Deals board has it, a message task appears
   await p.evaluate(() => { location.hash = '#/deals'; }); await p.waitForTimeout(300);
-  H.check('Won Deals lists the new won deal', await p.locator('.item:has-text("Omega Bistro")').count() === 1);
+  H.check('Won Deals lists the new won deal', await p.locator('.entry-title:text-is("Omega Bistro")').count() === 1);
   await p.evaluate(() => { location.hash = '#/dealboard'; }); await p.waitForTimeout(300);
   H.check('Deals board has the deal', await p.locator('.deal-card:has-text("Omega Bistro")').count() >= 1);
   await p.evaluate(() => { location.hash = '#/tasks'; }); await p.waitForTimeout(300);
@@ -67,6 +68,24 @@ const TABS = ['day', 'dashboard', 'analytics', 'dealboard', 'deals', 'lost', 'ti
   await p.keyboard.press('q'); await p.waitForTimeout(200);
   H.check('Q opens Day End Quick Add from any page', await p.locator('.sheet:has-text("Quick Add")').count() === 1);
   await p.keyboard.press('Escape');
+  // Today notice + pop-up, backup reminder, dashboard reports, tasks order / messages by day
+  H.check('due-today notice is shown (1 overdue task in the sample)', await p.locator('.notice:has-text("due today or overdue")').count() === 1);
+  await p.click('.notice button:text-is("Open Today")'); await p.waitForTimeout(150);
+  H.check('Today pop-up lists the overdue task', await p.locator('.sheet .item:has-text("Call Beta Cafe")').count() === 1);
+  await p.keyboard.press('Escape');
+  H.check('weekly backup reminder is shown (never backed up)', await p.locator('.bk-note:has-text("Weekly backup is due")').count() === 1);
+  await p.click('.bk-note button:text-is("Later")'); await p.waitForTimeout(100);
+  H.check('Later hides the backup reminder', await p.locator('.bk-note').count() === 0);
+  await p.evaluate(() => { location.hash = '#/dashboard'; }); await p.waitForTimeout(300);
+  H.check('Dashboard has the daily and weekly report', await p.locator('.h2:has-text("Daily report")').count() === 1 && /Weekly report —/.test(await p.locator('pre.rep >> nth=1').textContent()));
+  await p.selectOption('.ph-r select', '7'); await p.waitForTimeout(100);
+  H.check('Dashboard period picker changes the tiles', await p.locator('.stat .l:has-text("Last 7 days")').count() >= 1);
+  await p.evaluate(() => { location.hash = '#/tasks'; }); await p.waitForTimeout(300);
+  await p.click('button:text-is("Messages by day")'); await p.waitForTimeout(150);
+  const mt = await p.locator('.item .t').allTextContents();
+  H.check('Messages by day shows only message tasks of the day', mt.every(t => /^(WhatsApp|Email) /.test(t)), mt.join());
+  await p.evaluate(() => { location.hash = '#/day'; }); await p.waitForTimeout(800);
+  H.check('scroll buttons on a long page', await p.locator('.scr-btns button').count() === 2);
   // light theme + palette
   await p.evaluate(() => { location.hash = '#/settings'; }); await p.waitForTimeout(200);
   await p.click('.seg button:text-is("Light")'); await p.click('.pal .chip:has-text("Deep blue")'); await p.waitForTimeout(200);

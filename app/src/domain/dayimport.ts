@@ -129,7 +129,7 @@ export async function readXlsx(buf: ArrayBuffer): Promise<unknown[][]> {
   for (let r = 0; r < rows.length; r++) { rows[r] = rows[r] || []; for (let c = 0; c < rows[r].length; c++) if (rows[r][c] === undefined) rows[r][c] = ''; }
   return rows;
 }
-export async function importExcel(buf: ArrayBuffer, selDay: string): Promise<string> {
+export async function importExcel(buf: ArrayBuffer, selDay: string, forceWon = false): Promise<string> {
   let rows: unknown[][]; try { rows = await readXlsx(buf); } catch { return 'Couldn’t read that file. Use an Excel file exported from this page.'; }
   let hi = -1, map: Record<string, number> = {};
   for (let r = 0; r < rows.length && hi < 0; r++) { const m: Record<string, number> = {}; (rows[r] || []).forEach((h, c) => { const k = headKey(h); if (k && !(k in m)) m[k] = c; }); if ('category' in m || 'deal' in m) { hi = r; map = m; } }
@@ -140,7 +140,7 @@ export async function importExcel(buf: ArrayBuffer, selDay: string): Promise<str
     const g = (k: string) => (k in map ? row[map[k]] : '');
     const sk = 'category' in map ? normCat(g('category')) : 'tasks'; if (!sk) { skipped++; continue; }
     let day = 'day' in map ? normDay(g('day')) : ''; if (!day) { day = selDay; noDay++; }
-    const f = { number: cleanLink(cellStr(g('number'))), deal: cleanText(cellStr(g('deal'))), notes: cleanText(cellStr(g('notes'))), stage: normStage(cellStr(g('stage'))), plan: normPlan(cellStr(g('plan'))), billing: '', price: cellStr(g('price')), mvr: cellStr(g('mvr')), regs: cellStr(g('regs')), details: cleanText(cellStr(g('details'))) };
+    const f = { number: cleanLink(cellStr(g('number'))), deal: cleanText(cellStr(g('deal'))), notes: cleanText(cellStr(g('notes'))), stage: forceWon ? WON : normStage(cellStr(g('stage'))), plan: normPlan(cellStr(g('plan'))), billing: '', price: cellStr(g('price')), mvr: cellStr(g('mvr')), regs: cellStr(g('regs')), details: cleanText(cellStr(g('details'))) };
     if (f.stage === WON && (f.plan === 'Starter' || f.plan === 'Professional')) f.billing = normCycle(cellStr(g('billing'))) || cycleOf({ plan: cellStr(g('plan')) });
     if (f.stage !== WON) { f.plan = ''; f.billing = ''; f.price = ''; f.mvr = ''; f.regs = ''; }
     let entry: Partial<Entry>;
@@ -166,3 +166,35 @@ export async function importFile(f: File, selDay: string): Promise<string> {
   return importReportText(text, selDay);
 }
 export const _k = [SECTION_KEYS, get];
+
+/** Won Deals: the Deals Report text (day or Monthly / Yearly / All days) → Day End "Closed Won All" entries. */
+export function importDealsReportText(text: string, selDay: string): string {
+  const items: Item[] = []; let day = '', cur: Partial<Entry> | null = null, saw = false, noDay = 0;
+  const push = () => { if (cur && (cur.deal || cur.notes)) { const d = (cur as any)._day || day || selDay; if (!(cur as any)._day && !day) noDay++; delete (cur as any)._day; const pz = inferPricing(cur); if (pz) cur.pricing = pz; items.push({ day: d, hk: '', sk: 'tasks', entry: cur }); } cur = null; };
+  for (const line of String(text).replace(/\r/g, '').split('\n')) {
+    let m: RegExpMatchArray | null;
+    if (/^─{5,}/.test(line)) { push(); break; }
+    if ((m = line.match(/^Deals Report\s+—\s+(.*)$/))) { saw = true; day = dayFromText(m[1]); continue; }
+    if ((m = line.match(/^—\s+(.*?)\s+\(\d+\)$/))) { push(); day = dayFromText(m[1]); continue; }
+    if ((m = line.match(/^\d+\.\s+(.*)$/))) { push(); cur = { deal: m[1].trim(), notes: '', number: '', stage: WON, plan: '', billing: '', price: '' }; continue; }
+    if (!cur || !(m = line.match(/^\s*•\s+(Day|Link|Plan|Notes|Price|Registers):\s*(.*)$/))) continue;
+    const v = m[2].trim();
+    if (m[1] === 'Day') (cur as any)._day = dayFromText(v);
+    else if (m[1] === 'Link') cur.number = cleanLink(v);
+    else if (m[1] === 'Notes') cur.notes = v;
+    else if (m[1] === 'Plan') { const pm = v.match(/^(.*?)(?: \((Monthly|Biannual|Annual)\))?$/)!; cur.plan = normPlan(pm[1]); cur.billing = pm[2] || ''; }
+    else if (m[1] === 'Price') { const sp = splitPriceText(v); cur.price = sp.price; if (sp.mvr) cur.mvr = sp.mvr; }
+    else if (m[1] === 'Registers') { const n = (v.match(/\d+/) || [''])[0]; if (n) cur.regs = n; }
+  }
+  push();
+  if (!saw) return 'That doesn’t look like a Deals Report';
+  if (!items.length) return 'No deals found in that report';
+  return apply(items, {}, selDay, noDay);
+}
+export async function importDealsFile(f: File, selDay: string): Promise<string> {
+  const n = (f.name || '').toLowerCase();
+  if (/\.xlsx$/.test(n) || /spreadsheetml/.test(f.type || '')) return importExcel(await f.arrayBuffer(), selDay, true);
+  let text: string; try { text = await f.text(); } catch { return 'Couldn’t read that file'; }
+  if (/\.html?$/.test(n) || /^\s*<(!doctype|html)/i.test(text)) { const pre = new DOMParser().parseFromString(text, 'text/html').querySelector('pre'); if (!pre) return 'No report found in that HTML. Use a file from Download Report.'; text = pre.textContent || ''; }
+  return importDealsReportText(text, selDay);
+}

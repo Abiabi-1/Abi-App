@@ -1,7 +1,7 @@
 // Deals, Won Deals, Lost Deals, Tickets, Tasks and message tasks – all built from one data layer.
 import { all, get, put, del, rev } from '../data/store';
 import { linkKey, sameLink, isLink, cleanLink } from '../lib/privacy';
-import { addMonths, keyOf, parseKey, parsePrice, slug, todayKey, uid, addDays } from '../lib/util';
+import { keyOf, parseKey, parsePrice, slug, todayKey, uid, addDays } from '../lib/util';
 import { DEAL_STAGES, Entry, LOST, WON, entriesOf, allEntryDays, normStage, entryText, mkOf, tkOf, cycleOf } from './dayend';
 
 function memo<T>(f: () => T): () => T { let r = -1, v: T; return () => { if (r !== rev.value) { r = rev.value; v = f(); } return v; }; }
@@ -100,14 +100,18 @@ export const lostDeals = memo((): Lost[] => {
 export function lostValue(l: Lost) { const v = parsePrice(l.value); return isNaN(v) ? (parsePrice(l.price) || 0) : v; }
 
 // =============== Renewals (Won Deals revenue) ===============
-export function renewalOf(w: WonDeal) {
-  const b = get<any>('billing', w.id) || {}; const cyc = cycleOf(w); const months = cyc === 'Annual' ? 12 : cyc === 'Biannual' ? 6 : cyc === 'Monthly' ? 1 : 0;
-  const act = b.activation || w.day; let due = b.due || (months ? addMonths(act, months) : '');
-  if (b.renewed && months && !b.due) { due = addMonths(b.renewed, months); }
-  const price = parsePrice(w.price); const mrr = !isNaN(price) && months ? price / months : 0;
-  return { activation: act, due, months, mrr, renewed: b.renewed || '' };
+/** Same rules as the old Revenue & Renewals: paid plans only; due = renewal date set (ren) or activation (act, else the deal day) + billing months. */
+export function addM(k: string, n: number) { const x = parseKey(k), day = x.getDate(); x.setMonth(x.getMonth() + n); if (x.getDate() !== day) x.setDate(0); return keyOf(x); }
+export const monthsOf = (b: string) => (b === 'Annual' ? 12 : b === 'Biannual' ? 6 : b === 'Monthly' ? 1 : 0);
+export function renewalOf(w: { id: string; day: string; plan: string; billing: string; price: string; mvr?: string }) {
+  const b = get<any>('billing', w.id) || {}, m = monthsOf(w.billing), paid = (w.plan === 'Starter' || w.plan === 'Professional') && !!m;
+  const usd = parsePrice(w.price), mv = parsePrice(w.mvr);
+  const start = b.act || w.day, due = paid ? b.ren || addM(start, m) : '';
+  return { act: b.act || '', activation: start, start, due, months: m, paid, mrr: paid && !isNaN(usd) ? usd / m : 0, mrrMvr: paid && !isNaN(mv) ? mv / m : 0, renewed: b.renewedOn || '' };
 }
-export function markRenewed(w: WonDeal) { const r = renewalOf(w); put('billing', w.id, { renewed: r.due || todayKey(), due: r.months ? addMonths(r.due || todayKey(), r.months) : '' }); }
+export function markRenewed(w: Parameters<typeof renewalOf>[0]) { const r = renewalOf(w); if (!r.paid) return; put('billing', w.id, { ren: addM(r.due, r.months), renewedOn: todayKey() }); }
+export function setActivation(id: string, v: string) { put('billing', id, { act: v || undefined, ren: undefined }); }
+export function setDue(id: string, v: string) { put('billing', id, { ren: v || undefined }); }
 
 // =============== Tickets ===============
 export interface TType { id: string; name: string; subs: string[]; rules: string[]; defSub: string }

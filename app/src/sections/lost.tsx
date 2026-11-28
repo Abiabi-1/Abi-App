@@ -7,6 +7,7 @@ import { PLANS, CYCLES, planLabel, priceText } from '../domain/dayend';
 import { MONTHS, copyText, csv, download, fmtDay, fmtNum, todayKey, uid } from '../lib/util';
 import { Add, Btn, DangerBtn, Empty, Field, PageHead, SearchBox, Seg, Sheet, Stat, Tiles, closeModal, openModal, toast, Chips } from '../ui/kit';
 import { go } from '../ui/state';
+import { openUrl, cleanLink } from '../lib/privacy';
 
 const V = signal({ sub: 'lost' as 'lost' | 'churn', per: 'month' as 'day' | 'month' | 'year' | 'all', q: '' });
 export function LostDeals() {
@@ -35,10 +36,10 @@ function LostRow({ e }: { e: Lost }) {
   return <div class="item"><div class="main"><div class="t">{e.deal || '(no name)'}</div>
     <div class="pills"><span class="pill">{fmtDay(e.day)}</span>{e.reason && <span class="pill bad">{e.reason}</span>}{e.plan && <span class="pill acc">{planLabel(e)}</span>}{lostValue(e) > 0 && <span class="pill warn">${fmtNum(lostValue(e))}</span>}{e.src === 'day' && <span class="pill">Day End</span>}</div>
     {e.notes && <div class="n">{e.notes}</div>}</div>
-    <div class="acts"><Btn onClick={() => openModal(() => <LostForm kind={e.kind} e={e} />)}>Edit</Btn>{e.src === 'manual' && <DangerBtn onConfirm={() => del('lost', e.id)}>Delete</DangerBtn>}</div></div>;
+    <div class="acts"><Btn onClick={() => openModal(() => <LostForm kind={e.kind} e={e} />)}>Edit</Btn>{e.src === 'day' && <Btn onClick={() => import('./dayend').then(m => { m.selDay.value = e.day; go('day'); setTimeout(() => m.scrollToEntry(e.id), 300); })}>Open in Day End</Btn>}{e.number && <a class="b" href={openUrl(e.number)} target="_blank" rel="noopener">↗ HubSpot</a>}{e.src === 'manual' && <DangerBtn onConfirm={() => del('lost', e.id)}>Delete</DangerBtn>}</div></div>;
 }
 function LostForm({ kind, e }: { kind: 'lost' | 'churn'; e?: Lost }) {
-  const [f, setF] = useState({ deal: e?.deal || '', day: e?.day || todayKey(), reason: e?.reason || '', plan: e?.plan || '', billing: e?.billing || '', price: e?.price || '', value: e?.value || '', notes: e?.notes || '', kind: e?.kind || kind });
+  const [f, setF] = useState({ number: e?.number || '', deal: e?.deal || '', day: e?.day || todayKey(), reason: e?.reason || '', plan: e?.plan || '', billing: e?.billing || '', price: e?.price || '', value: e?.value || '', notes: e?.notes || '', kind: e?.kind || kind });
   const s = (k: string) => (ev: Event) => setF({ ...f, [k]: (ev.target as HTMLInputElement).value });
   const save = () => {
     if (e && e.src === 'day') put('lostmeta', e.id, { reason: f.reason, plan: f.plan, billing: f.billing, price: f.price, value: f.value });
@@ -49,6 +50,7 @@ function LostForm({ kind, e }: { kind: 'lost' | 'churn'; e?: Lost }) {
   return <Sheet title={e ? 'Edit ' + (f.kind === 'churn' ? 'churned customer' : 'lost deal') : f.kind === 'churn' ? 'Add churned customer' : 'Add lost deal'} onClose={closeModal} foot={<><Btn onClick={closeModal}>Cancel</Btn><button class="b-add" onClick={save}>Save</button></>}>
     <div class="form">
       <Field label="Deal name" full><input class="in" value={f.deal} disabled={day} onInput={s('deal')} /></Field>
+      {!day && <Field label="HubSpot deal link" full><input class="in" placeholder="Paste the HubSpot deal link" value={f.number} onInput={s('number')} onBlur={() => setF({ ...f, number: cleanLink(f.number) })} /></Field>}
       {!day && <Field label="Day"><input class="in" type="date" value={f.day} onInput={s('day')} /></Field>}
       {!day && <Field label="Kind"><select class="in" value={f.kind} onChange={s('kind')}><option value="lost">Lost deal</option><option value="churn">Churn</option></select></Field>}
       <Field label="Reason"><select class="in" value={f.reason} onChange={s('reason')}><option value="">—</option>{[...lostReasons(), ...(f.reason && lostReasons().indexOf(f.reason) < 0 ? [f.reason] : [])].map(r => <option value={r}>{r}</option>)}</select></Field>

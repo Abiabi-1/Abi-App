@@ -10,6 +10,7 @@ import { route, quickAdd, searchOpen, go } from './ui/state';
 import { Bar, SideMenu, QuickAdd, Search, Login } from './ui/shell';
 import { Toast, Modal, Menu } from './ui/kit';
 import { FloatMoon } from './ui/moon';
+import { TodayNotice, BackupReminder, ScrollButtons } from './ui/notices';
 import { DayEnd } from './sections/dayend';
 import { WonDeals } from './sections/won';
 import { DealBoard } from './sections/deals';
@@ -42,7 +43,9 @@ function App() {
   return <>
     <div class="app-bg" />
     <Bar />
+    <BackupReminder />
     <main><Page /></main>
+    <TodayNotice /><ScrollButtons />
     {route.value.t === 'day' && <button type="button" class="qa-tab" onClick={() => { quickAdd.value = {}; }} title="Quick Add (Q)">⚡ Quick Add</button>}
     <FloatMoon /><SideMenu /><QuickAdd /><Search /><Modal /><Menu /><Login /><Toast />
   </>;

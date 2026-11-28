@@ -2,7 +2,7 @@
 import { signal } from '@preact/signals';
 import { useState } from 'preact/hooks';
 import { rev, put, del, get } from '../data/store';
-import { Deal, deals, pipelines, savePipelines, moveDeal, addDealNote, tickets, isClosedT, Pipeline } from '../domain/crm';
+import { bestHours, Deal, deals, pipelines, savePipelines, moveDeal, addDealNote, tickets, isClosedT, Pipeline } from '../domain/crm';
 import { CYCLES, PLANS, WON, LOST, entryText, stageTone, planLabel, priceText, mkOf } from '../domain/dayend';
 import { ago, copyText, csv, download, fmtDay, keyOf, lsJSON, lsSet, parsePrice, fmtNum, uid, cx } from '../lib/util';
 import { openUrl } from '../lib/privacy';
@@ -10,7 +10,7 @@ import { Add, Btn, Chips, DangerBtn, Empty, Field, IconBtn, MarkGrid, PageHead, 
 import { go, isPhone } from '../ui/state';
 import { openTaskForm } from './tasks';
 
-const V = signal(lsJSON('hub_fl_deals3', { pid: 'sales', view: 'board' as 'board' | 'list', q: '', stage: '', tag: '', plan: '', hasLink: '', phStage: '' }));
+const V = signal({ ord: 'default', ...lsJSON('hub_fl_deals3', { pid: 'sales', view: 'board' as 'board' | 'list', q: '', stage: '', tag: '', plan: '', hasLink: '', phStage: '' }) } as { pid: string; view: 'board' | 'list'; q: string; stage: string; tag: string; plan: string; hasLink: string; phStage: string; ord: string });
 const setV = (p: Partial<typeof V.value>) => { V.value = { ...V.value, ...p }; lsSet('hub_fl_deals3', JSON.stringify(V.value)); };
 const selS = signal<string[]>([]);
 const rxNext = (s?: string) => (s === '' || !s ? 'y' : s === 'y' ? 'n' : '');
@@ -24,6 +24,9 @@ export function DealBoard() {
   const list = deals().filter(d => (d.pipeline || 'sales') === p.id || (p.id === 'sales' && p.stages.indexOf(d.stage) >= 0 && !P.some(x => x.id === d.pipeline && x.id !== 'sales')))
     .filter(d => (!q || (d.name + ' ' + d.entries.map(e => e.notes || '').join(' ') + ' ' + d.notes.map(n => n.text).join(' ')).toLowerCase().indexOf(q) >= 0)
       && (!v.tag || d.tags.indexOf(v.tag) >= 0) && (!v.plan || d.plan === v.plan) && (!v.hasLink || (v.hasLink === 'y' ? d.links.length > 0 : !d.links.length)));
+  const hNow = new Date().getHours();
+  if (v.ord === 'best') list.sort((a, b) => { const ra = bestHours(a.name).indexOf(hNow), rb = bestHours(b.name).indexOf(hNow); return (ra < 0 ? 99 : ra) - (rb < 0 ? 99 : rb); });
+  else if (v.ord === 'name') list.sort((a, b) => a.name.localeCompare(b.name)); else if (v.ord === 'old') list.sort((a, b) => a.ts - b.ts);
   const by = (s: string) => list.filter(d => d.stage === s || (p.stages.indexOf(d.stage) < 0 && s === p.stages[0]));
   const won = list.filter(d => d.stage === WON).length, lost = list.filter(d => d.stage === LOST).length;
   const val = list.filter(d => d.stage !== LOST && d.stage !== 'Churn').reduce((n, d) => n + (parsePrice(d.price) || 0), 0);
@@ -36,6 +39,7 @@ export function DealBoard() {
     <div class="ctl" style={{ marginTop: '10px' }}>
       {P.length > 1 && <select class="in" style={{ width: 'auto' }} value={p.id} onChange={e => setV({ pid: (e.target as HTMLSelectElement).value })}>{P.map(x => <option value={x.id}>{x.name}</option>)}</select>}
       <Seg value={v.view} onChange={x => setV({ view: x })} opts={[['board', 'Board'], ['list', 'List']]} />
+      <select class="in hide-phone" style={{ width: 'auto' }} aria-label="Order" value={v.ord} onChange={e => setV({ ord: (e.target as HTMLSelectElement).value })}><option value="default">Newest activity</option><option value="best">Best time now</option><option value="name">Name A–Z</option><option value="old">Oldest first</option></select>
       <SearchBox value={v.q} onInput={x => setV({ q: x })} ph="Search deals and notes" />
       <Btn icon="filter" on={nFilters > 0} onClick={() => openModal(() => <DealFilters tags={tags} />)}>{isPhone.value ? '' : 'Filters & more'}{nFilters ? ' · ' + nFilters : ''}</Btn>
       <Add onClick={() => openModal(() => <NewDeal pid={p.id} stage={p.stages[0]} />)}>New</Add>

@@ -8,7 +8,7 @@ import { Add, Btn, Chips, DangerBtn, Field, IconBtn, MarkGrid, PageHead, SearchB
 
 type MF = { wa: string; em: string; twa: string; tem: string };
 const mf = signal<MF>(lsJSON<MF>('hub_tk_mf', { wa: '', em: '', twa: '', tem: '' }));
-const V = signal({ folder: '__all', show: 'open' as 'open' | 'done' | 'all', day: '', q: '', sel: [] as string[] });
+const V = signal({ folder: '__all', show: 'open' as 'open' | 'done' | 'all', day: '', q: '', sel: [] as string[], ord: (lsJSON<string>('hub_tk_ord', 'best')) as 'best' | 'due' | 'new', msg: false });
 
 export function openTaskForm(pre: Partial<Task> = {}) {
   openModal(() => <TaskForm pre={pre} />);
@@ -45,7 +45,7 @@ export function Tasks() {
   void rev.value; const v = V.value, m = mf.value, td = todayKey();
   const all = allTasks(), fl = folders();
   const msgOn = !!(m.wa || m.em || m.twa || m.tem);
-  const inFolder = (t: Task) => v.folder === '__all' || (t.folder || '') === v.folder;
+  const inFolder = (t: Task) => (v.msg ? !!t.msg : true) && (v.folder === '__all' || (t.folder || '') === v.folder);
   const passMsg = (t: Task) => {
     if (!msgOn) return true; if (!t.msg) return false;
     const ch = t.msg.ch.replace(/^n/, ''), bad = t.msg.ch.charAt(0) === 'n';
@@ -56,7 +56,8 @@ export function Tasks() {
   const q = v.q.trim().toLowerCase();
   let list = all.filter(t => inFolder(t) && passMsg(t) && (v.show === 'all' || (v.show === 'done' ? t.done : !t.done)) && (!v.day || t.due === v.day) && (!q || (t.title + ' ' + (t.notes || '') + ' ' + (t.deal || '')).toLowerCase().indexOf(q) >= 0));
   const hrs = bestHours();
-  list = list.sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || (a.due || '9999').localeCompare(b.due || '9999') || (a.time || '').localeCompare(b.time || '') || (hrs.indexOf(new Date(a.created).getHours()) - hrs.indexOf(new Date(b.created).getHours())));
+  const hNow = new Date().getHours(), bestRank = (t: Task) => { const bh = t.deal ? bestHours(t.deal) : hrs; const i = bh.indexOf(hNow); return i < 0 ? 99 : i; };
+  list = list.sort((a, b) => (a.done ? 1 : 0) - (b.done ? 1 : 0) || (v.ord === 'new' ? b.created - a.created : v.ord === 'best' ? ((a.due || '9999') <= td ? 0 : 1) - ((b.due || '9999') <= td ? 0 : 1) || bestRank(a) - bestRank(b) || (a.due || '9999').localeCompare(b.due || '9999') : (a.due || '9999').localeCompare(b.due || '9999') || (a.time || '').localeCompare(b.time || '')));
   const open = all.filter(t => !t.done), overdue = open.filter(t => t.due && t.due < td), today = open.filter(t => t.due === td);
   const days = Array.from(new Set(all.map(t => t.due).filter(isKey))).sort().reverse().slice(0, 40);
   const set = (p: Partial<typeof v>) => { V.value = { ...v, ...p }; };
@@ -75,6 +76,8 @@ export function Tasks() {
     </div>
     <div class="ctl">
       <Seg value={v.show} onChange={x => set({ show: x })} opts={[['open', 'Open'], ['done', 'Done'], ['all', 'All']]} />
+      <select class="in" style={{ width: 'auto' }} aria-label="Order" value={v.ord} onChange={e => { const o = (e.target as HTMLSelectElement).value as any; lsSet('hub_tk_ord', JSON.stringify(o)); set({ ord: o }); }}><option value="best">Best time now</option><option value="due">Due date</option><option value="new">Newest</option></select>
+      <Btn on={v.msg} title="WhatsApp & email tasks, day by day" onClick={() => set({ msg: !v.msg, day: !v.msg ? td : '' })}>Messages by day</Btn>
       <IconBtn icon="left" title="Previous day" onClick={() => set({ day: shiftDayKey(v.day || td, -1) })} />
       <div class="row-scroll grow"><button class={cx('chip', !v.day && 'on')} onClick={() => set({ day: '' })}>All days</button>{days.map(k => <button class={cx('chip mono', v.day === k && 'on')} onClick={() => set({ day: k })}>{k === td ? 'Today' : fmtDay(k)}</button>)}</div>
       <IconBtn icon="right" title="Next day" onClick={() => set({ day: shiftDayKey(v.day || td, 1) })} />
@@ -93,6 +96,7 @@ function TaskRow({ t, sel, onSel }: { t: Task; sel: boolean; onSel: () => void }
       {t.notes && <div class="n">{t.notes}</div>}
     </div>
     <div class="acts">
+      {!t.msg && <select class="in tk-mv" value="" aria-label="Move to…" onChange={e => { const f = (e.target as HTMLSelectElement).value; if (f !== '') { put('tasks', t.id, { folder: f === '__none' ? '' : f }); toast('Moved'); } }}><option value="">Move to…</option>{folders().filter(f => f.id !== (t.folder || '') && !MSG_FOLDERS.some(m => m.id === f.id)).map(f => <option value={f.id || '__none'}>{f.name}</option>)}</select>}
       <IconBtn icon="check" title={t.done ? 'Mark open' : 'Mark done'} on={t.done} onClick={() => setTaskDone(t, !t.done)} />
       <IconBtn icon="dots" title="More" onClick={e => openMenu(e, [
         !t.msg && { label: 'Edit', icon: 'edit', fn: () => openTaskForm(t) },

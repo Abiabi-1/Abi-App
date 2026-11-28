@@ -6,7 +6,9 @@ import { deals, wonDeals, lostDeals, tickets, isClosedT, allTasks, renewalOf, lo
 import { DEAL_STAGES, WON, LOST, entriesOf, allEntryDays, daysWithEntries, Entry, entryText, planLabel, normPlan, PLANS, stageTone } from '../domain/dayend';
 import { calc, status } from '../domain/hr';
 import { addDays, csv, download, dur, fmtDay, fmtNum, keyOf, parseKey, todayKey, MONTHS } from '../lib/util';
-import { Btn, Empty, PageHead, Seg, Sheet, Stat, Tiles, closeModal, openModal } from '../ui/kit';
+import { Btn, Empty, PageHead, Seg, Sheet, Stat, Tiles, closeModal, openModal, toast } from '../ui/kit';
+import { buildXlsx, XLSX_MIME } from '../lib/xlsx';
+import { copyText } from '../lib/util';
 import { Bars, Columns } from '../ui/charts';
 import { go } from '../ui/state';
 
@@ -17,17 +19,33 @@ function listSheet(title: string, rows: { t: string; s?: string; go?: () => void
 }
 const entryRow = (e: Entry) => ({ t: e.deal || entryText(e).slice(0, 80) || '(entry)', s: fmtDay(e.day) + ' · ' + e.hk + (e.stage ? ' · ' + e.stage : ''), go: () => { import('./dayend').then(m => { m.selDay.value = e.day; go('day'); }); } });
 
+const DP = signal<'all' | 'today' | '7' | 'month'>('month');
+const inDP = (k: string) => { const td = todayKey(), p = DP.value; return p === 'all' || (p === 'today' ? k === td : p === '7' ? k > addDays(td, -7) && k <= td : k.slice(0, 7) === td.slice(0, 7)); };
+const DPL: Record<string, string> = { all: 'All time', today: 'Today', '7': 'Last 7 days', month: 'This month' };
+/** Daily / weekly report text (as the old Dashboard's "Daily and weekly report"). */
+export function summaryRows(keys: string[]) {
+  return keys.map(k => { const e = entriesOf(k), c = calc(k), W = wonDeals().filter(w => w.day === k), L = lostDeals().filter(l => l.day === k), done = allTasks().filter(t => t.done && t.doneAt && keyOf(new Date(t.doneAt)) === k).length;
+    return { k, tasks: e.filter(x => x.sk === 'tasks').length, calls: e.filter(x => x.sk === 'calls').length, wa: e.filter(x => x.sk === 'whatsapp').length, tickets: e.filter(x => x.sk === 'tickets').length, other: e.filter(x => x.sk === 'other').length, won: W.length, wonUsd: W.reduce((n, w) => n + (parseFloat(w.price) || 0), 0), lost: L.length, done, worked: c.n ? dur(c.worked, true) : '' }; });
+}
+export function summaryText(kind: 'daily' | 'weekly') {
+  const td = todayKey(), keys = kind === 'daily' ? [td] : Array.from({ length: 7 }, (_, i) => addDays(td, i - 6)), R = summaryRows(keys);
+  const L = [(kind === 'daily' ? 'Daily report — ' + fmtDay(td, true) : 'Weekly report — ' + fmtDay(keys[0]) + ' to ' + fmtDay(td)), ''];
+  R.forEach(r => { if (kind === 'weekly') L.push('▸ ' + fmtDay(r.k)); L.push('Entries: ' + (r.tasks + r.calls + r.wa + r.tickets + r.other) + ' (Tasks ' + r.tasks + ' · Calls ' + r.calls + ' · WA ' + r.wa + ' · Tickets ' + r.tickets + ' · Other ' + r.other + ')'); L.push('Won deals: ' + r.won + (r.wonUsd ? ' ($' + fmtNum(r.wonUsd) + ')' : '') + ' · Lost: ' + r.lost + ' · Tasks done: ' + r.done + (r.worked ? ' · Worked: ' + r.worked : '')); L.push(''); });
+  if (kind === 'weekly') { const t = R.reduce((a, r) => ({ e: a.e + r.tasks + r.calls + r.wa + r.tickets + r.other, w: a.w + r.won, l: a.l + r.lost, d: a.d + r.done }), { e: 0, w: 0, l: 0, d: 0 }); L.push('─────────────────────', 'Week totals', 'Entries: ' + t.e + ' · Won: ' + t.w + ' · Lost: ' + t.l + ' · Tasks done: ' + t.d); }
+  return { text: L.join('\n'), rows: R };
+}
+function sumXlsx(kind: 'daily' | 'weekly') { const { rows } = summaryText(kind); download(kind + '-report-' + todayKey() + '.xlsx', buildXlsx([['Day', 'Tasks', 'Calls', 'WhatsApp', 'Tickets', 'Other', 'Won deals', 'Won (USD)', 'Lost', 'Tasks done', 'Worked'], ...rows.map(r => [r.k, r.tasks, r.calls, r.wa, r.tickets, r.other, r.won, r.wonUsd, r.lost, r.done, r.worked])], [12, 8, 8, 10, 8, 8, 10, 10, 8, 10, 10], 'Report'), XLSX_MIME); toast('Excel file downloaded'); }
 export function Dashboard() {
   void rev.value; const td = todayKey(), te = entriesOf(td), st = status(), c = calc(st.key);
   const tasks = allTasks().filter(t => !t.done), due = tasks.filter(t => t.due && t.due <= td);
   const tOpen = tickets().filter(t => !isClosedT(t)), D = deals(), W = wonDeals(), L = lostDeals();
-  const wonM = W.filter(w => w.day.slice(0, 7) === td.slice(0, 7)), lostM = L.filter(l => l.kind === 'lost' && l.day.slice(0, 7) === td.slice(0, 7));
+  const wonM = W.filter(w => inDP(w.day)), lostM = L.filter(l => l.kind === 'lost' && inDP(l.day));
   const mrr = W.reduce((n, w) => n + renewalOf(w).mrr, 0), ren30 = W.filter(w => { const r = renewalOf(w); return r.due && r.due >= td && r.due <= addDays(td, 30); });
   const follow = D.filter(d => d.follow && d.follow <= td);
   const byStage = DEAL_STAGES.map(s => ({ k: s, label: s, v: D.filter(d => d.stage === s).length }));
   const last14 = Array.from({ length: 14 }, (_, i) => addDays(td, i - 13)).map(k => ({ k, label: k.slice(8), v: entriesOf(k).length }));
   return <div class="page">
-    <PageHead icon="dash" title="Dashboard" sub={fmtDay(td, true)} />
+    <PageHead icon="dash" title="Dashboard" sub={fmtDay(td, true)} right={<select class="in" style={{ width: 'auto' }} aria-label="Period" value={DP.value} onChange={e => { DP.value = (e.target as HTMLSelectElement).value as any; }}>{Object.keys(DPL).map(k => <option value={k}>{DPL[k]}</option>)}</select>} />
     <div class="h2">Today</div>
     <Tiles>
       <Stat l="Entries today" v={te.length} tone={te.length ? 'acc' : ''} c={te.filter(e => e.sk === 'tasks').length + ' tasks · ' + te.filter(e => e.sk === 'calls').length + ' calls'} onClick={() => go('day')} />
@@ -37,8 +55,8 @@ export function Dashboard() {
     </Tiles>
     <div class="h2">Deals</div>
     <Tiles>
-      <Stat l="Won this month" v={wonM.length} tone={wonM.length ? 'good' : ''} onClick={() => listSheet('Won this month', wonM.map(w => ({ t: w.deal, s: fmtDay(w.day) + ' · ' + planLabel(w), go: () => go('deals') })))} />
-      <Stat l="Win rate (month)" v={wonM.length + lostM.length ? Math.round((wonM.length / (wonM.length + lostM.length)) * 100) + '%' : '–'} c={lostM.length + ' lost'} />
+      <Stat l={'Won · ' + DPL[DP.value]} v={wonM.length} tone={wonM.length ? 'good' : ''} onClick={() => listSheet('Won · ' + DPL[DP.value], wonM.map(w => ({ t: w.deal, s: fmtDay(w.day) + ' · ' + planLabel(w), go: () => go('deals') })))} />
+      <Stat l={'Win rate · ' + DPL[DP.value]} v={wonM.length + lostM.length ? Math.round((wonM.length / (wonM.length + lostM.length)) * 100) + '%' : '–'} c={lostM.length + ' lost'} />
       <Stat l="MRR" v={'$' + fmtNum(mrr)} c={'ARR $' + fmtNum(mrr * 12)} onClick={() => go('deals')} />
       <Stat l="Renewals in 30 days" v={ren30.length} tone={ren30.length ? 'acc' : ''} onClick={() => listSheet('Renewals in 30 days', ren30.map(w => ({ t: w.deal, s: 'due ' + fmtDay(renewalOf(w).due) })))} />
       <Stat l="Follow-ups due" v={follow.length} onClick={() => listSheet('Follow-ups due', follow.map(d => ({ t: d.name, s: 'follow-up ' + fmtDay(d.follow), go: () => go('dealboard', d.key) })))} />
@@ -47,6 +65,7 @@ export function Dashboard() {
       <div class="card"><div class="lbl">Deals per stage</div><Bars data={byStage} onPick={k => listSheet(k, D.filter(d => d.stage === k).map(d => ({ t: d.name, s: planLabel(d), go: () => go('dealboard', d.key) })))} /></div>
       <div class="card"><div class="lbl">Entries, last 14 days</div><Columns data={last14} onPick={k => listSheet(fmtDay(k), entriesOf(k).map(entryRow))} /></div>
     </div>
+    <div class="grid2" style={{ marginTop: '12px' }}>{(['daily', 'weekly'] as const).map(kind => { const t = summaryText(kind).text; return <div><div class="h2">{kind === 'daily' ? 'Daily report' : 'Weekly report'}<span class="r"><Btn icon="copy" onClick={async () => toast((await copyText(t)) ? 'Copied' : 'Copy failed')}>Copy</Btn><Btn icon="down" onClick={() => download(kind + '-report-' + todayKey() + '.txt', t)}>Download</Btn><Btn onClick={() => sumXlsx(kind)}>Excel</Btn></span></div><pre class="rep">{t}</pre></div>; })}</div>
   </div>;
 }
 

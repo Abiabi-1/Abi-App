@@ -16,6 +16,7 @@ node tests/ui.test.cjs        # every section, PC 1200 + phone 390, bases, forms
 node tests/sync.test.cjs      # two devices: merge, deletes, offline outbox, migration without duplicates
 node tests/dayend_look.test.cjs  # Day End old structure + styles, moon phase, floating moon
 node tests/import.test.cjs    # paste report / Excel import, duplicates skipped
+LEGACY_DIST=<old dist> node tests/won_look.test.cjs   # Won Deals old look + report equal to the old app
 LEGACY_DIST=<old-app dist folder> node tests/parity.test.cjs   # Day End report text == old app
 ```
 The parity test needs the old app built from its source (`python3 tools/build.py` in the old source, which writes `dist/index.html`).
@@ -32,4 +33,4 @@ The parity test needs the old app built from its source (`python3 tools/build.py
 
 Privacy: every write goes through `cleanValue` (`src/lib/privacy.ts`) – no phone numbers or e-mails are stored.
 
-The Day End page uses the old page's stylesheet (`src/sections/dayend-old.css`), made from `tools/old_day_captured.css` by `tools/scope_old_css.py` so it works inside a shadow root.
+Day End and Won Deals use the old pages' stylesheets (`dayend-old.css`, `won-old.css`). The Day End page uses the old page's stylesheet (`src/sections/dayend-old.css`), made from `tools/old_day_captured.css` by `tools/scope_old_css.py` so it works inside a shadow root.

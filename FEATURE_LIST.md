@@ -504,3 +504,9 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 - Day End uses the old page's own stylesheet and structure (isolated), so it looks exactly as before; Import file, Paste report, Reset, Download Report (HTML) and the copy buttons are back.
 - The moon is drawn as before (phase follows the shift, soft glow, no outline) in Day End and as the floating moon; night sky after a 5 s rest on other pages.
 - Sync: retries after an offline first start, size-split saves (too-large items reported, never blocking), live connection restarted after the phone wakes, Sync now waits for a running sync.
+
+## Round 59 – Old vs new comparison: gaps and design flaws fixed (see FEATURES_V59_FULL_COMPARISON_GAPS_AND_FIXES.md)
+- Won Deals back to its own old look (old stylesheet + structure, isolated), with Revenue line, Activation date / Mark renewed / Due per deal, Revenue & Renewals card with 12-month bars, Order by / Show, Merge, note history, Reset day, Import file, Paste report, Excel, Download Report (HTML), Renewals block in the report.
+- Due-today notice + Today pop-up, weekly backup reminder, scroll to top / bottom.
+- Dashboard period picker + daily / weekly report (Copy / Download / Excel); Lost Deals "Open in Day End" + HubSpot link; Tasks order + "Messages by day" + Move to; Deals order.
+- Fix: old renewal dates (act / ren) were ignored after migration.

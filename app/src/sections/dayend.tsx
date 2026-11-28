@@ -1,7 +1,7 @@
 // Day End Report – the old page's look, exactly: same markup and class names, the old page's own stylesheet
 // (dayend-old.css, captured from the old app) inside an isolated shadow root, the old moon drawing and night sky.
-import { createPortal } from 'preact/compat';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { Shadow as ShadowBase } from '../ui/shadow';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { signal } from '@preact/signals';
 import type { ComponentChildren } from 'preact';
 import OLD_CSS from './dayend-old.css?inline';
@@ -30,21 +30,7 @@ let shadowRoot: ShadowRoot | null = null;
 export function dayEndQuery(sel: string): HTMLElement | null { return (shadowRoot?.querySelector(sel) as HTMLElement) || null; }
 export function scrollToEntry(id: string) { const el = dayEndQuery('[data-eid="' + id + '"]'); if (el) { el.scrollIntoView({ block: 'center' }); el.classList.add('hl'); setTimeout(() => el.classList.remove('hl'), 2200); } }
 
-// ---------- isolated host ----------
-function Shadow({ children }: { children: ComponentChildren }) {
-  const ref = useRef<HTMLDivElement>(null); const [mount, setMount] = useState<HTMLElement | null>(null);
-  useLayoutEffect(() => {
-    const host = ref.current!; const sr = host.shadowRoot || host.attachShadow({ mode: 'open' }); shadowRoot = sr;
-    if (!sr.querySelector('style')) { const st = document.createElement('style'); st.textContent = OLD_CSS + EXTRA_CSS; sr.appendChild(st); }
-    let m = sr.querySelector('.de-body') as HTMLElement | null; if (!m) { m = document.createElement('div'); m.className = 'de-body'; sr.appendChild(m); }
-    setMount(m);
-  }, []);
-  const th = theme.value, p = PALETTES.find(x => x.id === th.pal) || PALETTES[0];
-  const cs = getComputedStyle(document.documentElement), vars: Record<string, string> = {};
-  for (let i = 0; i < 5; i++) { const v = cs.getPropertyValue('--t' + i).trim(); const m = v.match(/\d+/g); if (m) { vars['--t' + i] = v; vars['--t' + i + '-rgb'] = m.slice(0, 3).join(','); } }
-  if (vars['--t1-rgb']) { vars['--accent-rgb'] = vars['--t1-rgb']; vars['--on-t'] = p.on || '#fff'; }
-  return <div ref={ref} class="de-host" data-theme={th.mode} data-calm={th.calm ? '' : undefined} style={vars}>{mount && createPortal(children, mount)}</div>;
-}
+function Shadow({ children }: { children: ComponentChildren }) { return <ShadowBase css={OLD_CSS + EXTRA_CSS} onRoot={r => { shadowRoot = r; }}>{children}</ShadowBase>; }
 // small additions the old page did with script (kept here so the stylesheet itself stays the captured original)
 const EXTRA_CSS = `
 .entry.hl{outline:2px solid var(--accent);outline-offset:2px;border-radius:12px}
