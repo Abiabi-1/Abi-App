@@ -173,7 +173,7 @@ export function currentHour(day: string) {
 export function addEntry(day: string, hk: string, sk: SK, data: Partial<Entry>): string {
   const now = Date.now(), id = uid('e');
   if (!get('days', day)) { const d = getDay(day); put('days', day, { shiftStart: d.shiftStart, shiftEnd: d.shiftEnd }); }
-  put('entries', id, { ...data, day, hk, sk, ord: now, at: data.at || now });
+  put('entries', id, { ...data, day, hk, sk, ord: data.ord || now, at: 'at' in data ? data.at : now });
   return id;
 }
 export function updateEntry(id: string, data: Partial<Entry>) { put('entries', id, data); }

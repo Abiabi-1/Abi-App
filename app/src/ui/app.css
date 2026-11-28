@@ -30,15 +30,29 @@ main { min-height: 60vh; }
 .login h2 { margin: 8px 0 4px; } .login-logo { width: 54px; height: 54px; border-radius: 14px; box-shadow: 0 0 24px rgba(var(--accent-rgb), .4); }
 .login-msg { color: var(--accent2); font-size: .82rem; margin: 10px 0 0; }
 
-/* floating moon */
-.fmoon { position: fixed; right: 18px; bottom: 22px; width: 92px; height: 92px; z-index: 900; border-radius: 50%; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; filter: drop-shadow(0 0 22px rgba(var(--accent-rgb), .45)); }
-.fmoon-img, .de-moon-img { width: 100%; height: 100%; border-radius: 50%; background: url(../moon.jpg) center/cover; }
-:root:not([data-theme="light"]) .fmoon-img, :root:not([data-theme="light"]) .de-moon-img { filter: hue-rotate(var(--moon-hue, 0deg)); }
-.fmoon-t { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; text-shadow: 0 1px 6px #000; pointer-events: none; }
-.fmoon-t b { font-size: 13px; } .fmoon-t span { font-size: 8px; letter-spacing: .18em; opacity: .85; }
-.moon-tab { position: fixed; left: 0; bottom: 120px; z-index: 900; border: 0; border-radius: 0 999px 999px 0; padding: 7px 12px 7px 10px; background: var(--card-solid); color: var(--accent2); font-size: .78rem; cursor: pointer; box-shadow: 0 0 16px rgba(var(--accent-rgb), .45); }
-@media (max-width: 820px) { .fmoon { width: 72px; height: 72px; right: 12px; bottom: calc(66px + env(safe-area-inset-bottom)); } .fmoon-t b { font-size: 11px; } .moon-tab { bottom: calc(70px + env(safe-area-inset-bottom)); } }
+/* floating moon (as before: drawn moon, no outline, 118 px, bottom left) */
+.fmoon { position: fixed; left: 14px; bottom: 14px; width: 118px; height: 118px; z-index: 900; border-radius: 50%; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; animation: mnRise .5s var(--ease) both; }
+.fmoon canvas { position: absolute; inset: -30%; width: 160%; height: 160%; pointer-events: none; }
+.fmoon .mn-c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+.fmoon .mn-t { font: 700 .92rem var(--mono); color: #fff; text-shadow: 0 0 10px #000, 0 0 3px #000, 0 0 14px rgba(var(--accent-rgb), .7); letter-spacing: -.02em; }
+.fmoon .mn-l { font: 700 .56rem var(--mono); letter-spacing: .14em; text-transform: uppercase; color: #ffc2c8; text-shadow: 0 0 6px #000; font-style: normal; margin-top: 2px; }
+.fmoon.over .mn-l { color: var(--on-accent); background: rgba(var(--accent-rgb), .9); padding: 1px 7px; border-radius: 99px; text-shadow: none; }
+@keyframes mnRise { from { opacity: 0; transform: translateY(10px); } }
+.fmoon-img { width: 100%; height: 100%; border-radius: 50%; background: radial-gradient(circle, rgba(var(--accent-rgb), .5), transparent 70%); }
+.moon-tab { position: fixed; left: 0; bottom: 36px; z-index: 900; height: 40px; padding: 0 14px 0 10px; display: flex; align-items: center; gap: 6px; border: 1px solid rgba(var(--accent-rgb), .55); border-left: 0; border-radius: 0 14px 14px 0; background: #000; color: #fff; font: 600 .74rem var(--mono); cursor: pointer; box-shadow: 0 0 14px rgba(var(--accent-rgb), .45); animation: mnTab 1.4s ease-out 2; }
+.moon-tab .mt-i { font-size: 17px; color: rgb(var(--accent-rgb)); text-shadow: 0 0 8px rgba(var(--accent-rgb), .9); } .moon-tab .mt-l { letter-spacing: .06em; text-shadow: 0 0 8px rgba(var(--accent-rgb), .6); }
+@keyframes mnTab { 50% { box-shadow: 0 0 26px rgba(var(--accent-rgb), .9); } }
+@media (max-width: 820px) { .fmoon { width: 96px; height: 96px; left: 10px; bottom: calc(62px + env(safe-area-inset-bottom)); } .moon-tab { bottom: calc(70px + env(safe-area-inset-bottom)); } }
+/* Quick Add tab on the right edge (PC, Day End) */
+.qa-tab { position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 800; writing-mode: vertical-rl; border: 0; border-radius: 12px 0 0 12px; padding: 14px 8px; background: linear-gradient(180deg, var(--t2), var(--t1) 60%, var(--t3)); color: var(--on-accent); font: 700 .78rem var(--font); letter-spacing: .06em; cursor: pointer; box-shadow: 0 0 18px rgba(var(--accent-rgb), .45); }
+@media (max-width: 820px) { .qa-tab { display: none; } }
 
+/* night sky on the other pages (after a 5 s rest), as before */
+.night { position: fixed; inset: 0; z-index: -1; pointer-events: none; animation: starsIn 1.6s var(--ease) both; }
+.night i { position: absolute; border-radius: 50%; background: var(--t4); box-shadow: 0 0 6px rgba(var(--accent2-rgb), .9); opacity: 0; transition: opacity 2.5s ease; }
+.night i.on { opacity: .9; animation: nsTw 3.4s ease-in-out infinite alternate; }
+@keyframes nsTw { from { opacity: .25; } to { opacity: .95; } }
+:root[data-theme="light"] .night { display: none; }
 /* stars: only after a 5 s rest; on Day End only inside the shift box */
 .stars { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; opacity: 0; animation: starsIn 1.6s var(--ease) forwards;
   background-image: radial-gradient(1px 1px at 12% 22%, rgba(var(--accent2-rgb), .9), transparent), radial-gradient(1px 1px at 28% 70%, rgba(255, 255, 255, .7), transparent), radial-gradient(1.5px 1.5px at 44% 34%, rgba(var(--accent2-rgb), .8), transparent),

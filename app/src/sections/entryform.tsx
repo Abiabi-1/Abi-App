@@ -12,7 +12,7 @@ export const QUICK_NOTES = ['Sent WhatsApp', 'Emailed', 'Will follow up tomorrow
 type V = Record<string, string>;
 
 /** Pricing logic: same table, MVR rate and extra-register rules as before. */
-function priced(v: V, trigger: string): V {
+export function priced(v: V, trigger: string): V {
   const o = { ...v };
   if (trigger === 'plan' || trigger === 'billing' || trigger === 'stage') o.pricing = '';
   if (o.stage !== WON) { o.plan = ''; o.billing = ''; o.price = ''; o.mvr = ''; o.regs = ''; o.pricing = ''; return o; }
@@ -27,7 +27,7 @@ function priced(v: V, trigger: string): V {
   }
   return o;
 }
-function regsStep(v: V, d: number): V {
+export function regsStep(v: V, d: number): V {
   if (!hasRegs(v.plan)) return v; const cur = Math.max(0, parseInt(v.regs, 10) || 0), next = Math.max(0, cur + d); if (next === cur) return v;
   const o: V = { ...v, regs: next ? String(next) : '' };
   if (o.pricing === 'custom' || !isPaid(o.plan)) { const k = (next - cur) * regMult(o.billing), p = parsePrice(o.price), m = parsePrice(o.mvr); if (!isNaN(p)) o.price = numStr(Math.max(0, p + k * REG_PRICE[0])); if (!isNaN(m)) o.mvr = numStr(Math.max(0, m + k * REG_PRICE[1])); }

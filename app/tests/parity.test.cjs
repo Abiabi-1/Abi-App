@@ -16,16 +16,16 @@ const seed = { fn: f => { if (localStorage.getItem('__seeded')) return; localSto
   const nc = await H.context(b, { init: seed }); const np = await nc.newPage(); const errs = []; np.on('pageerror', e => errs.push(e.message));
   await np.goto('http://app.local/next/#/day'); await np.waitForTimeout(1500);
   for (const d of ['2026-11-20', '2026-11-21']) {
-    await np.fill('.de-date', d); await np.dispatchEvent('.de-date', 'change'); await np.waitForTimeout(300);
-    const t = await np.evaluate(() => document.getElementById('reportPreview').textContent);
+    await np.fill('#dayPick', d); await np.dispatchEvent('#dayPick', 'change'); await np.waitForTimeout(300);
+    const t = await np.locator('#reportPreview').textContent();
     H.check('day report ' + d + ' equals the old app', t === legacy[d], diff(legacy[d], t));
   }
-  await np.click('.de-rep button:text-is("All days")'); await np.waitForTimeout(200);
-  let t = await np.evaluate(() => document.getElementById('periodPreview').textContent);
+  await np.click('#periodMode button[data-m="all"]'); await np.waitForTimeout(200);
+  let t = await np.locator('#periodPreview').textContent();
   H.check('all-days report equals the old app', t === legacy.all, diff(legacy.all, t));
-  await np.click('.de-rep button:text-is("Month")'); await np.waitForTimeout(100);
-  await np.selectOption('.de-rep select >> nth=0', '11'); await np.selectOption('.de-rep select >> nth=1', '2026'); await np.waitForTimeout(200);
-  t = await np.evaluate(() => document.getElementById('periodPreview').textContent);
+  await np.click('#periodMode button[data-m="month"]'); await np.waitForTimeout(100);
+  await np.selectOption('#pMonth', '11'); await np.selectOption('#pYear', '2026'); await np.waitForTimeout(200);
+  t = await np.locator('#periodPreview').textContent();
   H.check('November report equals the old app', t === legacy.month, diff(legacy.month, t));
   H.check('no page errors', !errs.length, errs.join(' | '));
   await b.close(); H.done();

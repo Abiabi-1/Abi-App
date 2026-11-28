@@ -66,13 +66,30 @@ const session = { access: 'tok', refresh: 'ref', exp: Date.now() + 36e5, user: {
   // privacy: data arriving from the cloud is cleaned too
   const ph = ['+9', '60', ' 7', '77 ', '1234'].join(''), em = ['someone', '@', 'example', '.com'].join('');
   const v = JSON.stringify({ c: 'entries', id: 'bad1', d: { day: '2026-11-27', hk: '10:00', sk: 'other', ord: 2, text: 'call ' + ph + ' or mail ' + em + ' about it' }, t: { day: 'zzzzzzzzz-0000-x', hk: 'zzzzzzzzz-0000-x', sk: 'zzzzzzzzz-0000-x', ord: 'zzzzzzzzz-0000-x', text: 'zzzzzzzzz-0000-x' }, x: null, u: 'zzzzzzzzz-0000-x' });
-  sb.S.rows.set('v2:entries:bad1', { workspace_id: 'ws1', key: 'v2:entries:bad1', value: v, version: 1, updated_at: '2026-11-28T00:00:00.000Z' });
+  sb.S.rows.set('v2:entries:bad1', { workspace_id: 'ws1', key: 'v2:entries:bad1', value: v, version: 1, updated_at: new Date(Date.UTC(2026, 10, 27) + (++sb.S.clock) * 1000).toISOString() });
   await sync(A);
   const bad = await get(A, 'entries', 'bad1');
   H.check('phone numbers / e-mails from the cloud are cleaned out', bad && bad.text.indexOf('1234') < 0 && bad.text.indexOf('@') < 0, bad && bad.text);
   const stored = await A.evaluate(() => JSON.stringify(window.__abi.store.rawAll().map(r => r.d)));
   const m = stored.replace(/https?:\/\/[^"]+/g, '').replace(/"(at|ord|created|ts|exp|placeTs|updated|closed|doneAt)":\d+/g, '').match(/\+?\d[\d ().-]{6,}\d/g);
   H.check('nothing phone- or e-mail-like is stored on the device', !(m || []).some(x => x.replace(/\D/g, '').length >= 7 && !/^\d{4}-\d{2}-\d{2}/.test(x)) && stored.indexOf(em) < 0, JSON.stringify(m));
+
+  // an item too large to send is reported and does not block the others
+  await A.evaluate(() => window.__abi.store.put('legacy', 'huge_test', { raw: 'x'.repeat(4600000) }));
+  await put(A, 'tasks', 'afterHuge', { title: 'sent despite a huge item', done: false });
+  await sync(A); await sync(B);
+  H.check('a too-large item does not block other changes', !!(await get(B, 'tasks', 'afterHuge')));
+  H.check('a too-large item is reported in the sync status', /too large/.test(await A.evaluate(() => window.__abi.sync.detail.value)), await A.evaluate(() => window.__abi.sync.detail.value));
+  await A.evaluate(() => window.__abi.store.del('legacy', 'huge_test'));
+
+  // first ever start while offline (no workspace known yet) → syncs once back online, without reopening
+  sb.S.offline = true;
+  const ctxC = await H.context(b, { supabase: sb, init: { fn: a => { if (localStorage.getItem('__seeded')) return; localStorage.setItem('__seeded', '1'); localStorage.setItem('cloud_session_v1', JSON.stringify(a)); }, arg: session } });
+  const C = await ctxC.newPage(); await C.goto('http://app.local/next/#/day'); await C.waitForTimeout(2500);
+  await C.evaluate(() => window.__abi.store.put('tasks', 'fromC', { title: 'made on a new device while offline', done: false }));
+  sb.S.offline = false; await C.evaluate(() => window.__abi.cycle(true)); await C.waitForTimeout(300); await C.evaluate(() => window.__abi.cycle(true));
+  await sync(A);
+  H.check('a device that started offline syncs once online (no reopen needed)', !!(await get(A, 'tasks', 'fromC')));
 
   // old app rows are only read, never written
   const legacyWrites = [...sb.S.rows.keys()].filter(k => !k.startsWith('v2:'));

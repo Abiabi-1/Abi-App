@@ -33,22 +33,21 @@ const TABS = ['day', 'dashboard', 'analytics', 'dealboard', 'deals', 'lost', 'ti
   const filled = await p.evaluate(() => [...document.querySelectorAll('button, .b, .chip, .tab, .ba')].filter(e => e.offsetParent && !e.closest('.b-add') && !e.classList.contains('b-add') && !e.classList.contains('sw') && !e.classList.contains('ck') && !e.classList.contains('stat')).filter(e => { const s = getComputedStyle(e); return (s.backgroundImage !== 'none') || (/rgb\(/.test(s.backgroundColor) && !/rgba\(.*, 0\)$/.test(s.backgroundColor)) || parseFloat(s.borderTopWidth) > 0 && !/rgba\(0, 0, 0, 0\)/.test(s.borderTopColor); }).map(e => e.className + ':' + e.textContent.slice(0, 20)));
   H.check('only add buttons are filled; all other buttons are borderless', filled.length === 0, filled.join(' | '));
   // add an entry in the open hour of today through the form
-  await p.click('.hb-h >> nth=0'); await p.waitForTimeout(150);
-  const sec = p.locator('.hb.open .sec[data-section="tasks"]').first();
+  const sec = p.locator('.hour-block.open .section[data-section="tasks"]').first();
   await sec.locator('[data-f="deal"]').fill('Omega Bistro'); await sec.locator('[data-f="notes"]').fill('Interested, emailed them the price list');
   await sec.locator('select[data-f="stage"]').selectOption('Closed Won All'); await sec.locator('select[data-f="plan"]').selectOption('Professional'); await sec.locator('select[data-f="billing"]').selectOption('Biannual');
   H.check('standard price is filled from the price table (Professional Biannual = 292 / 4500)', (await sec.locator('[data-f="price"]').inputValue()) === '292' && (await sec.locator('[data-f="mvr"]').inputValue()) === '4500');
-  await sec.locator('.ef-regs button >> nth=1').click();
+  await sec.locator('.regs button >> nth=1').click();
   H.check('one extra register adds 6 × $20 on biannual', (await sec.locator('[data-f="price"]').inputValue()) === '412');
-  await sec.locator('.b-add').click(); await p.waitForTimeout(250);
-  const rep = await p.evaluate(() => document.getElementById('reportPreview').textContent);
+  await sec.locator('.btn-add').click(); await p.waitForTimeout(250);
+  const rep = await p.locator('#reportPreview').textContent();
   H.check('the new entry is in the Final Report', /Omega Bistro, Interested, emailed them the price list \| Stage: Closed Won All \| Plan: Professional \(Biannual\) \| Price: \$412 \(6,300 MVR\) \| Registers: \+1/.test(rep), rep.split('\n').filter(l => /Omega/.test(l)).join());
-  H.check('email mark is detected green from the text', await p.locator('.ent:has-text("Omega Bistro") .ic.is-on').count() >= 1);
+  H.check('email mark is detected green from the text', await p.locator('.entry:has-text("Omega Bistro") .entry-mk.g').count() >= 1);
   // privacy guard while typing
   const ph = ['0', '77', '7 ', '12', '34'].join('');
   await sec.locator('[data-f="deal"]').fill('Pi Store'); await sec.locator('[data-f="notes"]').fill('call ' + ph + ' later');
-  await sec.locator('.b-add').click(); await p.waitForTimeout(250);
-  const piTxt = await p.locator('.ent:has-text("Pi Store") .ent-t').first().textContent();
+  await sec.locator('.btn-add').click(); await p.waitForTimeout(250);
+  const piTxt = await p.locator('.entry:has-text("Pi Store") .entry-text').first().textContent();
   H.check('a phone number typed in a note is not saved', piTxt.indexOf('1234') < 0 && piTxt.indexOf('77712') < 0, piTxt);
   // Won Deals shows it, the Deals board has it, a message task appears
   await p.evaluate(() => { location.hash = '#/deals'; }); await p.waitForTimeout(300);

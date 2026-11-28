@@ -499,3 +499,8 @@ Edit history + restore, swipe actions, one-hand dock, focus mode, greetings + re
 - Design bases everywhere: nav-bar look for every tab/chip/button, glow rule, only add buttons filled, one data box, one sheet; phone bar = the same bar at the bottom.
 - Old data migrated automatically (device or cloud copy) without duplicates; Day End reports identical to the old app (tested).
 - Not rebuilt yet (data kept): HR extras, Automation Studio flows, dashboard builder, Smart text, Snippets, Templates page, Invoices, Excel/paste import.
+
+## Round 58 – Day End Report and the moon as before, full check, sync check (see FEATURES_V58_DAY_END_AND_MOON_AS_BEFORE_SYNC_CHECK.md)
+- Day End uses the old page's own stylesheet and structure (isolated), so it looks exactly as before; Import file, Paste report, Reset, Download Report (HTML) and the copy buttons are back.
+- The moon is drawn as before (phase follows the shift, soft glow, no outline) in Day End and as the floating moon; night sky after a 5 s rest on other pages.
+- Sync: retries after an offline first start, size-split saves (too-large items reported, never blocking), live connection restarted after the phone wakes, Sync now waits for a running sync.

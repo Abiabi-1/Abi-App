@@ -50,7 +50,7 @@ async function refresh() {
     } catch (e: any) {
       if (!e.offline && [400, 401, 403].includes(e.status)) {
         const again = readSession(); if (again && again.access !== S!.access) { S = again; return; }
-        S = null; saveSession(); stopLoops(); setStatus('signedout', 'Your session ended. Please sign in again.'); sync.loginOpen.value = true;
+        S = null; saveSession(); stopLoops(); setStatus('signedout', 'Your session ended – sign in again. Your changes are kept on this device and sent after you sign in.'); sync.loginOpen.value = true;
       }
       throw e;
     } finally { refreshing = null; }
@@ -98,7 +98,7 @@ const rowKey = (r: { c: string; id: string }) => PREFIX + r.c + ':' + r.id;
 function parseRow(row: { key: string; value: string; version: number }): Rec | null {
   try { const v = JSON.parse(row.value); if (!v || !v.c || v.id == null) return null; return { c: v.c, id: String(v.id), d: v.d || {}, t: v.t || {}, x: v.x || undefined, u: v.u || '' }; } catch { return null; }
 }
-const valueOf = (r: Rec) => JSON.stringify({ c: r.c, id: r.id, d: r.d, t: r.t, x: r.x || null, u: r.u });
+const valueOf = (r: Rec) => { const v = JSON.stringify({ c: r.c, id: r.id, d: r.d, t: r.t, x: r.x || null, u: r.u }); return r.x && v.length > 900_000 ? JSON.stringify({ c: r.c, id: r.id, d: {}, t: {}, x: r.x, u: r.u }) : v; };   // a deleted huge item is sent without its content
 
 async function ensureWs(): Promise<string> {
   try { const c = JSON.parse(lsGet(LS_WS) || 'null'); if (c && S?.user && c.user === S.user.id && c.ws) return c.ws; } catch { /* */ }
@@ -131,18 +131,28 @@ async function resolveClash(r: Rec, depth: number) {
   if (ahead && cur) await pushOne(cur, depth + 1); else if (cur) markSynced(r.c, r.id, row.version, cur.u);
 }
 async function pushAll(keepalive = false) {
-  const list = dirtyRecs(); if (!list.length) return;
+  tooBig.clear(); const list = dirtyRecs(); if (!list.length) return;
   const fresh = list.filter(r => r.rv == null), known = list.filter(r => r.rv != null);
-  for (let i = 0; i < fresh.length; i += 300) {   // new rows in batches
-    const chunk = fresh.slice(i, i + 300);
-    const ins: any[] = await http('/rest/v1/kv?on_conflict=workspace_id,key&select=key,version', { method: 'POST', keepalive: keepalive && chunk.length < 20, headers: { Prefer: 'resolution=ignore-duplicates,return=representation' }, body: chunk.map(r => ({ workspace_id: WS, key: rowKey(r), value: valueOf(r) })) }) || [];
+  const batches: Rec[][] = []; let cur: Rec[] = [], bytes = 0;
+  for (const r of fresh) {   // new rows in batches of at most ~1 MB / 300 rows (the cloud refuses very large requests)
+    const n = valueOf(r).length;
+    if (n > MAX_ROW) { tooBig.add(rowKey(r)); continue; }
+    if (cur.length && (bytes + n > MAX_BATCH || cur.length >= 300)) { batches.push(cur); cur = []; bytes = 0; }
+    cur.push(r); bytes += n;
+  }
+  if (cur.length) batches.push(cur);
+  for (const chunk of batches) {
+    const ins: any[] = await http('/rest/v1/kv?on_conflict=workspace_id,key&select=key,version', { method: 'POST', keepalive: keepalive && JSON.stringify(chunk.map(valueOf)).length < 60000, headers: { Prefer: 'resolution=ignore-duplicates,return=representation' }, body: chunk.map(r => ({ workspace_id: WS, key: rowKey(r), value: valueOf(r) })) }) || [];
     const got = new Map(ins.map(x => [x.key, x.version]));
     for (const r of chunk) { const v = got.get(rowKey(r)); if (v != null) markSynced(r.c, r.id, v, r.u); else await resolveClash(r, 0); }
     updatePending();
   }
-  for (const r of known) { await pushOne(r); }
+  for (const r of known) { if (valueOf(r).length > MAX_ROW) { tooBig.add(rowKey(r)); continue; } await pushOne(r); }
   updatePending();
+  if (tooBig.size) sync.detail.value = tooBig.size + ' item(s) are too large to send (kept on this device): ' + Array.from(tooBig).slice(0, 3).join(', ');
 }
+const MAX_BATCH = 900_000, MAX_ROW = 4_500_000;
+const tooBig = new Set<string>();
 
 // pull: rows changed since the cursor (with a 60 s overlap; merging the same row twice is harmless)
 async function pullSince(sinceIso: string | null) {
@@ -175,12 +185,15 @@ async function fullCheck() {   // compare versions of every row; fetch what diff
 }
 
 // ---------- cycle ----------
+let running: Promise<void> | null = null;
 let busy = false, again = false, timer: any = 0, kickT: any = 0, lastPull = 0, lastFull = 0, loops = false;
 export function kick(ms = 0) { clearTimeout(kickT); kickT = setTimeout(() => cycle(), ms); }
 export async function cycle(force = false): Promise<void> {
-  if (!S || !WS) return;
-  if (busy) { again = true; return; }
+  if (!S) return;
+  if (!WS) { try { WS = await ensureWs(); } catch (e: any) { if (e.offline) setStatus('offline', 'Changes are saved on this device and sent when you are back online.'); return; } }
+  if (busy) { again = true; return running ? running.then(() => (force ? cycle(true) : undefined)) : undefined; }
   busy = true;
+  let done!: () => void; running = new Promise<void>(r => { done = r; });
   try {
     if (dirtyRecs().length) setStatus('syncing');
     await pushAll();
@@ -188,14 +201,14 @@ export async function cycle(force = false): Promise<void> {
     if (Date.now() - lastFull > 600000) await fullCheck();
     await pushAll();   // anything the pull showed we were ahead on
     updatePending(); sync.lastSync.value = Date.now();
-    setStatus(sync.pending.value ? 'syncing' : 'synced');
+    setStatus(sync.pending.value && !tooBig.size ? 'syncing' : 'synced', tooBig.size ? sync.detail.value : '');
   } catch (e: any) {
     updatePending();
     if (e.offline) setStatus('offline', 'Changes are saved on this device and sent when you are back online.');
     else if (e.status === 401 || !S) { /* login shown by refresh() */ }
     else setStatus('error', e.message || String(e));
   } finally {
-    busy = false;
+    busy = false; done();
     if (again) { again = false; kick(300); }
   }
 }
@@ -259,9 +272,9 @@ export async function cloudFlag(name: string): Promise<boolean> {
 function startLoops() {
   if (loops) return; loops = true;
   timer = setInterval(() => cycle(), 5000);
-  const vis = () => { if (document.hidden) { flush(); pushAll(true).catch(() => { /* */ }); } else { lastPull = 0; cycle(true); } };
+  const vis = () => { if (document.hidden) { flush(); pushAll(true).catch(() => { /* */ }); } else { lastPull = 0; cycle(true); if (!RT.ws || RT.ws.readyState > 1) { RT.ws = null; clearTimeout(RT.timer); RT.retry = 0; rtStart(); } } };
   document.addEventListener('visibilitychange', vis);
-  window.addEventListener('online', () => cycle(true));
+  window.addEventListener('online', () => { cycle(true); if (!RT.ws) { RT.retry = 0; rtStart(); } });
   window.addEventListener('offline', () => setStatus('offline'));
   window.addEventListener('pagehide', () => { flush(); pushAll(true).catch(() => { /* */ }); });
   rtStart(); beat(); setInterval(beat, 60000);

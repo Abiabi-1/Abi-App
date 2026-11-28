@@ -43,6 +43,7 @@ function App() {
     <div class="app-bg" />
     <Bar />
     <main><Page /></main>
+    {route.value.t === 'day' && <button type="button" class="qa-tab" onClick={() => { quickAdd.value = {}; }} title="Quick Add (Q)">⚡ Quick Add</button>}
     <FloatMoon /><SideMenu /><QuickAdd /><Search /><Modal /><Menu /><Login /><Toast />
   </>;
 }

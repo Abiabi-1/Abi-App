@@ -100,7 +100,7 @@ export function Search() {
     tickets().filter(x => (x.subject + ' ' + x.deal).toLowerCase().indexOf(t) >= 0).slice(0, 6).forEach(x => out.push({ k: 'Ticket', t: x.subject, s: x.deal, fn: () => go('tickets', x.id) }));
     allTasks().filter(x => (x.title + ' ' + (x.notes || '')).toLowerCase().indexOf(t) >= 0).slice(0, 6).forEach(x => out.push({ k: 'Task', t: x.title, s: x.due ? fmtDay(x.due) : '', fn: () => go('tasks') }));
     const days = allEntryDays().slice().reverse(); let n = 0;
-    for (const k of days) { for (const e of entriesOf(k)) { if (n >= 20) break; if (entryText(e).toLowerCase().indexOf(t) >= 0) { n++; out.push({ k: 'Day End', t: entryText(e).slice(0, 90), s: fmtDay(k) + ' · ' + e.hk, fn: () => { import('../sections/dayend').then(m => { m.selDay.value = k; go('day'); setTimeout(() => document.getElementById('e-' + e.id)?.scrollIntoView({ block: 'center' }), 200); }); } }); } } if (n >= 20) break; }
+    for (const k of days) { for (const e of entriesOf(k)) { if (n >= 20) break; if (entryText(e).toLowerCase().indexOf(t) >= 0) { n++; out.push({ k: 'Day End', t: entryText(e).slice(0, 90), s: fmtDay(k) + ' · ' + e.hk, fn: () => { import('../sections/dayend').then(m => { m.selDay.value = k; go('day'); setTimeout(() => m.scrollToEntry(e.id), 250); }); } }); } } if (n >= 20) break; }
     return out;
   }, [q, rev.value]);
   if (!open) return null;
